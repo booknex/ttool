@@ -150,11 +150,11 @@ function Router() {
   return (
     <ClientLayout user={user}>
       <Switch>
-        <Route path="/" component={Dashboard} />
+        <Route path="/" component={ReturnStatus} />
+        <Route path="/summary" component={Dashboard} />
         <Route path="/documents" component={Documents} />
         <Route path="/messages" component={Messages} />
         <Route path="/questionnaire" component={Questionnaire} />
-        <Route path="/return-status" component={ReturnStatus} />
         <Route path="/refund" component={Refund} />
         <Route path="/signatures" component={Signatures} />
         <Route path="/invoices" component={Invoices} />

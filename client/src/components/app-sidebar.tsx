@@ -30,11 +30,11 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { RefundTracking } from "@shared/schema";
 
 const getMenuItems = (isFiled: boolean) => [
-  { title: "Dashboard", url: "/", icon: LayoutDashboard },
+  { title: "Return Status", url: "/", icon: ListChecks },
+  { title: "Summary", url: "/summary", icon: LayoutDashboard },
   { title: "Documents", url: "/documents", icon: FileText },
   { title: "Messages", url: "/messages", icon: MessageSquare },
   { title: "Questionnaire", url: "/questionnaire", icon: ClipboardList },
-  { title: "Return Status", url: "/return-status", icon: ListChecks },
   ...(isFiled ? [{ title: "Refund Tracker", url: "/refund", icon: DollarSign }] : []),
   { title: "E-Signatures", url: "/signatures", icon: PenTool },
   { title: "Invoices", url: "/invoices", icon: Receipt },

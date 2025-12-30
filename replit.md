@@ -98,7 +98,8 @@ Core data entities:
 - **Full Schema Implementation**: Complete PostgreSQL schema with 9 tables (users, sessions, documents, required_documents, signatures, refund_tracking, messages, questionnaire_responses, invoices, invoice_items)
 - **Authentication**: Custom username/password authentication with bcrypt, session management, login/register pages
 - **Landing Page**: Professional landing page with feature highlights and CTA buttons
-- **Dashboard**: Overview page with document progress, refund status, pending actions, and quick links
+- **Return Status (Home)**: The default landing page showing tax return preparation status
+- **Summary**: Overview page with document progress, refund status, pending actions, and quick links
 - **Document Center**: Drag-and-drop upload with AI classification simulation, document checklist, and status tracking
 - **Messages**: Real-time messaging interface with auto-reply simulation
 - **Questionnaire**: Dynamic multi-section tax questionnaire with conditional questions and progress tracking
