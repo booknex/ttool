@@ -1,14 +1,16 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import {
   ChevronLeft,
   ChevronRight,
@@ -24,7 +26,8 @@ import {
   Loader2,
   ClipboardCheck,
   Sparkles,
-  X,
+  ArrowLeft,
+  Save,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -207,6 +210,16 @@ const questions: Question[] = [
   },
 ];
 
+const sections = Array.from(new Set(questions.map((q) => q.section)));
+
+function formatAnswer(answer: any, type: string): string {
+  if (answer === undefined || answer === null) return "Not answered";
+  if (type === "yes_no") return answer === true ? "Yes" : "No";
+  if (type === "checkbox" && Array.isArray(answer)) return answer.join(", ");
+  if (type === "number" && answer) return answer.toString();
+  return String(answer);
+}
+
 export default function Questionnaire() {
   const { toast } = useToast();
   const [, navigate] = useLocation();
@@ -215,11 +228,34 @@ export default function Questionnaire() {
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [isOpen, setIsOpen] = useState(true);
   const [tempAnswer, setTempAnswer] = useState<any>(null);
+  const [editingAnswers, setEditingAnswers] = useState<Record<string, any>>({});
+  const [hasChanges, setHasChanges] = useState(false);
 
   const isReviewing = user?.hasCompletedQuestionnaire === true;
 
   const { data: responses, isLoading } = useQuery<QuestionnaireResponse[]>({
     queryKey: ["/api/questionnaire"],
+  });
+
+  const saveMutation = useMutation({
+    mutationFn: async (data: Record<string, any>) => {
+      await apiRequest("POST", "/api/questionnaire", { answers: data });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/questionnaire"] });
+      setHasChanges(false);
+      toast({
+        title: "Changes Saved",
+        description: "Your questionnaire has been updated.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Could not save changes. Please try again.",
+        variant: "destructive",
+      });
+    },
   });
 
   const completeMutation = useMutation({
@@ -252,6 +288,7 @@ export default function Questionnaire() {
         loadedAnswers[r.questionId] = r.answer;
       });
       setAnswers(loadedAnswers);
+      setEditingAnswers(loadedAnswers);
     }
   }, [responses]);
 
@@ -271,7 +308,6 @@ export default function Questionnaire() {
     ? Math.round(((currentIndex) / visibleQuestions.length) * 100) 
     : 0;
 
-  const isLastQuestion = currentIndex === visibleQuestions.length - 1;
   const canGoBack = currentIndex > 0;
 
   useEffect(() => {
@@ -310,6 +346,23 @@ export default function Questionnaire() {
     setTempAnswer(updated);
   };
 
+  const handleEditAnswer = (questionId: string, value: any) => {
+    setEditingAnswers((prev) => ({ ...prev, [questionId]: value }));
+    setHasChanges(true);
+  };
+
+  const handleEditCheckboxChange = (questionId: string, option: string, checked: boolean) => {
+    const current = editingAnswers[questionId] || [];
+    const updated = checked
+      ? [...current, option]
+      : current.filter((o: string) => o !== option);
+    handleEditAnswer(questionId, updated);
+  };
+
+  const handleSaveChanges = () => {
+    saveMutation.mutate(editingAnswers);
+  };
+
   const hasAnswer = () => {
     if (!currentQuestion) return false;
     if (currentQuestion.type === "checkbox") {
@@ -332,6 +385,187 @@ export default function Questionnaire() {
     );
   }
 
+  if (isReviewing) {
+    const reviewVisibleQuestions = getVisibleQuestions(editingAnswers);
+    
+    return (
+      <div className="p-4 md:p-6 lg:p-8 max-w-4xl mx-auto space-y-6">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <ClipboardCheck className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <h1 className="text-xl md:text-2xl font-bold">Tax Questionnaire</h1>
+                <p className="text-sm text-muted-foreground">Review and update your answers</p>
+              </div>
+            </div>
+          </div>
+          {hasChanges && (
+            <Button onClick={handleSaveChanges} disabled={saveMutation.isPending}>
+              {saveMutation.isPending ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Save className="w-4 h-4 mr-2" />
+              )}
+              Save Changes
+            </Button>
+          )}
+        </div>
+
+        {sections.map((section) => {
+          const sectionQuestions = reviewVisibleQuestions.filter((q) => q.section === section);
+          if (sectionQuestions.length === 0) return null;
+          
+          const SectionIcon = sectionIcons[section] || ClipboardCheck;
+          
+          return (
+            <Card key={section}>
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <SectionIcon className="w-4 h-4 text-primary" />
+                  </div>
+                  <CardTitle className="text-lg">{section}</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {sectionQuestions.map((q, idx) => (
+                  <div key={q.id}>
+                    {idx > 0 && <Separator className="my-4" />}
+                    <div className="space-y-3">
+                      <Label className="text-sm font-medium">{q.question}</Label>
+                      {q.helper && (
+                        <p className="text-xs text-muted-foreground">{q.helper}</p>
+                      )}
+                      
+                      {q.type === "yes_no" && (
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant={editingAnswers[q.id] === true ? "default" : "outline"}
+                            onClick={() => handleEditAnswer(q.id, true)}
+                          >
+                            Yes
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant={editingAnswers[q.id] === false ? "default" : "outline"}
+                            onClick={() => handleEditAnswer(q.id, false)}
+                          >
+                            No
+                          </Button>
+                        </div>
+                      )}
+
+                      {q.type === "multiple" && q.options && (
+                        <RadioGroup
+                          value={editingAnswers[q.id] || ""}
+                          onValueChange={(v) => handleEditAnswer(q.id, v)}
+                          className="grid gap-2"
+                        >
+                          {q.options.map((opt) => (
+                            <label
+                              key={opt}
+                              className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors text-sm ${
+                                editingAnswers[q.id] === opt 
+                                  ? "border-primary bg-primary/5" 
+                                  : "hover:bg-muted/50"
+                              }`}
+                            >
+                              <RadioGroupItem value={opt} />
+                              <span>{opt}</span>
+                            </label>
+                          ))}
+                        </RadioGroup>
+                      )}
+
+                      {q.type === "checkbox" && q.options && (
+                        <div className="grid gap-2">
+                          {q.options.map((opt) => {
+                            const isChecked = (editingAnswers[q.id] || []).includes(opt);
+                            return (
+                              <label
+                                key={opt}
+                                className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors text-sm ${
+                                  isChecked 
+                                    ? "border-primary bg-primary/5" 
+                                    : "hover:bg-muted/50"
+                                }`}
+                              >
+                                <Checkbox
+                                  checked={isChecked}
+                                  onCheckedChange={(checked) =>
+                                    handleEditCheckboxChange(q.id, opt, checked as boolean)
+                                  }
+                                />
+                                <span>{opt}</span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {q.type === "text" && (
+                        <Input
+                          value={editingAnswers[q.id] || ""}
+                          onChange={(e) => handleEditAnswer(q.id, e.target.value)}
+                          placeholder="Type your answer..."
+                          className="max-w-md"
+                        />
+                      )}
+
+                      {q.type === "number" && (
+                        <div className="max-w-xs">
+                          <div className="relative">
+                            {q.id.includes("amount") && (
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                            )}
+                            <Input
+                              type="number"
+                              value={editingAnswers[q.id] || ""}
+                              onChange={(e) => handleEditAnswer(q.id, e.target.value)}
+                              placeholder="0"
+                              className={q.id.includes("amount") ? "pl-7" : ""}
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          );
+        })}
+
+        {hasChanges && (
+          <div className="sticky bottom-4">
+            <Card className="border-primary/50 bg-primary/5">
+              <CardContent className="p-4 flex items-center justify-between">
+                <p className="text-sm font-medium">You have unsaved changes</p>
+                <Button onClick={handleSaveChanges} disabled={saveMutation.isPending}>
+                  {saveMutation.isPending ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Save className="w-4 h-4 mr-2" />
+                  )}
+                  Save Changes
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   if (!currentQuestion) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
@@ -346,30 +580,14 @@ export default function Questionnaire() {
 
   const QuestionIcon = currentQuestion.icon || sectionIcons[currentQuestion.section] || ClipboardCheck;
 
-  const handleClose = () => {
-    if (isReviewing) {
-      setIsOpen(false);
-      navigate("/");
-    }
-  };
-
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-b from-background to-muted/20">
-      <Dialog open={isOpen} onOpenChange={isReviewing ? handleClose : () => {}}>
+      <Dialog open={isOpen} onOpenChange={() => {}}>
         <DialogContent 
           className="sm:max-w-lg max-h-[90vh] overflow-y-auto"
-          onPointerDownOutside={(e) => !isReviewing && e.preventDefault()}
-          onEscapeKeyDown={(e) => !isReviewing && e.preventDefault()}
+          onPointerDownOutside={(e) => e.preventDefault()}
+          onEscapeKeyDown={(e) => e.preventDefault()}
         >
-          {isReviewing && (
-            <button
-              onClick={handleClose}
-              className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-            >
-              <X className="h-4 w-4" />
-              <span className="sr-only">Close</span>
-            </button>
-          )}
           <DialogHeader className="space-y-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -520,7 +738,7 @@ export default function Questionnaire() {
                   <Loader2 className="w-4 h-4 animate-spin" />
                   Saving...
                 </>
-              ) : isLastQuestion ? (
+              ) : currentIndex === visibleQuestions.length - 1 ? (
                 <>
                   <Sparkles className="w-4 h-4" />
                   Complete
