@@ -105,7 +105,7 @@ Core data entities:
 - **Refund Tracker**: Visual progress tracker for federal and state refunds
 - **E-Signatures**: Signature pad using react-signature-canvas for engagement letter and Form 8879
 - **Invoices**: Invoice management with payment simulation (ready for Stripe integration)
-- **Theme Toggle**: Dark/light mode support with localStorage persistence
+- **Light Mode Only**: Clean white/light theme throughout the application
 - **Responsive Design**: Mobile-friendly layouts with Shadcn sidebar
 
 ### Admin Dashboard
