@@ -181,20 +181,6 @@ export default function AdminReturnStatuses() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Status Legend</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-            {RETURN_PREP_STATUSES.map((status) => (
-              <div key={status.value} className="flex items-center gap-2">
-                <Badge className={status.color}>{status.label}</Badge>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }
