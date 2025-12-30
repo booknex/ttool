@@ -49,9 +49,9 @@ function ClientLayout({ children, user }: { children: React.ReactNode; user: any
           <header className="flex items-center justify-between gap-4 p-3 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-40">
             <SidebarTrigger data-testid="button-sidebar-toggle" />
             <Link href="/messages">
-              <Button variant="ghost" size="icon" className="relative">
-                <MessageSquare className="h-5 w-5" />
-                <span className="sr-only">Messages</span>
+              <Button variant="default" className="gap-2">
+                <MessageSquare className="h-4 w-4" />
+                <span>Messages</span>
               </Button>
             </Link>
           </header>

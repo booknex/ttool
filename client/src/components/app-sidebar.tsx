@@ -17,7 +17,6 @@ import { Button } from "@/components/ui/button";
 import {
   LayoutDashboard,
   FileText,
-  MessageSquare,
   ClipboardList,
   Receipt,
   DollarSign,
@@ -33,7 +32,6 @@ const getMenuItems = (isFiled: boolean) => [
   { title: "Return Status", url: "/", icon: ListChecks },
   { title: "Summary", url: "/summary", icon: LayoutDashboard },
   { title: "Documents", url: "/documents", icon: FileText },
-  { title: "Messages", url: "/messages", icon: MessageSquare },
   { title: "Questionnaire", url: "/questionnaire", icon: ClipboardList },
   ...(isFiled ? [{ title: "Refund Tracker", url: "/refund", icon: DollarSign }] : []),
   { title: "E-Signatures", url: "/signatures", icon: PenTool },
