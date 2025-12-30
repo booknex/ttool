@@ -31,6 +31,9 @@ import AdminSignatures from "@/pages/admin/signatures";
 import AdminClientDetail from "@/pages/admin/client-detail";
 import AdminReturnStatuses from "@/pages/admin/return-statuses";
 import { BooknexMascot } from "@/components/booknex-mascot";
+import { Button } from "@/components/ui/button";
+import { MessageSquare } from "lucide-react";
+import { Link } from "wouter";
 
 function ClientLayout({ children, user }: { children: React.ReactNode; user: any }) {
   const style = {
@@ -43,8 +46,14 @@ function ClientLayout({ children, user }: { children: React.ReactNode; user: any
       <div className="flex h-screen w-full">
         <AppSidebar user={user} />
         <div className="flex flex-col flex-1 min-w-0">
-          <header className="flex items-center gap-4 p-3 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-40">
+          <header className="flex items-center justify-between gap-4 p-3 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-40">
             <SidebarTrigger data-testid="button-sidebar-toggle" />
+            <Link href="/messages">
+              <Button variant="ghost" size="icon" className="relative">
+                <MessageSquare className="h-5 w-5" />
+                <span className="sr-only">Messages</span>
+              </Button>
+            </Link>
           </header>
           <main className="flex-1 overflow-auto bg-muted/30">
             {children}
