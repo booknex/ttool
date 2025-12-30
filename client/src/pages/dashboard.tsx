@@ -60,7 +60,7 @@ export default function Dashboard() {
 
   const unreadMessages = messages?.filter((m) => !m.isRead && !m.isFromClient).length || 0;
   const uploadedDocs = documents?.length || 0;
-  const requiredDocsCount = requiredDocs?.length || 0;
+  const requiredDocsCount = 6;
   const uploadedReqDocs = requiredDocs?.filter((d) => d.isUploaded).length || 0;
   const docProgress = requiredDocsCount > 0 ? Math.round((uploadedReqDocs / requiredDocsCount) * 100) : 0;
 
