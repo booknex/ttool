@@ -14,7 +14,7 @@ export function BooknexMascot() {
       onClick={handleClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className="fixed top-20 right-6 z-50 cursor-pointer group"
+      className="fixed bottom-6 right-6 z-50 cursor-pointer group"
       title="Click to chat with us!"
     >
       <div className={`relative transition-transform duration-200 ${isHovered ? 'scale-110' : ''}`}>
@@ -75,10 +75,10 @@ export function BooknexMascot() {
         </div>
       </div>
       
-      <div className={`absolute top-full right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg p-3 text-sm transition-all duration-300 whitespace-nowrap ${isHovered ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'}`}>
+      <div className={`absolute bottom-full right-0 mb-2 bg-white border border-gray-200 rounded-lg shadow-lg p-3 text-sm transition-all duration-300 whitespace-nowrap ${isHovered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}`}>
         <div className="font-semibold text-primary">Hi, I'm Booknex!</div>
         <div className="text-gray-600">Click me to send a message</div>
-        <div className="absolute top-0 right-4 transform -translate-y-1/2 rotate-45 w-2 h-2 bg-white border-l border-t border-gray-200"></div>
+        <div className="absolute bottom-0 right-4 transform translate-y-1/2 rotate-45 w-2 h-2 bg-white border-r border-b border-gray-200"></div>
       </div>
     </div>
   );
