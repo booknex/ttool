@@ -66,6 +66,7 @@ export const users = pgTable("users", {
   phone: varchar("phone"),
   isAdmin: boolean("is_admin").default(false),
   hasSeenOnboarding: boolean("has_seen_onboarding").default(false),
+  hasCompletedQuestionnaire: boolean("has_completed_questionnaire").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

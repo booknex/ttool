@@ -197,6 +197,17 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
     }
   });
 
+  app.post("/api/auth/complete-questionnaire", isAuthenticated, resolveDbUser, async (req: any, res) => {
+    try {
+      const userId = req.dbUser.id;
+      await storage.updateUser(userId, { hasCompletedQuestionnaire: true });
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error completing questionnaire:", error);
+      res.status(500).json({ message: "Failed to complete questionnaire" });
+    }
+  });
+
   // Document routes
   app.get("/api/documents", isAuthenticated, resolveDbUser, async (req: any, res) => {
     try {
