@@ -30,6 +30,7 @@ import AdminRefunds from "@/pages/admin/refunds";
 import AdminSignatures from "@/pages/admin/signatures";
 import AdminClientDetail from "@/pages/admin/client-detail";
 import AdminReturnStatuses from "@/pages/admin/return-statuses";
+import { BooknexMascot } from "@/components/booknex-mascot";
 
 function ClientLayout({ children, user }: { children: React.ReactNode; user: any }) {
   const style = {
@@ -49,6 +50,7 @@ function ClientLayout({ children, user }: { children: React.ReactNode; user: any
             {children}
           </main>
         </div>
+        <BooknexMascot />
       </div>
     </SidebarProvider>
   );
