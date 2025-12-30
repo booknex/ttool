@@ -132,6 +132,25 @@ function Router() {
     );
   }
 
+  if (!user?.hasCompletedQuestionnaire) {
+    return (
+      <div className="min-h-screen bg-muted/30">
+        <header className="flex items-center justify-between gap-4 p-3 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-40">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+              <span className="text-primary-foreground font-bold text-sm">T</span>
+            </div>
+            <span className="font-semibold">TaxPortal</span>
+          </div>
+          <ThemeToggle />
+        </header>
+        <main className="flex-1 overflow-auto">
+          <Questionnaire />
+        </main>
+      </div>
+    );
+  }
+
   return (
     <ClientLayout user={user}>
       <Switch>

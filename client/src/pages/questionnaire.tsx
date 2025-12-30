@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -223,6 +224,7 @@ const sections = [...new Set(questions.map((q) => q.section))];
 
 export default function Questionnaire() {
   const { toast } = useToast();
+  const [, navigate] = useLocation();
   const [currentSection, setCurrentSection] = useState(0);
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [saved, setSaved] = useState(false);
@@ -248,6 +250,29 @@ export default function Questionnaire() {
       toast({
         title: "Save Failed",
         description: "Could not save your responses. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const completeMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("POST", "/api/questionnaire", { answers });
+      await apiRequest("POST", "/api/auth/complete-questionnaire");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/questionnaire"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      toast({
+        title: "Questionnaire Complete!",
+        description: "Thank you for completing the questionnaire.",
+      });
+      navigate("/");
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Could not complete the questionnaire. Please try again.",
         variant: "destructive",
       });
     },
@@ -605,12 +630,21 @@ export default function Questionnaire() {
               <Button
                 variant="default"
                 className="bg-green-600 hover:bg-green-700"
-                onClick={handleSave}
-                disabled={saveMutation.isPending}
+                onClick={() => completeMutation.mutate()}
+                disabled={completeMutation.isPending}
                 data-testid="button-complete-questionnaire"
               >
-                <CheckCircle2 className="w-4 h-4 mr-2" />
-                Complete
+                {completeMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Completing...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-4 h-4 mr-2" />
+                    Complete
+                  </>
+                )}
               </Button>
             )}
           </div>
