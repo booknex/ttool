@@ -61,6 +61,13 @@ Core data entities:
 - Login validates credentials and creates session
 - Protected routes require `isAuthenticated` middleware
 
+### New User Onboarding Flow
+- New users must complete the questionnaire before accessing the dashboard
+- During questionnaire, users see a minimal header-only layout (no sidebar navigation)
+- Upon completing the questionnaire, users are redirected to the dashboard
+- The onboarding tour automatically shows on first dashboard visit (hasSeenOnboarding=false)
+- Flow: Register/Login -> Questionnaire (required) -> Dashboard with Tour -> Full Portal Access
+
 ## External Dependencies
 
 ### Database
@@ -121,6 +128,8 @@ Core data entities:
 - `POST /api/auth/login` - Login with email/password
 - `POST /api/auth/logout` - Logout current user
 - `GET /api/auth/user` - Get current authenticated user
+- `POST /api/auth/complete-onboarding` - Mark onboarding tour as seen
+- `POST /api/auth/complete-questionnaire` - Mark questionnaire as completed
 
 #### Client Endpoints (authenticated via session):
 - `GET /api/documents` - List documents
