@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,9 +24,11 @@ import {
   Loader2,
   ClipboardCheck,
   Sparkles,
+  X,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/useAuth";
 import type { QuestionnaireResponse } from "@shared/schema";
 
 type Question = {
@@ -208,10 +210,13 @@ const questions: Question[] = [
 export default function Questionnaire() {
   const { toast } = useToast();
   const [, navigate] = useLocation();
+  const { user } = useAuth();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [isOpen, setIsOpen] = useState(true);
   const [tempAnswer, setTempAnswer] = useState<any>(null);
+
+  const isReviewing = user?.hasCompletedQuestionnaire === true;
 
   const { data: responses, isLoading } = useQuery<QuestionnaireResponse[]>({
     queryKey: ["/api/questionnaire"],
@@ -341,14 +346,30 @@ export default function Questionnaire() {
 
   const QuestionIcon = currentQuestion.icon || sectionIcons[currentQuestion.section] || ClipboardCheck;
 
+  const handleClose = () => {
+    if (isReviewing) {
+      setIsOpen(false);
+      navigate("/");
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-b from-background to-muted/20">
-      <Dialog open={isOpen} onOpenChange={() => {}}>
+      <Dialog open={isOpen} onOpenChange={isReviewing ? handleClose : () => {}}>
         <DialogContent 
           className="sm:max-w-lg max-h-[90vh] overflow-y-auto"
-          onPointerDownOutside={(e) => e.preventDefault()}
-          onEscapeKeyDown={(e) => e.preventDefault()}
+          onPointerDownOutside={(e) => !isReviewing && e.preventDefault()}
+          onEscapeKeyDown={(e) => !isReviewing && e.preventDefault()}
         >
+          {isReviewing && (
+            <button
+              onClick={handleClose}
+              className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+            >
+              <X className="h-4 w-4" />
+              <span className="sr-only">Close</span>
+            </button>
+          )}
           <DialogHeader className="space-y-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
