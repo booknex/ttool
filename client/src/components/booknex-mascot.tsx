@@ -14,7 +14,7 @@ export function BooknexMascot() {
       onClick={handleClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className="fixed bottom-6 left-6 z-50 cursor-pointer group"
+      className="fixed bottom-32 left-6 z-50 cursor-pointer group"
       title="Click to chat with us!"
     >
       <div className={`relative transition-transform duration-200 ${isHovered ? 'scale-110' : ''}`}>
