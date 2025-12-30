@@ -340,7 +340,7 @@ export default function Dashboard() {
                     <CardDescription>Track your tax return preparation</CardDescription>
                   </div>
                   <Button variant="outline" size="sm" asChild>
-                    <Link href="/return-status" data-testid="link-view-return-status">
+                    <Link href="/" data-testid="link-view-return-status">
                       Details
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
