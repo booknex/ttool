@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,14 +9,10 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import {
   ChevronLeft,
   ChevronRight,
-  Save,
   CheckCircle2,
-  Circle,
   Home,
   Briefcase,
   Heart,
@@ -54,7 +50,6 @@ const sectionIcons: Record<string, any> = {
 };
 
 const questions: Question[] = [
-  // Filing Status
   {
     id: "filing_status",
     section: "Filing Status",
@@ -70,8 +65,6 @@ const questions: Question[] = [
     type: "yes_no",
     icon: Heart,
   },
-
-  // Income
   {
     id: "employment_type",
     section: "Income",
@@ -102,8 +95,6 @@ const questions: Question[] = [
     type: "yes_no",
     icon: DollarSign,
   },
-
-  // Deductions
   {
     id: "homeowner",
     section: "Deductions",
@@ -147,8 +138,6 @@ const questions: Question[] = [
     type: "yes_no",
     icon: Heart,
   },
-
-  // Education
   {
     id: "student_loans",
     section: "Education",
@@ -170,8 +159,6 @@ const questions: Question[] = [
     type: "yes_no",
     icon: GraduationCap,
   },
-
-  // Family
   {
     id: "dependents",
     section: "Family",
@@ -194,8 +181,6 @@ const questions: Question[] = [
     dependsOn: { questionId: "dependents", answer: true },
     icon: Baby,
   },
-
-  // Life Events
   {
     id: "major_life_events",
     section: "Life Events",
@@ -220,39 +205,16 @@ const questions: Question[] = [
   },
 ];
 
-const sections = [...new Set(questions.map((q) => q.section))];
-
 export default function Questionnaire() {
   const { toast } = useToast();
   const [, navigate] = useLocation();
-  const [currentSection, setCurrentSection] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, any>>({});
-  const [saved, setSaved] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
+  const [tempAnswer, setTempAnswer] = useState<any>(null);
 
   const { data: responses, isLoading } = useQuery<QuestionnaireResponse[]>({
     queryKey: ["/api/questionnaire"],
-  });
-
-  const saveMutation = useMutation({
-    mutationFn: async (data: Record<string, any>) => {
-      await apiRequest("POST", "/api/questionnaire", { answers: data });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/questionnaire"] });
-      setSaved(true);
-      toast({
-        title: "Progress Saved",
-        description: "Your questionnaire responses have been saved.",
-      });
-      setTimeout(() => setSaved(false), 3000);
-    },
-    onError: () => {
-      toast({
-        title: "Save Failed",
-        description: "Could not save your responses. Please try again.",
-        variant: "destructive",
-      });
-    },
   });
 
   const completeMutation = useMutation({
@@ -288,365 +250,279 @@ export default function Questionnaire() {
     }
   }, [responses]);
 
-  const shouldShowQuestion = (q: Question): boolean => {
+  const shouldShowQuestion = (q: Question, currentAnswers: Record<string, any>): boolean => {
     if (!q.dependsOn) return true;
-    const dependentAnswer = answers[q.dependsOn.questionId];
+    const dependentAnswer = currentAnswers[q.dependsOn.questionId];
     return dependentAnswer === q.dependsOn.answer;
   };
 
-  const currentSectionQuestions = questions.filter(
-    (q) => q.section === sections[currentSection] && shouldShowQuestion(q)
-  );
-
-  const getSectionProgress = (sectionName: string) => {
-    const sectionQuestions = questions.filter(
-      (q) => q.section === sectionName && shouldShowQuestion(q)
-    );
-    const answered = sectionQuestions.filter((q) => answers[q.id] !== undefined).length;
-    return sectionQuestions.length > 0 ? Math.round((answered / sectionQuestions.length) * 100) : 0;
+  const getVisibleQuestions = (currentAnswers: Record<string, any>) => {
+    return questions.filter((q) => shouldShowQuestion(q, currentAnswers));
   };
 
-  const answeredCount = questions.filter(
-    (q) => answers[q.id] !== undefined && shouldShowQuestion(q)
-  ).length;
-  const visibleCount = questions.filter(shouldShowQuestion).length;
-  const progress = visibleCount > 0 ? Math.round((answeredCount / visibleCount) * 100) : 0;
+  const visibleQuestions = getVisibleQuestions(answers);
+  const currentQuestion = visibleQuestions[currentIndex];
+  const progress = visibleQuestions.length > 0 
+    ? Math.round(((currentIndex) / visibleQuestions.length) * 100) 
+    : 0;
 
-  const handleAnswer = (questionId: string, value: any) => {
-    setAnswers((prev) => ({ ...prev, [questionId]: value }));
+  const isLastQuestion = currentIndex === visibleQuestions.length - 1;
+  const canGoBack = currentIndex > 0;
+
+  useEffect(() => {
+    if (currentQuestion) {
+      setTempAnswer(answers[currentQuestion.id] ?? null);
+    }
+  }, [currentIndex, currentQuestion, answers]);
+
+  const handleNext = () => {
+    if (!currentQuestion) return;
+
+    const newAnswers = { ...answers, [currentQuestion.id]: tempAnswer };
+    setAnswers(newAnswers);
+
+    const newVisibleQuestions = getVisibleQuestions(newAnswers);
+    
+    if (currentIndex >= newVisibleQuestions.length - 1) {
+      completeMutation.mutate();
+    } else {
+      const nextIndex = Math.min(currentIndex + 1, newVisibleQuestions.length - 1);
+      setCurrentIndex(nextIndex);
+    }
   };
 
-  const handleCheckboxChange = (questionId: string, option: string, checked: boolean) => {
-    const current = answers[questionId] || [];
+  const handleBack = () => {
+    if (canGoBack) {
+      setCurrentIndex((prev) => prev - 1);
+    }
+  };
+
+  const handleCheckboxChange = (option: string, checked: boolean) => {
+    const current = tempAnswer || [];
     const updated = checked
       ? [...current, option]
       : current.filter((o: string) => o !== option);
-    handleAnswer(questionId, updated);
+    setTempAnswer(updated);
   };
 
-  const handleSave = () => {
-    saveMutation.mutate(answers);
+  const hasAnswer = () => {
+    if (!currentQuestion) return false;
+    if (currentQuestion.type === "checkbox") {
+      return tempAnswer && tempAnswer.length > 0;
+    }
+    if (currentQuestion.type === "text" || currentQuestion.type === "number") {
+      return tempAnswer !== null && tempAnswer !== undefined && tempAnswer !== "";
+    }
+    return tempAnswer !== null && tempAnswer !== undefined;
   };
-
-  const canGoNext = currentSection < sections.length - 1;
-  const canGoPrev = currentSection > 0;
 
   if (isLoading) {
     return (
-      <div className="p-4 md:p-6 lg:p-8 max-w-4xl mx-auto space-y-6">
-        <Skeleton className="h-10 w-64" />
-        <Skeleton className="h-4 w-full" />
-        <Card>
-          <CardContent className="p-6">
-            <div className="space-y-6">
-              {[1, 2, 3].map((i) => (
-                <Skeleton key={i} className="h-24 w-full" />
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="text-center space-y-4">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
+          <p className="text-muted-foreground">Loading questionnaire...</p>
+        </div>
       </div>
     );
   }
 
-  return (
-    <div className="p-4 md:p-6 lg:p-8 max-w-4xl mx-auto space-y-6">
-      <div className="flex items-start gap-4">
-        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-          <ClipboardCheck className="w-6 h-6 text-primary" />
+  if (!currentQuestion) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="text-center space-y-4">
+          <Sparkles className="w-12 h-12 mx-auto text-green-500" />
+          <h2 className="text-xl font-semibold">All Done!</h2>
+          <p className="text-muted-foreground">Processing your responses...</p>
         </div>
-        <div className="flex-1">
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight" data-testid="text-questionnaire-title">
-            Tax Questionnaire
-          </h1>
-          <p className="text-muted-foreground">
-            Answer these questions to help us maximize your deductions
-          </p>
-        </div>
-        {saved && (
-          <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
-            <CheckCircle2 className="w-3 h-3 mr-1" /> Saved
-          </Badge>
-        )}
       </div>
+    );
+  }
 
-      <Card>
-        <CardContent className="p-4 md:p-6">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-sm text-muted-foreground">{answeredCount} of {visibleCount} questions answered</span>
-            <span className="text-sm font-semibold text-primary">{progress}%</span>
-          </div>
-          <Progress value={progress} className="h-2" />
-        </CardContent>
-      </Card>
+  const QuestionIcon = currentQuestion.icon || sectionIcons[currentQuestion.section] || ClipboardCheck;
 
-      <div className="grid md:grid-cols-4 gap-6">
-        <div className="md:col-span-1">
-          <Card className="sticky top-20">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Sections</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="space-y-1 p-2">
-                {sections.map((section, idx) => {
-                  const SectionIcon = sectionIcons[section] || Circle;
-                  const sectionProgress = getSectionProgress(section);
-                  const isComplete = sectionProgress === 100;
-                  const isCurrent = idx === currentSection;
-                  
-                  return (
-                    <button
-                      key={section}
-                      onClick={() => setCurrentSection(idx)}
-                      className={`w-full flex items-center gap-3 p-3 rounded-lg text-left transition-colors ${
-                        isCurrent 
-                          ? "bg-primary/10 text-primary" 
-                          : "hover:bg-muted/50"
-                      }`}
-                      data-testid={`button-section-${section.toLowerCase().replace(' ', '-')}`}
-                    >
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                        isComplete 
-                          ? "bg-green-100 dark:bg-green-900/30" 
-                          : isCurrent 
-                            ? "bg-primary/20" 
-                            : "bg-muted"
-                      }`}>
-                        {isComplete ? (
-                          <CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-400" />
-                        ) : (
-                          <SectionIcon className={`w-4 h-4 ${isCurrent ? "text-primary" : "text-muted-foreground"}`} />
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className={`text-sm font-medium truncate ${isCurrent ? "text-primary" : ""}`}>
-                          {section}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {sectionProgress}% complete
-                        </p>
-                      </div>
-                    </button>
-                  );
-                })}
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-b from-background to-muted/20">
+      <Dialog open={isOpen} onOpenChange={() => {}}>
+        <DialogContent 
+          className="sm:max-w-lg max-h-[90vh] overflow-y-auto"
+          onPointerDownOutside={(e) => e.preventDefault()}
+          onEscapeKeyDown={(e) => e.preventDefault()}
+        >
+          <DialogHeader className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <QuestionIcon className="w-5 h-5 text-primary" />
               </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="md:col-span-3 space-y-6">
-          <Card>
-            <CardHeader className="border-b">
-              <div className="flex items-center gap-3">
-                {(() => {
-                  const SectionIcon = sectionIcons[sections[currentSection]] || Circle;
-                  return (
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                      <SectionIcon className="w-5 h-5 text-primary" />
-                    </div>
-                  );
-                })()}
-                <div>
-                  <CardTitle>{sections[currentSection]}</CardTitle>
-                  <CardDescription>
-                    Section {currentSection + 1} of {sections.length}
-                  </CardDescription>
-                </div>
+              <div className="flex-1">
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">
+                  {currentQuestion.section}
+                </p>
+                <DialogTitle className="text-lg leading-tight">
+                  Question {currentIndex + 1} of {visibleQuestions.length}
+                </DialogTitle>
               </div>
-            </CardHeader>
-            <CardContent className="p-6 space-y-6">
-              {currentSectionQuestions.map((q, idx) => (
-                <div key={q.id}>
-                  {idx > 0 && <Separator className="mb-6" />}
-                  <div className="space-y-4">
-                    <div className="flex items-start gap-3">
-                      <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center flex-shrink-0 text-sm font-medium text-muted-foreground">
-                        {idx + 1}
-                      </div>
-                      <div className="flex-1 pt-0.5">
-                        <Label className="text-base font-medium leading-relaxed">{q.question}</Label>
-                        {q.helper && (
-                          <p className="text-sm text-muted-foreground mt-1">{q.helper}</p>
-                        )}
-                      </div>
-                    </div>
+            </div>
+            <Progress value={progress} className="h-2" />
+          </DialogHeader>
 
-                    <div className="pl-10">
-                      {q.type === "yes_no" && (
-                        <div className="flex gap-3">
-                          <Button
-                            type="button"
-                            variant={answers[q.id] === true ? "default" : "outline"}
-                            className="flex-1"
-                            onClick={() => handleAnswer(q.id, true)}
-                          >
-                            <CheckCircle2 className="w-4 h-4 mr-2" />
-                            Yes
-                          </Button>
-                          <Button
-                            type="button"
-                            variant={answers[q.id] === false ? "default" : "outline"}
-                            className="flex-1"
-                            onClick={() => handleAnswer(q.id, false)}
-                          >
-                            No
-                          </Button>
-                        </div>
-                      )}
+          <div className="py-4 space-y-4">
+            <DialogDescription asChild>
+              <div className="space-y-2">
+                <Label className="text-base font-medium text-foreground leading-relaxed block">
+                  {currentQuestion.question}
+                </Label>
+                {currentQuestion.helper && (
+                  <p className="text-sm text-muted-foreground">{currentQuestion.helper}</p>
+                )}
+              </div>
+            </DialogDescription>
 
-                      {q.type === "multiple" && q.options && (
-                        <RadioGroup
-                          value={answers[q.id]}
-                          onValueChange={(v) => handleAnswer(q.id, v)}
-                          className="grid gap-2"
-                        >
-                          {q.options.map((opt) => (
-                            <label
-                              key={opt}
-                              className={`flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-colors ${
-                                answers[q.id] === opt 
-                                  ? "border-primary bg-primary/5" 
-                                  : "hover:bg-muted/50"
-                              }`}
-                            >
-                              <RadioGroupItem value={opt} id={`${q.id}-${opt}`} />
-                              <span className="flex-1">{opt}</span>
-                            </label>
-                          ))}
-                        </RadioGroup>
-                      )}
-
-                      {q.type === "checkbox" && q.options && (
-                        <div className="grid gap-2">
-                          {q.options.map((opt) => {
-                            const isChecked = (answers[q.id] || []).includes(opt);
-                            return (
-                              <label
-                                key={opt}
-                                className={`flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-colors ${
-                                  isChecked 
-                                    ? "border-primary bg-primary/5" 
-                                    : "hover:bg-muted/50"
-                                }`}
-                              >
-                                <Checkbox
-                                  id={`${q.id}-${opt}`}
-                                  checked={isChecked}
-                                  onCheckedChange={(checked) =>
-                                    handleCheckboxChange(q.id, opt, checked as boolean)
-                                  }
-                                />
-                                <span className="flex-1">{opt}</span>
-                              </label>
-                            );
-                          })}
-                        </div>
-                      )}
-
-                      {q.type === "text" && (
-                        <Input
-                          value={answers[q.id] || ""}
-                          onChange={(e) => handleAnswer(q.id, e.target.value)}
-                          placeholder="Type your answer..."
-                          className="max-w-md"
-                          data-testid={`input-${q.id}`}
-                        />
-                      )}
-
-                      {q.type === "number" && (
-                        <div className="max-w-xs">
-                          <div className="relative">
-                            {q.id.includes("amount") && (
-                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-                            )}
-                            <Input
-                              type="number"
-                              value={answers[q.id] || ""}
-                              onChange={(e) => handleAnswer(q.id, e.target.value)}
-                              placeholder="0"
-                              className={q.id.includes("amount") ? "pl-7" : ""}
-                              data-testid={`input-${q.id}`}
-                            />
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-
-              {currentSectionQuestions.length === 0 && (
-                <div className="text-center py-12">
-                  <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-4">
-                    <Sparkles className="w-8 h-8 text-green-600 dark:text-green-400" />
-                  </div>
-                  <h3 className="font-medium mb-1">All Done Here</h3>
-                  <p className="text-muted-foreground text-sm">
-                    No additional questions in this section based on your answers
-                  </p>
+            <div className="pt-2">
+              {currentQuestion.type === "yes_no" && (
+                <div className="flex gap-3">
+                  <Button
+                    type="button"
+                    variant={tempAnswer === true ? "default" : "outline"}
+                    className="flex-1 h-12"
+                    onClick={() => setTempAnswer(true)}
+                  >
+                    <CheckCircle2 className="w-4 h-4 mr-2" />
+                    Yes
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={tempAnswer === false ? "default" : "outline"}
+                    className="flex-1 h-12"
+                    onClick={() => setTempAnswer(false)}
+                  >
+                    No
+                  </Button>
                 </div>
               )}
-            </CardContent>
-          </Card>
 
-          <div className="flex items-center justify-between gap-4">
+              {currentQuestion.type === "multiple" && currentQuestion.options && (
+                <RadioGroup
+                  value={tempAnswer || ""}
+                  onValueChange={(v) => setTempAnswer(v)}
+                  className="grid gap-2"
+                >
+                  {currentQuestion.options.map((opt) => (
+                    <label
+                      key={opt}
+                      className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                        tempAnswer === opt 
+                          ? "border-primary bg-primary/5" 
+                          : "hover:bg-muted/50"
+                      }`}
+                    >
+                      <RadioGroupItem value={opt} id={`${currentQuestion.id}-${opt}`} />
+                      <span className="flex-1 text-sm">{opt}</span>
+                    </label>
+                  ))}
+                </RadioGroup>
+              )}
+
+              {currentQuestion.type === "checkbox" && currentQuestion.options && (
+                <div className="grid gap-2 max-h-64 overflow-y-auto">
+                  {currentQuestion.options.map((opt) => {
+                    const isChecked = (tempAnswer || []).includes(opt);
+                    return (
+                      <label
+                        key={opt}
+                        className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                          isChecked 
+                            ? "border-primary bg-primary/5" 
+                            : "hover:bg-muted/50"
+                        }`}
+                      >
+                        <Checkbox
+                          id={`${currentQuestion.id}-${opt}`}
+                          checked={isChecked}
+                          onCheckedChange={(checked) =>
+                            handleCheckboxChange(opt, checked as boolean)
+                          }
+                        />
+                        <span className="flex-1 text-sm">{opt}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
+
+              {currentQuestion.type === "text" && (
+                <Input
+                  value={tempAnswer || ""}
+                  onChange={(e) => setTempAnswer(e.target.value)}
+                  placeholder="Type your answer..."
+                  className="h-12"
+                  autoFocus
+                />
+              )}
+
+              {currentQuestion.type === "number" && (
+                <div className="relative">
+                  {currentQuestion.id.includes("amount") && (
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                  )}
+                  <Input
+                    type="number"
+                    value={tempAnswer || ""}
+                    onChange={(e) => setTempAnswer(e.target.value)}
+                    placeholder="0"
+                    className={`h-12 ${currentQuestion.id.includes("amount") ? "pl-7" : ""}`}
+                    autoFocus
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between gap-3 pt-4 border-t">
             <Button
-              variant="outline"
-              onClick={() => setCurrentSection((p) => p - 1)}
-              disabled={!canGoPrev}
-              data-testid="button-prev-section"
+              variant="ghost"
+              onClick={handleBack}
+              disabled={!canGoBack}
+              className="gap-2"
             >
-              <ChevronLeft className="w-4 h-4 mr-2" />
-              Previous
+              <ChevronLeft className="w-4 h-4" />
+              Back
             </Button>
 
             <Button
-              onClick={handleSave}
-              disabled={saveMutation.isPending}
-              data-testid="button-save-questionnaire"
+              onClick={handleNext}
+              disabled={!hasAnswer() || completeMutation.isPending}
+              className="gap-2 min-w-[100px]"
             >
-              {saveMutation.isPending ? (
+              {completeMutation.isPending ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <Loader2 className="w-4 h-4 animate-spin" />
                   Saving...
+                </>
+              ) : isLastQuestion ? (
+                <>
+                  <Sparkles className="w-4 h-4" />
+                  Complete
                 </>
               ) : (
                 <>
-                  <Save className="w-4 h-4 mr-2" />
-                  Save Progress
+                  Next
+                  <ChevronRight className="w-4 h-4" />
                 </>
               )}
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
-            {canGoNext ? (
-              <Button
-                onClick={() => setCurrentSection((p) => p + 1)}
-                data-testid="button-next-section"
-              >
-                Next
-                <ChevronRight className="w-4 h-4 ml-2" />
-              </Button>
-            ) : (
-              <Button
-                variant="default"
-                className="bg-green-600 hover:bg-green-700"
-                onClick={() => completeMutation.mutate()}
-                disabled={completeMutation.isPending}
-                data-testid="button-complete-questionnaire"
-              >
-                {completeMutation.isPending ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Completing...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle2 className="w-4 h-4 mr-2" />
-                    Complete
-                  </>
-                )}
-              </Button>
-            )}
+      <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-auto">
+        <div className="bg-card border rounded-lg shadow-lg p-3 flex items-center gap-3">
+          <ClipboardCheck className="w-5 h-5 text-primary" />
+          <div className="text-sm">
+            <span className="font-medium">{Math.round(progress)}% complete</span>
+            <span className="text-muted-foreground ml-2">
+              ({currentIndex} of {visibleQuestions.length} questions)
+            </span>
           </div>
         </div>
       </div>
