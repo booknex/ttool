@@ -283,44 +283,6 @@ export default function AffiliateDashboard() {
           </Card>
         </div>
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2">
-              <Award className="h-5 w-5 text-amber-500" />
-              Achievements
-            </CardTitle>
-            <CardDescription>Unlock badges by reaching milestones</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-              {earnedBadges.map((badge) => (
-                <div
-                  key={badge.id}
-                  className="flex flex-col items-center p-3 rounded-lg bg-gradient-to-br from-amber-50 to-yellow-100 border border-amber-200"
-                >
-                  <div className="w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center mb-2">
-                    <badge.icon className="h-5 w-5 text-white" />
-                  </div>
-                  <p className="text-xs font-semibold text-center">{badge.name}</p>
-                  <p className="text-[10px] text-gray-500 text-center">{badge.description}</p>
-                </div>
-              ))}
-              {lockedBadges.map((badge) => (
-                <div
-                  key={badge.id}
-                  className="flex flex-col items-center p-3 rounded-lg bg-gray-50 border border-gray-200 opacity-50"
-                >
-                  <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center mb-2">
-                    <badge.icon className="h-5 w-5 text-gray-500" />
-                  </div>
-                  <p className="text-xs font-semibold text-center text-gray-500">{badge.name}</p>
-                  <p className="text-[10px] text-gray-400 text-center">{badge.description}</p>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
             <CardContent className="p-6">
