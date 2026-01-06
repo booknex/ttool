@@ -69,7 +69,7 @@ export default function Landing() {
           </div>
           <Button asChild data-testid="button-header-login">
             <a href="/login">
-              Sign In
+              Employee Sign In
               <ArrowRight className="ml-2 h-4 w-4" />
             </a>
           </Button>
