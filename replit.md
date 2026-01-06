@@ -103,6 +103,11 @@ Core data entities:
   - Track total referrals, conversions, and conversion rate
   - Monitor pending and paid commissions
   - See recent referral activity with status badges
+- **Gamification System**:
+  - **Tier System**: Bronze (0), Silver (5), Gold (15), Platinum (30), Diamond (50) based on referral count
+  - **Achievement Badges**: 6 unlockable badges for milestones (First Steps, Getting Traction, Closer, Momentum, Benjamin, Sharp Shooter)
+  - **Progress Bar**: Shows progress toward next tier with referral count
+  - **Leaderboard**: Privacy-focused top 5 display with anonymized competitors, current user's rank always visible
 - **Database Tables**: affiliates, affiliate_sessions, affiliate_referrals
 
 ### Admin Kanban Board (NEW)
