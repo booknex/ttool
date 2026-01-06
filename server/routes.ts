@@ -110,7 +110,7 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
 
   app.post("/api/auth/register", async (req: any, res) => {
     try {
-      const { email, password, firstName, lastName } = req.body;
+      const { email, password, firstName, lastName, referralCode } = req.body;
       
       if (!email || !password) {
         return res.status(400).json({ message: "Email and password are required" });
@@ -127,6 +127,31 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
 
       const passwordHash = await hashPassword(password);
       const user = await storage.createUser(email, passwordHash, firstName, lastName);
+      
+      // Handle referral code attribution
+      if (referralCode) {
+        const affiliate = await storage.getAffiliateByReferralCode(referralCode);
+        if (affiliate) {
+          // Update user with referral info
+          await storage.updateUser(user.id, { 
+            referredByAffiliateId: affiliate.id,
+            referralCode: referralCode
+          });
+          // Create referral record
+          await storage.createAffiliateReferral({
+            affiliateId: affiliate.id,
+            clientUserId: user.id,
+            referralCode: referralCode,
+            leadEmail: email,
+            leadName: `${firstName || ''} ${lastName || ''}`.trim() || undefined,
+            status: 'registered',
+          });
+          // Update affiliate stats
+          await storage.updateAffiliate(affiliate.id, {
+            totalReferrals: (affiliate.totalReferrals || 0) + 1,
+          });
+        }
+      }
       
       (req.session as any).userId = user.id;
       await storage.seedUserData(user.id);
@@ -989,6 +1014,278 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
     } catch (error) {
       console.error("Error fetching admin stats:", error);
       res.status(500).json({ message: "Failed to fetch stats" });
+    }
+  });
+
+  // =====================================================
+  // AFFILIATE PORTAL ROUTES
+  // =====================================================
+
+  // Generate unique referral code
+  function generateReferralCode(): string {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let code = 'REF-';
+    for (let i = 0; i < 6; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return code;
+  }
+
+  // Affiliate authentication middleware
+  const isAffiliateAuthenticated = (req: any, res: any, next: any) => {
+    if ((req.session as any).affiliateId) {
+      next();
+    } else {
+      res.status(401).json({ message: "Unauthorized - Affiliate login required" });
+    }
+  };
+
+  // Resolve affiliate from session
+  const resolveAffiliate = async (req: any, res: any, next: any) => {
+    try {
+      const affiliateId = (req.session as any).affiliateId;
+      if (!affiliateId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const affiliate = await storage.getAffiliate(affiliateId);
+      if (!affiliate) {
+        return res.status(404).json({ message: "Affiliate not found" });
+      }
+      
+      req.affiliate = affiliate;
+      next();
+    } catch (error) {
+      console.error("Error resolving affiliate:", error);
+      res.status(500).json({ message: "Failed to resolve affiliate" });
+    }
+  };
+
+  // Affiliate registration
+  app.post("/api/affiliate/auth/register", async (req: any, res) => {
+    try {
+      const { email, password, firstName, lastName, companyName, phone } = req.body;
+      
+      if (!email || !password) {
+        return res.status(400).json({ message: "Email and password are required" });
+      }
+
+      if (password.length < 6) {
+        return res.status(400).json({ message: "Password must be at least 6 characters" });
+      }
+
+      const existingAffiliate = await storage.getAffiliateByEmail(email);
+      if (existingAffiliate) {
+        return res.status(400).json({ message: "Email already registered" });
+      }
+
+      const passwordHash = await hashPassword(password);
+      let referralCode = generateReferralCode();
+      
+      // Ensure referral code is unique
+      while (await storage.getAffiliateByReferralCode(referralCode)) {
+        referralCode = generateReferralCode();
+      }
+
+      const affiliate = await storage.createAffiliate({
+        email,
+        passwordHash,
+        firstName,
+        lastName,
+        companyName,
+        phone,
+        referralCode,
+        status: 'active',
+      });
+      
+      (req.session as any).affiliateId = affiliate.id;
+      
+      res.json({ 
+        id: affiliate.id, 
+        email: affiliate.email, 
+        firstName: affiliate.firstName, 
+        lastName: affiliate.lastName,
+        referralCode: affiliate.referralCode,
+        status: affiliate.status,
+      });
+    } catch (error) {
+      console.error("Error registering affiliate:", error);
+      res.status(500).json({ message: "Failed to register" });
+    }
+  });
+
+  // Affiliate login
+  app.post("/api/affiliate/auth/login", async (req: any, res) => {
+    try {
+      const { email, password } = req.body;
+      
+      if (!email || !password) {
+        return res.status(400).json({ message: "Email and password are required" });
+      }
+
+      const affiliate = await storage.getAffiliateByEmail(email);
+      if (!affiliate) {
+        return res.status(401).json({ message: "Invalid email or password" });
+      }
+
+      const validPassword = await verifyPassword(password, affiliate.passwordHash);
+      if (!validPassword) {
+        return res.status(401).json({ message: "Invalid email or password" });
+      }
+
+      if (affiliate.status !== 'active') {
+        return res.status(403).json({ message: "Affiliate account is not active" });
+      }
+
+      (req.session as any).affiliateId = affiliate.id;
+      
+      res.json({ 
+        id: affiliate.id, 
+        email: affiliate.email, 
+        firstName: affiliate.firstName, 
+        lastName: affiliate.lastName,
+        referralCode: affiliate.referralCode,
+        status: affiliate.status,
+      });
+    } catch (error) {
+      console.error("Error logging in affiliate:", error);
+      res.status(500).json({ message: "Failed to login" });
+    }
+  });
+
+  // Affiliate logout
+  app.post("/api/affiliate/auth/logout", (req: any, res) => {
+    delete (req.session as any).affiliateId;
+    res.json({ success: true });
+  });
+
+  // Get current affiliate
+  app.get("/api/affiliate/auth/user", isAffiliateAuthenticated, resolveAffiliate, async (req: any, res) => {
+    try {
+      const affiliate = req.affiliate;
+      res.json({
+        id: affiliate.id,
+        email: affiliate.email,
+        firstName: affiliate.firstName,
+        lastName: affiliate.lastName,
+        companyName: affiliate.companyName,
+        phone: affiliate.phone,
+        referralCode: affiliate.referralCode,
+        payoutRate: affiliate.payoutRate,
+        status: affiliate.status,
+        totalReferrals: affiliate.totalReferrals,
+        totalConversions: affiliate.totalConversions,
+        totalEarnings: affiliate.totalEarnings,
+      });
+    } catch (error) {
+      console.error("Error fetching affiliate:", error);
+      res.status(500).json({ message: "Failed to fetch affiliate" });
+    }
+  });
+
+  // Get affiliate referrals
+  app.get("/api/affiliate/referrals", isAffiliateAuthenticated, resolveAffiliate, async (req: any, res) => {
+    try {
+      const referrals = await storage.getAffiliateReferrals(req.affiliate.id);
+      res.json(referrals);
+    } catch (error) {
+      console.error("Error fetching referrals:", error);
+      res.status(500).json({ message: "Failed to fetch referrals" });
+    }
+  });
+
+  // Get affiliate stats/dashboard data
+  app.get("/api/affiliate/stats", isAffiliateAuthenticated, resolveAffiliate, async (req: any, res) => {
+    try {
+      const affiliate = req.affiliate;
+      const referrals = await storage.getAffiliateReferrals(affiliate.id);
+      
+      const registered = referrals.filter(r => r.status === 'registered').length;
+      const converted = referrals.filter(r => r.status === 'converted').length;
+      const pendingCommissions = referrals
+        .filter(r => r.commissionStatus === 'pending')
+        .reduce((sum, r) => sum + Number(r.commissionAmount || 0), 0);
+      const paidCommissions = referrals
+        .filter(r => r.commissionStatus === 'paid')
+        .reduce((sum, r) => sum + Number(r.commissionAmount || 0), 0);
+      
+      res.json({
+        totalReferrals: referrals.length,
+        registered,
+        converted,
+        conversionRate: referrals.length > 0 ? Math.round((converted / referrals.length) * 100) : 0,
+        pendingCommissions,
+        paidCommissions,
+        totalEarnings: Number(affiliate.totalEarnings || 0),
+        referralCode: affiliate.referralCode,
+        payoutRate: affiliate.payoutRate,
+      });
+    } catch (error) {
+      console.error("Error fetching affiliate stats:", error);
+      res.status(500).json({ message: "Failed to fetch stats" });
+    }
+  });
+
+  // =====================================================
+  // ADMIN KANBAN ROUTES
+  // =====================================================
+
+  // Get clients grouped by return prep status for Kanban board
+  app.get("/api/admin/kanban", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const clients = await storage.getAllClients();
+      const allRefunds = await storage.getAllRefundTracking();
+      
+      const clientsWithStatus = clients.map(client => {
+        const refund = allRefunds.find(r => r.userId === client.id);
+        return {
+          id: client.id,
+          email: client.email,
+          firstName: client.firstName,
+          lastName: client.lastName,
+          returnPrepStatus: refund?.returnPrepStatus || 'not_started',
+          createdAt: client.createdAt,
+        };
+      });
+      
+      // Group by status
+      const statuses = [
+        'not_started', 'documents_gathering', 'information_review', 
+        'return_preparation', 'quality_review', 'client_review', 
+        'signature_required', 'filing', 'filed'
+      ];
+      
+      const columns: Record<string, any[]> = {};
+      statuses.forEach(status => {
+        columns[status] = clientsWithStatus.filter(c => c.returnPrepStatus === status);
+      });
+      
+      res.json({ columns, statuses });
+    } catch (error) {
+      console.error("Error fetching kanban data:", error);
+      res.status(500).json({ message: "Failed to fetch kanban data" });
+    }
+  });
+
+  // Update client status via drag and drop
+  app.patch("/api/admin/kanban/:userId", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { userId } = req.params;
+      const { returnPrepStatus } = req.body;
+      
+      if (!returnPrepStatus) {
+        return res.status(400).json({ message: "Return prep status is required" });
+      }
+      
+      const updated = await storage.upsertRefundTracking({
+        userId,
+        returnPrepStatus,
+      });
+      
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating kanban status:", error);
+      res.status(500).json({ message: "Failed to update status" });
     }
   });
 

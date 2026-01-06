@@ -8,6 +8,8 @@ import {
   questionnaireResponses,
   invoices,
   invoiceItems,
+  affiliates,
+  affiliateReferrals,
   type User,
   type UpsertUser,
   type Document,
@@ -26,6 +28,10 @@ import {
   type InsertInvoice,
   type InvoiceItem,
   type InsertInvoiceItem,
+  type Affiliate,
+  type InsertAffiliate,
+  type AffiliateReferral,
+  type InsertAffiliateReferral,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, ne } from "drizzle-orm";
@@ -89,6 +95,20 @@ export interface IStorage {
   getAllRefundTracking(): Promise<RefundTracking[]>;
   setUserAsAdmin(email: string): Promise<User | undefined>;
   replyToMessage(userId: string, content: string): Promise<Message>;
+
+  // Affiliate operations
+  getAffiliate(id: string): Promise<Affiliate | undefined>;
+  getAffiliateByEmail(email: string): Promise<Affiliate | undefined>;
+  getAffiliateByReferralCode(code: string): Promise<Affiliate | undefined>;
+  createAffiliate(data: InsertAffiliate): Promise<Affiliate>;
+  updateAffiliate(id: string, updates: Partial<Affiliate>): Promise<Affiliate | undefined>;
+  getAllAffiliates(): Promise<Affiliate[]>;
+
+  // Affiliate referral operations
+  getAffiliateReferrals(affiliateId: string): Promise<AffiliateReferral[]>;
+  createAffiliateReferral(data: InsertAffiliateReferral): Promise<AffiliateReferral>;
+  updateAffiliateReferral(id: string, updates: Partial<AffiliateReferral>): Promise<AffiliateReferral | undefined>;
+  getReferralByClientId(clientUserId: string): Promise<AffiliateReferral | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -405,6 +425,64 @@ export class DatabaseStorage implements IStorage {
       isFromClient: false,
       isRead: false,
     });
+  }
+
+  // Affiliate operations
+  async getAffiliate(id: string): Promise<Affiliate | undefined> {
+    const [affiliate] = await db.select().from(affiliates).where(eq(affiliates.id, id));
+    return affiliate;
+  }
+
+  async getAffiliateByEmail(email: string): Promise<Affiliate | undefined> {
+    const [affiliate] = await db.select().from(affiliates).where(eq(affiliates.email, email));
+    return affiliate;
+  }
+
+  async getAffiliateByReferralCode(code: string): Promise<Affiliate | undefined> {
+    const [affiliate] = await db.select().from(affiliates).where(eq(affiliates.referralCode, code));
+    return affiliate;
+  }
+
+  async createAffiliate(data: InsertAffiliate): Promise<Affiliate> {
+    const [affiliate] = await db.insert(affiliates).values(data).returning();
+    return affiliate;
+  }
+
+  async updateAffiliate(id: string, updates: Partial<Affiliate>): Promise<Affiliate | undefined> {
+    const [updated] = await db
+      .update(affiliates)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(affiliates.id, id))
+      .returning();
+    return updated;
+  }
+
+  async getAllAffiliates(): Promise<Affiliate[]> {
+    return db.select().from(affiliates).orderBy(desc(affiliates.createdAt));
+  }
+
+  // Affiliate referral operations
+  async getAffiliateReferrals(affiliateId: string): Promise<AffiliateReferral[]> {
+    return db.select().from(affiliateReferrals).where(eq(affiliateReferrals.affiliateId, affiliateId)).orderBy(desc(affiliateReferrals.createdAt));
+  }
+
+  async createAffiliateReferral(data: InsertAffiliateReferral): Promise<AffiliateReferral> {
+    const [referral] = await db.insert(affiliateReferrals).values(data).returning();
+    return referral;
+  }
+
+  async updateAffiliateReferral(id: string, updates: Partial<AffiliateReferral>): Promise<AffiliateReferral | undefined> {
+    const [updated] = await db
+      .update(affiliateReferrals)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(affiliateReferrals.id, id))
+      .returning();
+    return updated;
+  }
+
+  async getReferralByClientId(clientUserId: string): Promise<AffiliateReferral | undefined> {
+    const [referral] = await db.select().from(affiliateReferrals).where(eq(affiliateReferrals.clientUserId, clientUserId));
+    return referral;
   }
 }
 
