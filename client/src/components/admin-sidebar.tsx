@@ -24,6 +24,7 @@ import {
   LogOut,
   Shield,
   ListChecks,
+  Kanban,
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
@@ -34,6 +35,7 @@ interface AdminSidebarProps {
 const adminMenuItems = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard, testId: "link-admin-dashboard" },
   { title: "Clients", url: "/admin/clients", icon: Users, testId: "link-admin-clients" },
+  { title: "Kanban Board", url: "/admin/kanban", icon: Kanban, testId: "link-admin-kanban" },
   { title: "Documents", url: "/admin/documents", icon: FileText, testId: "link-admin-documents" },
   { title: "Messages", url: "/admin/messages", icon: MessageSquare, testId: "link-admin-messages" },
   { title: "Invoices", url: "/admin/invoices", icon: DollarSign, testId: "link-admin-invoices" },

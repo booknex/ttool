@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, useLocation } from "wouter";
+import { useState, useEffect } from "react";
+import { Link, useLocation, useSearch } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,14 +11,24 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 
 export default function Register() {
   const [, setLocation] = useLocation();
+  const search = useSearch();
   const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [referralCode, setReferralCode] = useState("");
+
+  useEffect(() => {
+    const params = new URLSearchParams(search);
+    const ref = params.get("ref");
+    if (ref) {
+      setReferralCode(ref);
+    }
+  }, [search]);
 
   const registerMutation = useMutation({
-    mutationFn: async (data: { email: string; password: string; firstName: string; lastName: string }) => {
+    mutationFn: async (data: { email: string; password: string; firstName: string; lastName: string; referralCode?: string }) => {
       const response = await apiRequest("POST", "/api/auth/register", data);
       return response.json();
     },
@@ -37,7 +47,13 @@ export default function Register() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    registerMutation.mutate({ email, password, firstName, lastName });
+    registerMutation.mutate({ 
+      email, 
+      password, 
+      firstName, 
+      lastName,
+      ...(referralCode && { referralCode })
+    });
   };
 
   return (

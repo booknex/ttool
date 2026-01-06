@@ -92,10 +92,27 @@ Core data entities:
 - **Replit Plugins**: cartographer, dev-banner, runtime-error-modal for Replit integration
 - **esbuild**: Production server bundling with dependency allowlist optimization
 
-## Recent Changes (December 2024)
+## Recent Changes (January 2026)
+
+### Affiliate Portal (NEW)
+- **Separate Authentication**: Affiliates have their own login/register system at `/affiliate/*`
+- **Referral Code System**: Each affiliate gets a unique referral code (e.g., REF-ABC123)
+- **Client Attribution**: When clients register with a referral code, they're linked to the affiliate
+- **Dashboard Features**:
+  - View referral code and copy shareable link
+  - Track total referrals, conversions, and conversion rate
+  - Monitor pending and paid commissions
+  - See recent referral activity with status badges
+- **Database Tables**: affiliates, affiliate_sessions, affiliate_referrals
+
+### Admin Kanban Board (NEW)
+- **Visual Workflow Management**: Drag-and-drop client cards between status columns
+- **Status Columns**: Not Started, Gathering Docs, Info Review, Prep, QA Review, Client Review, Signatures, Filing, Filed
+- **Real-time Updates**: Uses dnd-kit for smooth drag-and-drop with optimistic updates
+- **Access**: Admin sidebar has "Kanban Board" link at `/admin/kanban`
 
 ### Completed Features
-- **Full Schema Implementation**: Complete PostgreSQL schema with 9 tables (users, sessions, documents, required_documents, signatures, refund_tracking, messages, questionnaire_responses, invoices, invoice_items)
+- **Full Schema Implementation**: Complete PostgreSQL schema with 12 tables (users, sessions, documents, required_documents, signatures, refund_tracking, messages, questionnaire_responses, invoices, invoice_items, affiliates, affiliate_referrals)
 - **Authentication**: Custom username/password authentication with bcrypt, session management, login/register pages
 - **Landing Page**: Professional landing page with feature highlights and CTA buttons
 - **Return Status (Home)**: The default landing page showing tax return preparation status
@@ -116,6 +133,7 @@ Core data entities:
   - Dashboard: Overview stats (total clients, documents, messages, revenue)
   - Clients: View all registered clients with their stats, click to open detail page
   - Client Detail: View/edit client info, see documents/messages/signatures/invoices tabs
+  - Kanban Board: Visual drag-and-drop workflow management
   - Documents: Review and update document status for all clients
   - Messages: Respond to client messages with real replies
   - Invoices: Create and manage invoices for clients

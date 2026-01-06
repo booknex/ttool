@@ -209,9 +209,14 @@ export default function Landing() {
             <Shield className="w-5 h-5 text-primary" />
             <span className="font-medium">TaxPortal</span>
           </div>
-          <p className="text-sm text-muted-foreground">
-            Your information is encrypted and protected with bank-level security.
-          </p>
+          <div className="flex items-center gap-6">
+            <a href="/affiliate/login" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              Affiliate Portal
+            </a>
+            <p className="text-sm text-muted-foreground">
+              Your information is encrypted and protected with bank-level security.
+            </p>
+          </div>
         </div>
       </footer>
     </div>

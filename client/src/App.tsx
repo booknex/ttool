@@ -30,6 +30,10 @@ import AdminRefunds from "@/pages/admin/refunds";
 import AdminSignatures from "@/pages/admin/signatures";
 import AdminClientDetail from "@/pages/admin/client-detail";
 import AdminReturnStatuses from "@/pages/admin/return-statuses";
+import AdminKanban from "@/pages/admin/kanban";
+import AffiliateLogin from "@/pages/affiliate/login";
+import AffiliateRegister from "@/pages/affiliate/register";
+import AffiliateDashboard from "@/pages/affiliate/dashboard";
 import { BooknexMascot } from "@/components/booknex-mascot";
 import { Button } from "@/components/ui/button";
 import { MessageSquare } from "lucide-react";
@@ -115,6 +119,9 @@ function Router() {
         <Route path="/" component={Landing} />
         <Route path="/login" component={Login} />
         <Route path="/register" component={Register} />
+        <Route path="/affiliate" component={AffiliateDashboard} />
+        <Route path="/affiliate/login" component={AffiliateLogin} />
+        <Route path="/affiliate/register" component={AffiliateRegister} />
         <Route component={Landing} />
       </Switch>
     );
@@ -134,6 +141,7 @@ function Router() {
           <Route path="/admin/return-statuses" component={AdminReturnStatuses} />
           <Route path="/admin/refunds" component={AdminRefunds} />
           <Route path="/admin/signatures" component={AdminSignatures} />
+          <Route path="/admin/kanban" component={AdminKanban} />
           <Route component={NotFound} />
         </Switch>
       </AdminLayout>
