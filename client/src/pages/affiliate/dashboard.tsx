@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -5,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import {
@@ -101,6 +103,7 @@ export default function AffiliateDashboard() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [showAchievements, setShowAchievements] = useState(false);
 
   const { data: affiliate, isLoading: affiliateLoading } = useQuery<Affiliate>({
     queryKey: ["/api/affiliate/auth/user"],
@@ -224,7 +227,10 @@ export default function AffiliateDashboard() {
 
       <main className="max-w-6xl mx-auto p-6 space-y-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <Card className={`border-2 ${tierInfo.current.color.replace('bg-', 'border-')} col-span-1`}>
+          <Card 
+            className={`border-2 ${tierInfo.current.color.replace('bg-', 'border-')} col-span-1 cursor-pointer hover:shadow-lg transition-shadow`}
+            onClick={() => setShowAchievements(true)}
+          >
             <CardContent className="p-6">
               <div className="flex items-center gap-4 mb-4">
                 <div className={`w-16 h-16 rounded-full ${tierInfo.current.color} flex items-center justify-center`}>
@@ -250,6 +256,7 @@ export default function AffiliateDashboard() {
               {!tierInfo.next && (
                 <p className="text-sm text-gray-500">You've reached the highest tier!</p>
               )}
+              <p className="text-xs text-center text-gray-400 mt-3">Tap to view achievements</p>
             </CardContent>
           </Card>
 
@@ -514,6 +521,66 @@ export default function AffiliateDashboard() {
           </Card>
         </div>
       </main>
+
+      <Dialog open={showAchievements} onOpenChange={setShowAchievements}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Award className="h-5 w-5 text-amber-500" />
+              Your Achievements
+            </DialogTitle>
+            <DialogDescription>
+              {earnedBadges.length} of {BADGES.length} badges unlocked
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <h4 className="text-sm font-medium mb-2 text-green-700">Unlocked</h4>
+              {earnedBadges.length > 0 ? (
+                <div className="grid grid-cols-2 gap-2">
+                  {earnedBadges.map((badge) => (
+                    <div
+                      key={badge.id}
+                      className="flex items-center gap-2 p-2 rounded-lg bg-gradient-to-br from-amber-50 to-yellow-100 border border-amber-200"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center flex-shrink-0">
+                        <badge.icon className="h-4 w-4 text-white" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold truncate">{badge.name}</p>
+                        <p className="text-[10px] text-gray-500 truncate">{badge.description}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500">No badges unlocked yet. Keep referring!</p>
+              )}
+            </div>
+            {lockedBadges.length > 0 && (
+              <div>
+                <h4 className="text-sm font-medium mb-2 text-gray-500">Locked</h4>
+                <div className="grid grid-cols-2 gap-2">
+                  {lockedBadges.map((badge) => (
+                    <div
+                      key={badge.id}
+                      className="flex items-center gap-2 p-2 rounded-lg bg-gray-50 border border-gray-200 opacity-60"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center flex-shrink-0">
+                        <badge.icon className="h-4 w-4 text-gray-500" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold text-gray-500 truncate">{badge.name}</p>
+                        <p className="text-[10px] text-gray-400 truncate">{badge.description}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
