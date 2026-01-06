@@ -339,7 +339,7 @@ export default function Questionnaire() {
   };
 
   const handleCheckboxChange = (option: string, checked: boolean) => {
-    const current = tempAnswer || [];
+    const current = Array.isArray(tempAnswer) ? tempAnswer : [];
     const updated = checked
       ? [...current, option]
       : current.filter((o: string) => o !== option);
@@ -352,7 +352,8 @@ export default function Questionnaire() {
   };
 
   const handleEditCheckboxChange = (questionId: string, option: string, checked: boolean) => {
-    const current = editingAnswers[questionId] || [];
+    const existing = editingAnswers[questionId];
+    const current = Array.isArray(existing) ? existing : [];
     const updated = checked
       ? [...current, option]
       : current.filter((o: string) => o !== option);
@@ -665,7 +666,7 @@ export default function Questionnaire() {
               {currentQuestion.type === "checkbox" && currentQuestion.options && (
                 <div className="grid gap-2 max-h-64 overflow-y-auto">
                   {currentQuestion.options.map((opt) => {
-                    const isChecked = (tempAnswer || []).includes(opt);
+                    const isChecked = Array.isArray(tempAnswer) && tempAnswer.includes(opt);
                     return (
                       <label
                         key={opt}
