@@ -1226,6 +1226,53 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
     }
   });
 
+  // Get affiliate leaderboard (top performers) - privacy-focused
+  app.get("/api/affiliate/leaderboard", isAffiliateAuthenticated, resolveAffiliate, async (req: any, res) => {
+    try {
+      const allAffiliates = await storage.getAllAffiliates();
+      const currentAffiliateId = req.affiliate.id;
+      
+      // Sort by total referrals (conversions as tiebreaker)
+      const ranked = allAffiliates
+        .filter(a => a.status === 'active')
+        .map(a => ({
+          id: a.id,
+          totalReferrals: a.totalReferrals || 0,
+        }))
+        .sort((a, b) => b.totalReferrals - a.totalReferrals);
+      
+      // Find current user's rank
+      const currentRank = ranked.findIndex(a => a.id === currentAffiliateId) + 1;
+      const currentUser = ranked.find(a => a.id === currentAffiliateId);
+      
+      // Only show anonymized position data (no names, just ranks and referral counts)
+      // Top 5 entries shown with generic labels
+      const leaderboard = ranked.slice(0, 5).map((a, idx) => ({
+        rank: idx + 1,
+        referrals: a.totalReferrals,
+        isCurrentUser: a.id === currentAffiliateId,
+      }));
+      
+      // Add current user's entry if not in top 5
+      const isInTop5 = currentRank > 0 && currentRank <= 5;
+      const currentUserEntry = currentUser ? {
+        rank: currentRank,
+        referrals: currentUser.totalReferrals,
+        isCurrentUser: true,
+      } : null;
+      
+      res.json({
+        leaderboard,
+        currentRank,
+        currentUserEntry: isInTop5 ? null : currentUserEntry,
+        totalAffiliates: ranked.length,
+      });
+    } catch (error) {
+      console.error("Error fetching leaderboard:", error);
+      res.status(500).json({ message: "Failed to fetch leaderboard" });
+    }
+  });
+
   // =====================================================
   // ADMIN KANBAN ROUTES
   // =====================================================

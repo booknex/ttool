@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import {
@@ -16,6 +17,14 @@ import {
   CheckCircle,
   Clock,
   Share2,
+  Trophy,
+  Star,
+  Flame,
+  Target,
+  Award,
+  Crown,
+  Zap,
+  Medal,
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -49,6 +58,45 @@ interface Affiliate {
   referralCode: string;
 }
 
+interface LeaderboardEntry {
+  rank: number;
+  referrals: number;
+  isCurrentUser: boolean;
+}
+
+interface LeaderboardData {
+  leaderboard: LeaderboardEntry[];
+  currentRank: number;
+  currentUserEntry: LeaderboardEntry | null;
+  totalAffiliates: number;
+}
+
+const TIERS = [
+  { name: "Bronze", minReferrals: 0, color: "bg-amber-600", icon: Medal, nextAt: 5 },
+  { name: "Silver", minReferrals: 5, color: "bg-gray-400", icon: Star, nextAt: 15 },
+  { name: "Gold", minReferrals: 15, color: "bg-yellow-500", icon: Trophy, nextAt: 30 },
+  { name: "Platinum", minReferrals: 30, color: "bg-indigo-500", icon: Crown, nextAt: 50 },
+  { name: "Diamond", minReferrals: 50, color: "bg-cyan-400", icon: Zap, nextAt: null },
+];
+
+const BADGES = [
+  { id: "first_referral", name: "First Steps", description: "Get your first referral", icon: UserPlus, requirement: (s: AffiliateStats) => s.totalReferrals >= 1 },
+  { id: "five_referrals", name: "Getting Traction", description: "Refer 5 clients", icon: Users, requirement: (s: AffiliateStats) => s.totalReferrals >= 5 },
+  { id: "first_conversion", name: "Closer", description: "Get your first conversion", icon: Target, requirement: (s: AffiliateStats) => s.converted >= 1 },
+  { id: "five_conversions", name: "Momentum", description: "Convert 5 clients", icon: Flame, requirement: (s: AffiliateStats) => s.converted >= 5 },
+  { id: "hundred_earned", name: "Benjamin", description: "Earn $100 in commissions", icon: DollarSign, requirement: (s: AffiliateStats) => s.totalEarnings >= 100 },
+  { id: "high_converter", name: "Sharp Shooter", description: "Achieve 50%+ conversion rate", icon: TrendingUp, requirement: (s: AffiliateStats) => s.conversionRate >= 50 && s.totalReferrals >= 3 },
+];
+
+function getTier(referrals: number) {
+  for (let i = TIERS.length - 1; i >= 0; i--) {
+    if (referrals >= TIERS[i].minReferrals) {
+      return { current: TIERS[i], next: TIERS[i + 1] || null, index: i };
+    }
+  }
+  return { current: TIERS[0], next: TIERS[1], index: 0 };
+}
+
 export default function AffiliateDashboard() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -65,6 +113,11 @@ export default function AffiliateDashboard() {
 
   const { data: referrals, isLoading: referralsLoading } = useQuery<Referral[]>({
     queryKey: ["/api/affiliate/referrals"],
+    enabled: !!affiliate,
+  });
+
+  const { data: leaderboardData } = useQuery<LeaderboardData>({
+    queryKey: ["/api/affiliate/leaderboard"],
     enabled: !!affiliate,
   });
 
@@ -135,6 +188,14 @@ export default function AffiliateDashboard() {
     }
   };
 
+  const tierInfo = getTier(stats?.totalReferrals || 0);
+  const progressToNext = tierInfo.next
+    ? ((stats?.totalReferrals || 0) - tierInfo.current.minReferrals) / (tierInfo.next.minReferrals - tierInfo.current.minReferrals) * 100
+    : 100;
+
+  const earnedBadges = stats ? BADGES.filter(b => b.requirement(stats)) : [];
+  const lockedBadges = stats ? BADGES.filter(b => !b.requirement(stats)) : BADGES;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <header className="bg-white border-b shadow-sm">
@@ -162,24 +223,93 @@ export default function AffiliateDashboard() {
       </header>
 
       <main className="max-w-6xl mx-auto p-6 space-y-6">
-        <Card className="border-indigo-200 bg-gradient-to-r from-indigo-50 to-purple-50">
-          <CardContent className="p-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div>
-                <h2 className="text-lg font-semibold mb-1">Your Referral Code</h2>
-                <div className="flex items-center gap-2">
-                  <code className="text-2xl font-bold text-indigo-600 bg-white px-4 py-2 rounded-lg border">
-                    {stats?.referralCode || "Loading..."}
-                  </code>
-                  <Button size="icon" variant="outline" onClick={copyReferralCode}>
-                    <Copy className="h-4 w-4" />
-                  </Button>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <Card className={`border-2 ${tierInfo.current.color.replace('bg-', 'border-')} col-span-1`}>
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4 mb-4">
+                <div className={`w-16 h-16 rounded-full ${tierInfo.current.color} flex items-center justify-center`}>
+                  <tierInfo.current.icon className="h-8 w-8 text-white" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Current Tier</p>
+                  <h2 className="text-2xl font-bold">{tierInfo.current.name}</h2>
                 </div>
               </div>
-              <Button onClick={copyReferralLink} className="gap-2">
-                <Share2 className="h-4 w-4" />
-                Copy Referral Link
-              </Button>
+              {tierInfo.next && (
+                <div>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span className="text-gray-500">Progress to {tierInfo.next.name}</span>
+                    <span className="font-medium">{stats?.totalReferrals || 0}/{tierInfo.next.minReferrals}</span>
+                  </div>
+                  <Progress value={progressToNext} className="h-2" />
+                  <p className="text-xs text-gray-500 mt-1">
+                    {tierInfo.next.minReferrals - (stats?.totalReferrals || 0)} more referrals to unlock
+                  </p>
+                </div>
+              )}
+              {!tierInfo.next && (
+                <p className="text-sm text-gray-500">You've reached the highest tier!</p>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="border-indigo-200 bg-gradient-to-r from-indigo-50 to-purple-50 col-span-1 lg:col-span-2">
+            <CardContent className="p-6">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-lg font-semibold mb-1">Your Referral Code</h2>
+                  <div className="flex items-center gap-2">
+                    <code className="text-2xl font-bold text-indigo-600 bg-white px-4 py-2 rounded-lg border">
+                      {stats?.referralCode || "Loading..."}
+                    </code>
+                    <Button size="icon" variant="outline" onClick={copyReferralCode}>
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                <Button onClick={copyReferralLink} className="gap-2">
+                  <Share2 className="h-4 w-4" />
+                  Copy Referral Link
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2">
+              <Award className="h-5 w-5 text-amber-500" />
+              Achievements
+            </CardTitle>
+            <CardDescription>Unlock badges by reaching milestones</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+              {earnedBadges.map((badge) => (
+                <div
+                  key={badge.id}
+                  className="flex flex-col items-center p-3 rounded-lg bg-gradient-to-br from-amber-50 to-yellow-100 border border-amber-200"
+                >
+                  <div className="w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center mb-2">
+                    <badge.icon className="h-5 w-5 text-white" />
+                  </div>
+                  <p className="text-xs font-semibold text-center">{badge.name}</p>
+                  <p className="text-[10px] text-gray-500 text-center">{badge.description}</p>
+                </div>
+              ))}
+              {lockedBadges.map((badge) => (
+                <div
+                  key={badge.id}
+                  className="flex flex-col items-center p-3 rounded-lg bg-gray-50 border border-gray-200 opacity-50"
+                >
+                  <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center mb-2">
+                    <badge.icon className="h-5 w-5 text-gray-500" />
+                  </div>
+                  <p className="text-xs font-semibold text-center text-gray-500">{badge.name}</p>
+                  <p className="text-[10px] text-gray-400 text-center">{badge.description}</p>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
@@ -255,7 +385,67 @@ export default function AffiliateDashboard() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <Card className="lg:col-span-1">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2">
+                <Trophy className="h-5 w-5 text-yellow-500" />
+                Leaderboard
+              </CardTitle>
+              <CardDescription>
+                {leaderboardData?.currentRank
+                  ? `You're #${leaderboardData.currentRank} of ${leaderboardData.totalAffiliates}`
+                  : "Top performers this month"}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {leaderboardData?.leaderboard.map((entry) => (
+                <div
+                  key={entry.rank}
+                  className={`flex items-center justify-between p-2 rounded-lg ${
+                    entry.isCurrentUser ? "bg-indigo-50 border border-indigo-200" : "bg-gray-50"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                      entry.rank === 1 ? "bg-yellow-400 text-white" :
+                      entry.rank === 2 ? "bg-gray-300 text-gray-700" :
+                      entry.rank === 3 ? "bg-amber-600 text-white" :
+                      "bg-gray-200 text-gray-600"
+                    }`}>
+                      {entry.rank}
+                    </span>
+                    <span className={`text-sm ${entry.isCurrentUser ? "font-bold text-indigo-600" : "text-gray-600"}`}>
+                      {entry.isCurrentUser ? "You" : `#${entry.rank} Affiliate`}
+                    </span>
+                  </div>
+                  <span className="text-sm font-medium">{entry.referrals} refs</span>
+                </div>
+              ))}
+              {leaderboardData?.currentUserEntry && (
+                <>
+                  <div className="text-center text-xs text-gray-400 py-1">• • •</div>
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-indigo-50 border border-indigo-200">
+                    <div className="flex items-center gap-2">
+                      <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold bg-indigo-500 text-white">
+                        {leaderboardData.currentUserEntry.rank}
+                      </span>
+                      <span className="text-sm font-bold text-indigo-600">You</span>
+                    </div>
+                    <span className="text-sm font-medium">{leaderboardData.currentUserEntry.referrals} refs</span>
+                  </div>
+                </>
+              )}
+              {!leaderboardData && (
+                <div className="space-y-2">
+                  {[...Array(5)].map((_, i) => (
+                    <Skeleton key={i} className="h-10" />
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Clock className="h-5 w-5" />
@@ -282,7 +472,7 @@ export default function AffiliateDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="lg:col-span-2">
+          <Card>
             <CardHeader>
               <CardTitle>Recent Referrals</CardTitle>
               <CardDescription>Track the status of your referrals</CardDescription>
@@ -291,39 +481,33 @@ export default function AffiliateDashboard() {
               {referralsLoading ? (
                 <div className="space-y-3">
                   {[...Array(3)].map((_, i) => (
-                    <Skeleton key={i} className="h-16" />
+                    <Skeleton key={i} className="h-14" />
                   ))}
                 </div>
               ) : referrals && referrals.length > 0 ? (
-                <div className="space-y-3">
-                  {referrals.slice(0, 5).map((referral) => (
+                <div className="space-y-2">
+                  {referrals.slice(0, 4).map((referral) => (
                     <div
                       key={referral.id}
-                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                      className="flex items-center justify-between p-2 bg-gray-50 rounded-lg"
                     >
-                      <div>
-                        <p className="font-medium">{referral.leadName || referral.leadEmail}</p>
-                        <p className="text-sm text-gray-500">
-                          {format(new Date(referral.createdAt), "MMM d, yyyy")}
+                      <div className="min-w-0">
+                        <p className="font-medium text-sm truncate">{referral.leadName || referral.leadEmail}</p>
+                        <p className="text-xs text-gray-500">
+                          {format(new Date(referral.createdAt), "MMM d")}
                         </p>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1">
                         {getStatusBadge(referral.status)}
-                        {referral.commissionAmount && (
-                          <span className="text-sm font-medium text-green-600">
-                            ${Number(referral.commissionAmount).toFixed(2)}
-                          </span>
-                        )}
-                        {getCommissionBadge(referral.commissionStatus)}
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <UserPlus className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p>No referrals yet</p>
-                  <p className="text-sm">Share your referral code to start earning!</p>
+                <div className="text-center py-6 text-gray-500">
+                  <UserPlus className="h-10 w-10 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">No referrals yet</p>
+                  <p className="text-xs">Share your code to start earning!</p>
                 </div>
               )}
             </CardContent>
