@@ -44,6 +44,18 @@ export const messageTypeEnum = pgEnum('message_type', [
   'text', 'file', 'system'
 ]);
 
+export const affiliateStatusEnum = pgEnum('affiliate_status', [
+  'pending', 'active', 'suspended', 'inactive'
+]);
+
+export const referralStatusEnum = pgEnum('referral_status', [
+  'lead', 'registered', 'engaged', 'converted', 'rejected'
+]);
+
+export const commissionStatusEnum = pgEnum('commission_status', [
+  'pending', 'approved', 'paid', 'cancelled'
+]);
+
 // Session storage table - required for Replit Auth
 export const sessions = pgTable(
   "sessions",
@@ -67,6 +79,8 @@ export const users = pgTable("users", {
   isAdmin: boolean("is_admin").default(false),
   hasSeenOnboarding: boolean("has_seen_onboarding").default(false),
   hasCompletedQuestionnaire: boolean("has_completed_questionnaire").default(false),
+  referredByAffiliateId: varchar("referred_by_affiliate_id"),
+  referralCode: varchar("referral_code"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -176,6 +190,52 @@ export const invoiceItems = pgTable("invoice_items", {
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
 });
 
+// Affiliates table
+export const affiliates = pgTable("affiliates", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  email: varchar("email").unique().notNull(),
+  passwordHash: varchar("password_hash").notNull(),
+  firstName: varchar("first_name"),
+  lastName: varchar("last_name"),
+  companyName: varchar("company_name"),
+  phone: varchar("phone"),
+  referralCode: varchar("referral_code").unique().notNull(),
+  payoutRate: decimal("payout_rate", { precision: 5, scale: 2 }).default('10.00'),
+  status: affiliateStatusEnum("status").default('pending'),
+  totalReferrals: integer("total_referrals").default(0),
+  totalConversions: integer("total_conversions").default(0),
+  totalEarnings: decimal("total_earnings", { precision: 10, scale: 2 }).default('0'),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Affiliate sessions table
+export const affiliateSessions = pgTable(
+  "affiliate_sessions",
+  {
+    sid: varchar("sid").primaryKey(),
+    sess: jsonb("sess").notNull(),
+    expire: timestamp("expire").notNull(),
+  },
+  (table) => [index("IDX_affiliate_session_expire").on(table.expire)],
+);
+
+// Affiliate referrals table
+export const affiliateReferrals = pgTable("affiliate_referrals", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  affiliateId: varchar("affiliate_id").notNull().references(() => affiliates.id),
+  clientUserId: varchar("client_user_id").references(() => users.id),
+  referralCode: varchar("referral_code").notNull(),
+  leadEmail: varchar("lead_email"),
+  leadName: varchar("lead_name"),
+  status: referralStatusEnum("status").default('lead'),
+  commissionAmount: decimal("commission_amount", { precision: 10, scale: 2 }),
+  commissionStatus: commissionStatusEnum("commission_status").default('pending'),
+  convertedAt: timestamp("converted_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({ createdAt: true, updatedAt: true });
 export const insertDocumentSchema = createInsertSchema(documents).omit({ uploadedAt: true });
@@ -186,6 +246,8 @@ export const insertMessageSchema = createInsertSchema(messages).omit({ createdAt
 export const insertQuestionnaireResponseSchema = createInsertSchema(questionnaireResponses).omit({ updatedAt: true });
 export const insertInvoiceSchema = createInsertSchema(invoices).omit({ createdAt: true });
 export const insertInvoiceItemSchema = createInsertSchema(invoiceItems);
+export const insertAffiliateSchema = createInsertSchema(affiliates).omit({ createdAt: true, updatedAt: true });
+export const insertAffiliateReferralSchema = createInsertSchema(affiliateReferrals).omit({ createdAt: true, updatedAt: true });
 
 // Types
 export type UpsertUser = typeof users.$inferInsert;
@@ -206,3 +268,7 @@ export type Invoice = typeof invoices.$inferSelect;
 export type InsertInvoice = z.infer<typeof insertInvoiceSchema>;
 export type InvoiceItem = typeof invoiceItems.$inferSelect;
 export type InsertInvoiceItem = z.infer<typeof insertInvoiceItemSchema>;
+export type Affiliate = typeof affiliates.$inferSelect;
+export type InsertAffiliate = z.infer<typeof insertAffiliateSchema>;
+export type AffiliateReferral = typeof affiliateReferrals.$inferSelect;
+export type InsertAffiliateReferral = z.infer<typeof insertAffiliateReferralSchema>;
