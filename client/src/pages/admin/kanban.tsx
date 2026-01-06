@@ -65,17 +65,16 @@ function ClientCard({ client, isDragging }: { client: Client; isDragging?: boole
   
   return (
     <div
-      className={`bg-white rounded-lg border shadow-sm p-3 ${
+      className={`bg-white rounded border shadow-sm px-2 py-1.5 ${
         isDragging ? "shadow-lg ring-2 ring-primary" : ""
       }`}
     >
-      <div className="flex items-center gap-2">
-        <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
-          <User className="h-4 w-4 text-gray-500" />
+      <div className="flex items-center gap-1.5">
+        <div className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
+          <User className="h-3 w-3 text-gray-500" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="font-medium text-sm truncate">{name}</p>
-          <p className="text-xs text-gray-500 truncate">{client.email}</p>
+          <p className="font-medium text-xs truncate">{name}</p>
         </div>
       </div>
     </div>
@@ -100,8 +99,8 @@ function SortableClientCard({ client }: { client: Client }) {
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing">
-      <div className="flex items-center gap-1">
-        <GripVertical className="h-4 w-4 text-gray-400 flex-shrink-0" />
+      <div className="flex items-center gap-0.5">
+        <GripVertical className="h-3 w-3 text-gray-400 flex-shrink-0" />
         <div className="flex-1">
           <ClientCard client={client} isDragging={isDragging} />
         </div>
@@ -118,14 +117,14 @@ function KanbanColumn({
   clients: Client[];
 }) {
   return (
-    <div className={`flex flex-col rounded-lg border-2 ${statusColors[status]} min-w-[200px] w-[200px]`}>
-      <div className="p-3 border-b bg-white/50">
-        <h3 className="font-semibold text-sm">{statusLabels[status]}</h3>
-        <span className="text-xs text-gray-500">{clients.length} clients</span>
+    <div className={`flex flex-col rounded-lg border-2 ${statusColors[status]} min-w-[160px] w-[160px]`}>
+      <div className="px-2 py-1.5 border-b bg-white/50">
+        <h3 className="font-semibold text-xs">{statusLabels[status]}</h3>
+        <span className="text-[10px] text-gray-500">{clients.length}</span>
       </div>
-      <div className="p-2 flex-1 overflow-y-auto min-h-[200px] max-h-[calc(100vh-280px)]">
+      <div className="p-1.5 flex-1 overflow-y-auto min-h-[200px] max-h-[calc(100vh-240px)]">
         <SortableContext items={clients.map(c => c.id)} strategy={verticalListSortingStrategy}>
-          <div className="space-y-2">
+          <div className="space-y-1">
             {clients.map((client) => (
               <SortableClientCard key={client.id} client={client} />
             ))}
@@ -268,7 +267,7 @@ export default function AdminKanban() {
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex gap-4 overflow-x-auto pb-4">
+        <div className="flex gap-2 overflow-x-auto pb-4">
           {data.statuses.map((status) => (
             <KanbanColumn
               key={status}
