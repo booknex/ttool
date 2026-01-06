@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Link } from "wouter";
 import {
   Shield,
   FileText,
@@ -59,9 +60,11 @@ export default function Landing() {
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-sm border-b">
         <div className="max-w-7xl mx-auto px-4 md:px-8 h-16 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-primary text-primary-foreground">
-              <Shield className="w-5 h-5" />
-            </div>
+            <Link href="/affiliate/login">
+              <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-primary text-primary-foreground cursor-pointer hover:opacity-80 transition-opacity">
+                <Shield className="w-5 h-5" />
+              </div>
+            </Link>
             <span className="font-semibold text-lg">TaxPortal</span>
           </div>
           <Button asChild data-testid="button-header-login">
