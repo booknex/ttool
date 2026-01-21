@@ -54,6 +54,7 @@ export default function AdminClientDetail() {
     onSuccess: () => {
       toast({ title: "Now viewing as client", description: "You are now logged in as this client" });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/impersonation-status"] });
       setLocation("/");
     },
     onError: (error: any) => {

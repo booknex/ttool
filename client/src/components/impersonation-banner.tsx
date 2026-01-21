@@ -1,14 +1,17 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest, queryClient, getQueryFn } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import { ArrowLeft, User } from "lucide-react";
 
 export function ImpersonationBanner() {
   const [, setLocation] = useLocation();
   
-  const { data: status } = useQuery<{ isImpersonating: boolean; adminEmail?: string }>({
+  const { data: status } = useQuery<{ isImpersonating: boolean; adminEmail?: string } | null>({
     queryKey: ["/api/admin/impersonation-status"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
+    staleTime: 0,
+    refetchOnMount: "always",
     refetchInterval: 30000,
   });
 
