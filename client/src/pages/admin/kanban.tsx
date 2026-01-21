@@ -11,7 +11,8 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
-  closestCenter,
+  useDroppable,
+  rectIntersection,
 } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -116,18 +117,30 @@ function KanbanColumn({
   status: string;
   clients: Client[];
 }) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: status,
+  });
+
   return (
-    <div className={`flex flex-col rounded-lg border-2 ${statusColors[status]} min-w-[160px] w-[160px]`}>
+    <div className={`flex flex-col rounded-lg border-2 ${statusColors[status]} min-w-[160px] w-[160px] ${isOver ? 'ring-2 ring-primary ring-offset-2' : ''}`}>
       <div className="px-2 py-1.5 border-b bg-white/50">
         <h3 className="font-semibold text-xs">{statusLabels[status]}</h3>
         <span className="text-[10px] text-gray-500">{clients.length}</span>
       </div>
-      <div className="p-1.5 flex-1 overflow-y-auto min-h-[200px] max-h-[calc(100vh-240px)]">
+      <div 
+        ref={setNodeRef}
+        className={`p-1.5 flex-1 overflow-y-auto min-h-[200px] max-h-[calc(100vh-240px)] ${isOver ? 'bg-primary/5' : ''}`}
+      >
         <SortableContext items={clients.map(c => c.id)} strategy={verticalListSortingStrategy}>
           <div className="space-y-1">
             {clients.map((client) => (
               <SortableClientCard key={client.id} client={client} />
             ))}
+            {clients.length === 0 && (
+              <div className="h-16 flex items-center justify-center text-xs text-gray-400 border-2 border-dashed border-gray-200 rounded">
+                Drop here
+              </div>
+            )}
           </div>
         </SortableContext>
       </div>
@@ -182,52 +195,44 @@ export default function AdminKanban() {
 
     if (!over || !data) return;
 
-    const activeClient = active.data.current?.client as Client;
-    if (!activeClient) return;
+    const draggedClient = active.data.current?.client as Client;
+    if (!draggedClient) return;
 
     let targetStatus: string | null = null;
-    for (const [status, clients] of Object.entries(data.columns)) {
-      const isInColumn = clients.some(c => c.id === over.id);
-      if (isInColumn || over.id === status) {
-        targetStatus = status;
-        break;
-      }
-    }
+    const overId = over.id.toString();
 
-    for (const [status, clients] of Object.entries(data.columns)) {
-      if (clients.some(c => c.id === over.id)) {
-        targetStatus = status;
-        break;
-      }
-    }
-
-    if (!targetStatus) {
-      for (const status of data.statuses) {
-        if (over.id.toString().includes(status)) {
+    // Check if dropped directly on a column (by column status id)
+    if (data.statuses.includes(overId)) {
+      targetStatus = overId;
+    } else {
+      // Check if dropped on a client card - find which column that client is in
+      for (const [status, clients] of Object.entries(data.columns)) {
+        if (clients.some(c => c.id === overId)) {
           targetStatus = status;
           break;
         }
       }
     }
 
-    if (targetStatus && targetStatus !== activeClient.returnPrepStatus) {
+    if (targetStatus && targetStatus !== draggedClient.returnPrepStatus) {
+      // Optimistic update
       queryClient.setQueryData(["/api/admin/kanban"], (old: KanbanData | undefined) => {
         if (!old) return old;
         
-        const newColumns = { ...old.columns };
-        newColumns[activeClient.returnPrepStatus] = newColumns[activeClient.returnPrepStatus].filter(
-          c => c.id !== activeClient.id
-        );
+        const newColumns: Record<string, Client[]> = {};
+        for (const status of old.statuses) {
+          newColumns[status] = old.columns[status]?.filter(c => c.id !== draggedClient.id) || [];
+        }
         newColumns[targetStatus] = [
           ...newColumns[targetStatus],
-          { ...activeClient, returnPrepStatus: targetStatus },
+          { ...draggedClient, returnPrepStatus: targetStatus },
         ];
         
         return { ...old, columns: newColumns };
       });
 
       updateStatusMutation.mutate({
-        userId: activeClient.id,
+        userId: draggedClient.id,
         returnPrepStatus: targetStatus,
       });
     }
@@ -263,7 +268,7 @@ export default function AdminKanban() {
 
       <DndContext
         sensors={sensors}
-        collisionDetection={closestCenter}
+        collisionDetection={rectIntersection}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
