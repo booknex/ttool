@@ -144,6 +144,11 @@ Core data entities:
   - Invoices: Create and manage invoices for clients
   - Refunds: Update refund status for clients
   - Signatures: View all e-signatures from clients
+- **Admin Client Management**:
+  - Add Client: Modal form on clients page to manually create client accounts with email/password
+  - Login as Client: Button on client detail page to impersonate a client (view portal as they see it)
+  - Impersonation Banner: Orange banner shown when admin is viewing as client, with "Return to Admin" button
+  - Session data stored securely server-side in PostgreSQL (not in client cookies)
 
 ### API Endpoints
 
@@ -175,8 +180,10 @@ Core data entities:
 #### Admin Endpoints (require isAdmin=true):
 - `GET /api/admin/stats` - Dashboard statistics
 - `GET /api/admin/clients` - All clients with stats
+- `POST /api/admin/clients` - Create new client account with email/password
 - `GET /api/admin/clients/:id` - Single client with stats
 - `PATCH /api/admin/clients/:id` - Update client info (firstName, lastName, email, phone)
+- `POST /api/admin/clients/:id/impersonate` - Login as client (admin impersonation)
 - `GET /api/admin/clients/:id/documents` - Client's documents
 - `GET /api/admin/clients/:id/messages` - Client's messages
 - `GET /api/admin/clients/:id/signatures` - Client's signatures
@@ -191,3 +198,5 @@ Core data entities:
 - `POST /api/admin/invoices` - Create invoice for client
 - `GET /api/admin/refunds` - All refund tracking
 - `PATCH /api/admin/refunds/:userId` - Update refund status
+- `POST /api/admin/return` - Return from client impersonation to admin
+- `GET /api/admin/impersonation-status` - Check if currently impersonating a client
