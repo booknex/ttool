@@ -703,6 +703,129 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
     }
   });
 
+  // Create new client (admin only)
+  app.post("/api/admin/clients", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { email, password, firstName, lastName, phone } = req.body;
+      
+      if (!email || !password) {
+        return res.status(400).json({ message: "Email and password are required" });
+      }
+
+      if (password.length < 6) {
+        return res.status(400).json({ message: "Password must be at least 6 characters" });
+      }
+
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ message: "Email already registered" });
+      }
+
+      const passwordHash = await hashPassword(password);
+      const user = await storage.createUser(email, passwordHash, firstName, lastName);
+      
+      if (phone) {
+        await storage.updateUser(user.id, { phone });
+      }
+      
+      await storage.seedUserData(user.id);
+      
+      res.json(user);
+    } catch (error) {
+      console.error("Error creating client:", error);
+      res.status(500).json({ message: "Failed to create client" });
+    }
+  });
+
+  // Impersonate client (admin only)
+  app.post("/api/admin/clients/:id/impersonate", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const clientId = req.params.id;
+      const adminUserId = (req.session as any).userId;
+      
+      const client = await storage.getUser(clientId);
+      if (!client) {
+        return res.status(404).json({ message: "Client not found" });
+      }
+      
+      if (client.isAdmin) {
+        return res.status(400).json({ message: "Cannot impersonate another admin" });
+      }
+      
+      // Store original admin ID for returning later
+      (req.session as any).originalAdminId = adminUserId;
+      (req.session as any).userId = clientId;
+      (req.session as any).isImpersonating = true;
+      
+      res.json({ 
+        message: "Now impersonating client",
+        client: { id: client.id, email: client.email, firstName: client.firstName, lastName: client.lastName }
+      });
+    } catch (error) {
+      console.error("Error impersonating client:", error);
+      res.status(500).json({ message: "Failed to impersonate client" });
+    }
+  });
+
+  // Return from impersonation (back to admin)
+  app.post("/api/admin/return", isAuthenticated, async (req: any, res) => {
+    try {
+      const originalAdminId = (req.session as any).originalAdminId;
+      const isImpersonating = (req.session as any).isImpersonating;
+      
+      if (!originalAdminId || !isImpersonating) {
+        return res.status(400).json({ message: "Not currently impersonating" });
+      }
+      
+      const admin = await storage.getUser(originalAdminId);
+      if (!admin || !admin.isAdmin) {
+        delete (req.session as any).originalAdminId;
+        delete (req.session as any).isImpersonating;
+        return res.status(403).json({ message: "Invalid impersonation session" });
+      }
+      
+      // Restore admin session
+      (req.session as any).userId = originalAdminId;
+      delete (req.session as any).originalAdminId;
+      delete (req.session as any).isImpersonating;
+      
+      res.json({ 
+        message: "Returned to admin account",
+        user: { id: admin.id, email: admin.email, firstName: admin.firstName, lastName: admin.lastName, isAdmin: admin.isAdmin }
+      });
+    } catch (error) {
+      console.error("Error returning from impersonation:", error);
+      res.status(500).json({ message: "Failed to return to admin" });
+    }
+  });
+
+  // Get impersonation status (safe - only reveals info if session has valid impersonation state)
+  app.get("/api/admin/impersonation-status", isAuthenticated, async (req: any, res) => {
+    try {
+      const isImpersonating = !!(req.session as any).isImpersonating;
+      const originalAdminId = (req.session as any).originalAdminId;
+      
+      if (isImpersonating && originalAdminId) {
+        const admin = await storage.getUser(originalAdminId);
+        if (admin?.isAdmin) {
+          res.json({ 
+            isImpersonating: true, 
+            adminEmail: admin.email 
+          });
+        } else {
+          delete (req.session as any).isImpersonating;
+          delete (req.session as any).originalAdminId;
+          res.json({ isImpersonating: false });
+        }
+      } else {
+        res.json({ isImpersonating: false });
+      }
+    } catch (error) {
+      console.error("Error checking impersonation status:", error);
+      res.status(500).json({ message: "Failed to check status" });
+    }
+  });
+
   // Get client's documents (admin view)
   app.get("/api/admin/clients/:id/documents", isAuthenticated, isAdmin, async (req: any, res) => {
     try {

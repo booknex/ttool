@@ -1,5 +1,5 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useRoute, Link } from "wouter";
+import { useRoute, Link, useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -29,12 +29,14 @@ import {
   Save,
   X,
   Loader2,
-  ClipboardList
+  ClipboardList,
+  LogIn
 } from "lucide-react";
 import { format } from "date-fns";
 
 export default function AdminClientDetail() {
   const [, params] = useRoute("/admin/clients/:id");
+  const [, setLocation] = useLocation();
   const clientId = params?.id;
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
@@ -43,6 +45,24 @@ export default function AdminClientDetail() {
     lastName: "",
     email: "",
     phone: "",
+  });
+
+  const impersonateMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest("POST", `/api/admin/clients/${clientId}/impersonate`);
+    },
+    onSuccess: () => {
+      toast({ title: "Now viewing as client", description: "You are now logged in as this client" });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      setLocation("/");
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Failed to login as client", 
+        description: error.message || "Please try again",
+        variant: "destructive" 
+      });
+    },
   });
 
   const { data: client, isLoading } = useQuery<any>({
@@ -254,27 +274,43 @@ export default function AdminClientDetail() {
           </h1>
           <p className="text-sm text-muted-foreground">Client Details</p>
         </div>
-        {!isEditing ? (
-          <Button variant="outline" onClick={handleEdit} data-testid="button-edit-client">
-            <Edit className="w-4 h-4 mr-2" />
-            Edit Info
-          </Button>
-        ) : (
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={handleCancel} data-testid="button-cancel-edit">
-              <X className="w-4 h-4 mr-2" />
-              Cancel
-            </Button>
-            <Button onClick={handleSave} disabled={updateMutation.isPending} data-testid="button-save-client">
-              {updateMutation.isPending ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <Save className="w-4 h-4 mr-2" />
-              )}
-              Save
-            </Button>
-          </div>
-        )}
+        <div className="flex gap-2">
+          {!isEditing ? (
+            <>
+              <Button 
+                variant="outline" 
+                onClick={() => impersonateMutation.mutate()}
+                disabled={impersonateMutation.isPending}
+              >
+                {impersonateMutation.isPending ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <LogIn className="w-4 h-4 mr-2" />
+                )}
+                Login as Client
+              </Button>
+              <Button variant="outline" onClick={handleEdit} data-testid="button-edit-client">
+                <Edit className="w-4 h-4 mr-2" />
+                Edit Info
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="outline" onClick={handleCancel} data-testid="button-cancel-edit">
+                <X className="w-4 h-4 mr-2" />
+                Cancel
+              </Button>
+              <Button onClick={handleSave} disabled={updateMutation.isPending} data-testid="button-save-client">
+                {updateMutation.isPending ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Save className="w-4 h-4 mr-2" />
+                )}
+                Save
+              </Button>
+            </>
+          )}
+        </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">

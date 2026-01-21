@@ -35,6 +35,7 @@ import AffiliateLogin from "@/pages/affiliate/login";
 import AffiliateRegister from "@/pages/affiliate/register";
 import AffiliateDashboard from "@/pages/affiliate/dashboard";
 import { BooknexMascot } from "@/components/booknex-mascot";
+import { ImpersonationBanner } from "@/components/impersonation-banner";
 import { Button } from "@/components/ui/button";
 import { MessageSquare } from "lucide-react";
 import { Link } from "wouter";
@@ -47,6 +48,7 @@ function ClientLayout({ children, user }: { children: React.ReactNode; user: any
 
   return (
     <SidebarProvider style={style}>
+      <ImpersonationBanner />
       <div className="flex h-screen w-full">
         <AppSidebar user={user} />
         <div className="flex flex-col flex-1 min-w-0">

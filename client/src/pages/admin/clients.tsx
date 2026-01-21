@@ -1,9 +1,23 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import { useState } from "react";
 import { 
   FileText, 
   MessageSquare, 
@@ -12,13 +26,51 @@ import {
   CheckCircle,
   Clock,
   AlertCircle,
-  ChevronRight
+  ChevronRight,
+  Plus,
+  UserPlus
 } from "lucide-react";
 
 export default function AdminClients() {
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [newClient, setNewClient] = useState({
+    email: "",
+    password: "",
+    firstName: "",
+    lastName: "",
+    phone: ""
+  });
+  
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
   const { data: clients, isLoading } = useQuery<any[]>({
     queryKey: ["/api/admin/clients"],
   });
+
+  const createClientMutation = useMutation({
+    mutationFn: async (data: typeof newClient) => {
+      return apiRequest("POST", "/api/admin/clients", data);
+    },
+    onSuccess: () => {
+      toast({ title: "Client created successfully" });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/clients"] });
+      setIsAddDialogOpen(false);
+      setNewClient({ email: "", password: "", firstName: "", lastName: "", phone: "" });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Failed to create client", 
+        description: error.message || "Please try again",
+        variant: "destructive" 
+      });
+    },
+  });
+
+  const handleCreateClient = (e: React.FormEvent) => {
+    e.preventDefault();
+    createClientMutation.mutate(newClient);
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -61,13 +113,93 @@ export default function AdminClients() {
         <h1 className="text-2xl font-semibold" data-testid="text-admin-clients-title">
           Clients
         </h1>
-        <Badge variant="outline">{clients?.length || 0} Total</Badge>
+        <div className="flex items-center gap-3">
+          <Badge variant="outline">{clients?.length || 0} Total</Badge>
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <UserPlus className="w-4 h-4 mr-2" />
+                Add Client
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add New Client</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleCreateClient}>
+                <div className="space-y-4 py-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="firstName">First Name</Label>
+                      <Input
+                        id="firstName"
+                        value={newClient.firstName}
+                        onChange={(e) => setNewClient({ ...newClient, firstName: e.target.value })}
+                        placeholder="John"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="lastName">Last Name</Label>
+                      <Input
+                        id="lastName"
+                        value={newClient.lastName}
+                        onChange={(e) => setNewClient({ ...newClient, lastName: e.target.value })}
+                        placeholder="Doe"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email *</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      required
+                      value={newClient.email}
+                      onChange={(e) => setNewClient({ ...newClient, email: e.target.value })}
+                      placeholder="john@example.com"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="password">Password *</Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      required
+                      minLength={6}
+                      value={newClient.password}
+                      onChange={(e) => setNewClient({ ...newClient, password: e.target.value })}
+                      placeholder="At least 6 characters"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Phone (optional)</Label>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      value={newClient.phone}
+                      onChange={(e) => setNewClient({ ...newClient, phone: e.target.value })}
+                      placeholder="(555) 123-4567"
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={createClientMutation.isPending}>
+                    {createClientMutation.isPending ? "Creating..." : "Create Client"}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {clients?.length === 0 ? (
         <Card>
           <CardContent className="p-12 text-center">
-            <p className="text-muted-foreground">No clients yet. Clients will appear here when they sign up.</p>
+            <p className="text-muted-foreground">No clients yet. Click "Add Client" to create one.</p>
           </CardContent>
         </Card>
       ) : (
