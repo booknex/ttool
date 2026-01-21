@@ -633,6 +633,7 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
               pendingInvoices,
               questionnaireProgress: questionnaire.length,
               refundStatus: refund?.federalStatus || 'not_filed',
+              returnPrepStatus: (refund as any)?.returnPrepStatus || 'not_started',
             },
           };
         })
@@ -673,6 +674,7 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
           unreadMessages,
           pendingInvoices,
           refundStatus: refund?.federalStatus || 'not_filed',
+          returnPrepStatus: (refund as any)?.returnPrepStatus || 'not_started',
         },
       });
     } catch (error) {

@@ -184,6 +184,29 @@ export default function AdminClientDetail() {
     }
   };
 
+  const getReturnPrepStatusBadge = (status: string) => {
+    const statusLabels: Record<string, { label: string; variant: "default" | "secondary" | "outline" | "destructive" }> = {
+      not_started: { label: "Not Started", variant: "outline" },
+      documents_gathering: { label: "Gathering Docs", variant: "secondary" },
+      information_review: { label: "Info Review", variant: "secondary" },
+      return_preparation: { label: "Prep", variant: "secondary" },
+      quality_review: { label: "QA Review", variant: "secondary" },
+      client_review: { label: "Client Review", variant: "secondary" },
+      signature_required: { label: "Signatures", variant: "secondary" },
+      filing: { label: "Filing", variant: "secondary" },
+      filed: { label: "Filed", variant: "default" },
+    };
+    const config = statusLabels[status] || { label: status, variant: "outline" as const };
+    return (
+      <Badge 
+        variant={config.variant} 
+        className={config.variant === "default" ? "bg-green-500" : ""}
+      >
+        {config.label}
+      </Badge>
+    );
+  };
+
   if (isLoading) {
     return (
       <div className="p-6 space-y-6">
@@ -368,8 +391,8 @@ export default function AdminClientDetail() {
             <Separator />
 
             <div>
-              <h4 className="text-sm font-medium mb-2">Refund Status</h4>
-              {getRefundStatusBadge(client.stats?.refundStatus || "not_filed")}
+              <h4 className="text-sm font-medium mb-2">Return Status</h4>
+              {getReturnPrepStatusBadge(client.stats?.returnPrepStatus || "not_started")}
             </div>
           </CardContent>
         </Card>
