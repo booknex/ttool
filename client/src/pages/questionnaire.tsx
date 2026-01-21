@@ -28,6 +28,8 @@ import {
   Sparkles,
   ArrowLeft,
   Save,
+  Plus,
+  Trash2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -38,12 +40,14 @@ type Question = {
   id: string;
   section: string;
   question: string;
-  type: "yes_no" | "multiple" | "text" | "number" | "checkbox";
+  type: "yes_no" | "multiple" | "text" | "number" | "checkbox" | "multi_entry";
   options?: string[];
   dependsOn?: { questionId: string; answer: string | boolean };
   icon?: any;
   helper?: string;
+  entryPlaceholder?: string;
 };
+
 
 const sectionIcons: Record<string, any> = {
   "Filing Status": Home,
@@ -88,10 +92,11 @@ const questions: Question[] = [
   {
     id: "side_business_type",
     section: "Income",
-    question: "What type of side business did you operate?",
-    type: "text",
+    question: "What businesses did you operate?",
+    type: "multi_entry",
     dependsOn: { questionId: "side_business", answer: true },
-    helper: "e.g., Consulting, Rideshare, Etsy shop",
+    helper: "Add each business separately",
+    entryPlaceholder: "e.g., Consulting, Rideshare, Etsy shop",
   },
   {
     id: "crypto_transactions",
@@ -216,6 +221,10 @@ function formatAnswer(answer: any, type: string): string {
   if (answer === undefined || answer === null) return "Not answered";
   if (type === "yes_no") return answer === true ? "Yes" : "No";
   if (type === "checkbox" && Array.isArray(answer)) return answer.join(", ");
+  if (type === "multi_entry" && Array.isArray(answer)) {
+    const names = answer.filter((name: string) => name && name.trim() !== "");
+    return names.length > 0 ? names.join(", ") : "Not answered";
+  }
   if (type === "number" && answer) return answer.toString();
   return String(answer);
 }
@@ -319,7 +328,12 @@ export default function Questionnaire() {
   const handleNext = () => {
     if (!currentQuestion) return;
 
-    const newAnswers = { ...answers, [currentQuestion.id]: tempAnswer };
+    let answerToSave = tempAnswer;
+    if (currentQuestion.type === "multi_entry" && Array.isArray(tempAnswer)) {
+      answerToSave = tempAnswer.filter((name: string) => name && name.trim() !== "");
+    }
+
+    const newAnswers = { ...answers, [currentQuestion.id]: answerToSave };
     setAnswers(newAnswers);
 
     const newVisibleQuestions = getVisibleQuestions(newAnswers);
@@ -361,7 +375,15 @@ export default function Questionnaire() {
   };
 
   const handleSaveChanges = () => {
-    saveMutation.mutate(editingAnswers);
+    const cleanedAnswers: Record<string, any> = {};
+    for (const [key, value] of Object.entries(editingAnswers)) {
+      if (Array.isArray(value) && questions.find(q => q.id === key)?.type === "multi_entry") {
+        cleanedAnswers[key] = value.filter((name: string) => name && name.trim() !== "");
+      } else {
+        cleanedAnswers[key] = value;
+      }
+    }
+    saveMutation.mutate(cleanedAnswers);
   };
 
   const hasAnswer = () => {
@@ -369,10 +391,43 @@ export default function Questionnaire() {
     if (currentQuestion.type === "checkbox") {
       return tempAnswer && tempAnswer.length > 0;
     }
+    if (currentQuestion.type === "multi_entry") {
+      return Array.isArray(tempAnswer) && tempAnswer.length > 0 && tempAnswer.some((name: string) => name.trim() !== "");
+    }
     if (currentQuestion.type === "text" || currentQuestion.type === "number") {
       return tempAnswer !== null && tempAnswer !== undefined && tempAnswer !== "";
     }
     return tempAnswer !== null && tempAnswer !== undefined;
+  };
+
+  const addBusinessEntry = () => {
+    const current = Array.isArray(tempAnswer) ? tempAnswer : [];
+    setTempAnswer([...current, ""]);
+  };
+
+  const removeBusinessEntry = (index: number) => {
+    const current = Array.isArray(tempAnswer) ? tempAnswer : [];
+    setTempAnswer(current.filter((_: string, i: number) => i !== index));
+  };
+
+  const updateBusinessEntry = (index: number, name: string) => {
+    const current = Array.isArray(tempAnswer) ? tempAnswer : [];
+    setTempAnswer(current.map((entry: string, i: number) => i === index ? name : entry));
+  };
+
+  const addEditBusinessEntry = (questionId: string) => {
+    const current = Array.isArray(editingAnswers[questionId]) ? editingAnswers[questionId] : [];
+    handleEditAnswer(questionId, [...current, ""]);
+  };
+
+  const removeEditBusinessEntry = (questionId: string, index: number) => {
+    const current = Array.isArray(editingAnswers[questionId]) ? editingAnswers[questionId] : [];
+    handleEditAnswer(questionId, current.filter((_: string, i: number) => i !== index));
+  };
+
+  const updateEditBusinessEntry = (questionId: string, index: number, name: string) => {
+    const current = Array.isArray(editingAnswers[questionId]) ? editingAnswers[questionId] : [];
+    handleEditAnswer(questionId, current.map((entry: string, i: number) => i === index ? name : entry));
   };
 
   if (isLoading) {
@@ -536,6 +591,39 @@ export default function Questionnaire() {
                               className={q.id.includes("amount") ? "pl-7" : ""}
                             />
                           </div>
+                        </div>
+                      )}
+
+                      {q.type === "multi_entry" && (
+                        <div className="space-y-2 max-w-md">
+                          {(Array.isArray(editingAnswers[q.id]) ? editingAnswers[q.id] : []).map((entry: string, idx: number) => (
+                            <div key={idx} className="flex gap-2">
+                              <Input
+                                value={entry}
+                                onChange={(e) => updateEditBusinessEntry(q.id, idx, e.target.value)}
+                                placeholder={q.entryPlaceholder || "Enter business name"}
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => removeEditBusinessEntry(q.id, idx)}
+                                className="text-destructive hover:text-destructive"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))}
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => addEditBusinessEntry(q.id)}
+                            className="gap-2"
+                          >
+                            <Plus className="h-4 w-4" />
+                            Add Business
+                          </Button>
                         </div>
                       )}
                     </div>
@@ -713,6 +801,40 @@ export default function Questionnaire() {
                     className={`h-12 ${currentQuestion.id.includes("amount") ? "pl-7" : ""}`}
                     autoFocus
                   />
+                </div>
+              )}
+
+              {currentQuestion.type === "multi_entry" && (
+                <div className="space-y-3">
+                  {(Array.isArray(tempAnswer) ? tempAnswer : []).map((entry: string, idx: number) => (
+                    <div key={idx} className="flex gap-2">
+                      <Input
+                        value={entry}
+                        onChange={(e) => updateBusinessEntry(idx, e.target.value)}
+                        placeholder={currentQuestion.entryPlaceholder || "Enter business name"}
+                        className="h-12"
+                        autoFocus={idx === (Array.isArray(tempAnswer) ? tempAnswer.length - 1 : 0)}
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeBusinessEntry(idx)}
+                        className="h-12 w-12 text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={addBusinessEntry}
+                    className="gap-2 w-full h-12"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Add Business
+                  </Button>
                 </div>
               )}
             </div>
