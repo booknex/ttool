@@ -509,7 +509,7 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
         const response = await storage.upsertQuestionnaireResponse({
           userId,
           questionId,
-          answer,
+          answer: answer as any,
           taxYear: 2024,
         });
         savedResponses.push(response);
@@ -742,6 +742,17 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
     } catch (error) {
       console.error("Error fetching client invoices:", error);
       res.status(500).json({ message: "Failed to fetch invoices" });
+    }
+  });
+
+  // Get client's questionnaire responses (admin view)
+  app.get("/api/admin/clients/:id/questionnaire", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const responses = await storage.getQuestionnaireResponses(req.params.id);
+      res.json(responses);
+    } catch (error) {
+      console.error("Error fetching client questionnaire:", error);
+      res.status(500).json({ message: "Failed to fetch questionnaire" });
     }
   });
 

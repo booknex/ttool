@@ -28,7 +28,8 @@ import {
   Edit,
   Save,
   X,
-  Loader2
+  Loader2,
+  ClipboardList
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -68,6 +69,56 @@ export default function AdminClientDetail() {
     queryKey: ["/api/admin/clients", clientId, "invoices"],
     enabled: !!clientId,
   });
+
+  const { data: questionnaire } = useQuery<any[]>({
+    queryKey: ["/api/admin/clients", clientId, "questionnaire"],
+    enabled: !!clientId,
+  });
+
+  const questionLabels: Record<string, { section: string; question: string }> = {
+    filing_status: { section: "Filing Status", question: "What is your filing status for 2024?" },
+    marital_change: { section: "Filing Status", question: "Did your marital status change during 2024?" },
+    employment_type: { section: "Income", question: "What type of income did you have in 2024?" },
+    side_business: { section: "Income", question: "Did you have any freelance or side business income?" },
+    side_business_type: { section: "Income", question: "What businesses did you operate?" },
+    crypto_transactions: { section: "Income", question: "Did you buy, sell, or trade cryptocurrency in 2024?" },
+    homeowner: { section: "Deductions", question: "Do you own your home?" },
+    mortgage_interest: { section: "Deductions", question: "Did you pay mortgage interest in 2024?" },
+    property_taxes: { section: "Deductions", question: "Did you pay property taxes in 2024?" },
+    charitable_donations: { section: "Deductions", question: "Did you make charitable donations in 2024?" },
+    charitable_amount: { section: "Deductions", question: "Approximately how much did you donate to charity?" },
+    medical_expenses: { section: "Deductions", question: "Did you have significant medical expenses?" },
+    student_loans: { section: "Education", question: "Did you pay student loan interest in 2024?" },
+    education_expenses: { section: "Education", question: "Did you or a dependent have education expenses?" },
+    "529_contributions": { section: "Education", question: "Did you contribute to a 529 education savings plan?" },
+    dependents: { section: "Family", question: "Do you have any dependents?" },
+    dependent_count: { section: "Family", question: "How many dependents do you have?" },
+    childcare_expenses: { section: "Family", question: "Did you pay for childcare or dependent care?" },
+    major_life_events: { section: "Life Events", question: "Did you experience any major life events in 2024?" },
+    home_office: { section: "Life Events", question: "Did you work from home with a dedicated home office?" },
+    vehicle_business_use: { section: "Life Events", question: "Did you use your vehicle for business purposes?" },
+  };
+
+  const formatQuestionnaireAnswer = (answer: any): string => {
+    if (answer === null || answer === undefined) return "Not answered";
+    if (typeof answer === "boolean") return answer ? "Yes" : "No";
+    if (Array.isArray(answer)) {
+      const filtered = answer.filter((a: any) => a && String(a).trim() !== "");
+      return filtered.length > 0 ? filtered.join(", ") : "Not answered";
+    }
+    return String(answer);
+  };
+
+  const groupedQuestionnaire = questionnaire?.reduce((acc: Record<string, any[]>, item: any) => {
+    const label = questionLabels[item.questionId];
+    const section = label?.section || "Other";
+    if (!acc[section]) acc[section] = [];
+    acc[section].push({
+      ...item,
+      questionText: label?.question || item.questionId,
+    });
+    return acc;
+  }, {}) || {};
 
   const updateMutation = useMutation({
     mutationFn: async (data: typeof editForm) => {
@@ -325,9 +376,12 @@ export default function AdminClientDetail() {
 
         <div className="lg:col-span-2">
           <Tabs defaultValue="documents" className="space-y-4">
-            <TabsList>
+            <TabsList className="flex-wrap">
               <TabsTrigger value="documents" data-testid="tab-documents">
                 Documents ({documents?.length || 0})
+              </TabsTrigger>
+              <TabsTrigger value="questionnaire" data-testid="tab-questionnaire">
+                Questionnaire ({questionnaire?.length || 0})
               </TabsTrigger>
               <TabsTrigger value="messages" data-testid="tab-messages">
                 Messages ({messages?.length || 0})
@@ -364,6 +418,41 @@ export default function AdminClientDetail() {
                             </div>
                           </div>
                           {getStatusBadge(doc.status)}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="questionnaire">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Tax Questionnaire</CardTitle>
+                  <CardDescription>Client's questionnaire responses for their tax return</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {!questionnaire || questionnaire.length === 0 ? (
+                    <p className="text-muted-foreground text-center py-8">Questionnaire not completed yet</p>
+                  ) : (
+                    <div className="space-y-6">
+                      {Object.entries(groupedQuestionnaire).map(([section, items]) => (
+                        <div key={section}>
+                          <h4 className="font-medium text-sm text-muted-foreground mb-3 flex items-center gap-2">
+                            <ClipboardList className="w-4 h-4" />
+                            {section}
+                          </h4>
+                          <div className="space-y-2">
+                            {(items as any[]).map((item: any) => (
+                              <div key={item.id} className="p-3 rounded-lg bg-muted/50">
+                                <p className="text-sm font-medium mb-1">{item.questionText}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  {formatQuestionnaireAnswer(item.answer)}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       ))}
                     </div>
