@@ -43,7 +43,8 @@ import {
   ClipboardList,
   LogIn,
   Archive,
-  ArchiveRestore
+  ArchiveRestore,
+  Trash2
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -97,6 +98,27 @@ export default function AdminClientDetail() {
     onError: (error: any, archive) => {
       toast({ 
         title: archive ? "Failed to archive client" : "Failed to restore client", 
+        description: error.message || "Please try again",
+        variant: "destructive" 
+      });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest("DELETE", `/api/admin/clients/${clientId}`);
+    },
+    onSuccess: () => {
+      toast({ 
+        title: "Client deleted", 
+        description: "The client and all their data have been permanently deleted"
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/clients"] });
+      setLocation("/admin/clients");
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Failed to delete client", 
         description: error.message || "Please try again",
         variant: "destructive" 
       });
@@ -367,6 +389,42 @@ export default function AdminClientDetail() {
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
+              {client.isArchived && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button 
+                      variant="destructive"
+                      disabled={deleteMutation.isPending}
+                    >
+                      {deleteMutation.isPending ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <Trash2 className="w-4 h-4 mr-2" />
+                      )}
+                      Delete Permanently
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete Client Permanently?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete the client account 
+                        and all associated data including documents, messages, signatures, invoices, 
+                        and questionnaire responses.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction 
+                        onClick={() => deleteMutation.mutate()}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      >
+                        Delete Permanently
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
             </>
           ) : (
             <>

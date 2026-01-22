@@ -823,6 +823,33 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
     }
   });
 
+  // Delete archived client and all their data (admin only)
+  app.delete("/api/admin/clients/:id", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const clientId = req.params.id;
+      
+      const client = await storage.getUser(clientId);
+      if (!client) {
+        return res.status(404).json({ message: "Client not found" });
+      }
+      
+      if (client.isAdmin) {
+        return res.status(400).json({ message: "Cannot delete an admin account" });
+      }
+      
+      if (!client.isArchived) {
+        return res.status(400).json({ message: "Client must be archived before deletion" });
+      }
+      
+      await storage.deleteClient(clientId);
+      
+      res.json({ message: "Client and all their data have been permanently deleted" });
+    } catch (error) {
+      console.error("Error deleting client:", error);
+      res.status(500).json({ message: "Failed to delete client" });
+    }
+  });
+
   // Return from impersonation (back to admin)
   app.post("/api/admin/return", isAuthenticated, async (req: any, res) => {
     try {

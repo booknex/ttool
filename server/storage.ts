@@ -34,7 +34,7 @@ import {
   type InsertAffiliateReferral,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc, ne } from "drizzle-orm";
+import { eq, and, desc, ne, inArray } from "drizzle-orm";
 
 export interface IStorage {
   // User operations
@@ -43,6 +43,7 @@ export interface IStorage {
   upsertUser(user: UpsertUser): Promise<User>;
   createUser(email: string, passwordHash: string, firstName?: string, lastName?: string): Promise<User>;
   updateUser(id: string, updates: Partial<User>): Promise<User | undefined>;
+  deleteClient(id: string): Promise<void>;
 
   // Document operations
   getDocuments(userId: string): Promise<Document[]>;
@@ -162,6 +163,24 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, id))
       .returning();
     return updated;
+  }
+
+  async deleteClient(id: string): Promise<void> {
+    const userInvoices = await db.select({ id: invoices.id }).from(invoices).where(eq(invoices.userId, id));
+    const invoiceIds = userInvoices.map(inv => inv.id);
+    
+    if (invoiceIds.length > 0) {
+      await db.delete(invoiceItems).where(inArray(invoiceItems.invoiceId, invoiceIds));
+    }
+    await db.delete(invoices).where(eq(invoices.userId, id));
+    await db.delete(messages).where(eq(messages.userId, id));
+    await db.delete(signatures).where(eq(signatures.userId, id));
+    await db.delete(questionnaireResponses).where(eq(questionnaireResponses.userId, id));
+    await db.delete(refundTracking).where(eq(refundTracking.userId, id));
+    await db.delete(requiredDocuments).where(eq(requiredDocuments.userId, id));
+    await db.delete(documents).where(eq(documents.userId, id));
+    await db.delete(affiliateReferrals).where(eq(affiliateReferrals.clientUserId, id));
+    await db.delete(users).where(eq(users.id, id));
   }
 
   // Document operations
