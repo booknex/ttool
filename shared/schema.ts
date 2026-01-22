@@ -81,6 +81,8 @@ export const users = pgTable("users", {
   hasCompletedQuestionnaire: boolean("has_completed_questionnaire").default(false),
   referredByAffiliateId: varchar("referred_by_affiliate_id"),
   referralCode: varchar("referral_code"),
+  isArchived: boolean("is_archived").default(false),
+  archivedAt: timestamp("archived_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -97,6 +99,7 @@ export const documents = pgTable("documents", {
   status: documentStatusEnum("status").default('pending'),
   taxYear: integer("tax_year").default(2024),
   aiClassification: jsonb("ai_classification"),
+  isArchived: boolean("is_archived").default(false),
   uploadedAt: timestamp("uploaded_at").defaultNow(),
 });
 

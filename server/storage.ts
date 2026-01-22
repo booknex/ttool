@@ -50,6 +50,7 @@ export interface IStorage {
   createDocument(doc: InsertDocument): Promise<Document>;
   updateDocument(id: string, updates: Partial<Document>): Promise<Document | undefined>;
   deleteDocument(id: string): Promise<void>;
+  archiveUserDocuments(userId: string, archive: boolean): Promise<void>;
 
   // Required documents
   getRequiredDocuments(userId: string): Promise<RequiredDocument[]>;
@@ -185,6 +186,13 @@ export class DatabaseStorage implements IStorage {
 
   async deleteDocument(id: string): Promise<void> {
     await db.delete(documents).where(eq(documents.id, id));
+  }
+
+  async archiveUserDocuments(userId: string, archive: boolean): Promise<void> {
+    await db
+      .update(documents)
+      .set({ isArchived: archive })
+      .where(eq(documents.userId, userId));
   }
 
   // Required documents

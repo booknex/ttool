@@ -767,6 +767,62 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
     }
   });
 
+  // Archive client and their documents (admin only)
+  app.post("/api/admin/clients/:id/archive", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const clientId = req.params.id;
+      
+      const client = await storage.getUser(clientId);
+      if (!client) {
+        return res.status(404).json({ message: "Client not found" });
+      }
+      
+      if (client.isAdmin) {
+        return res.status(400).json({ message: "Cannot archive an admin account" });
+      }
+      
+      // Archive the client
+      await storage.updateUser(clientId, { 
+        isArchived: true, 
+        archivedAt: new Date() 
+      });
+      
+      // Archive all documents belonging to this client
+      await storage.archiveUserDocuments(clientId, true);
+      
+      res.json({ message: "Client and their documents have been archived" });
+    } catch (error) {
+      console.error("Error archiving client:", error);
+      res.status(500).json({ message: "Failed to archive client" });
+    }
+  });
+
+  // Unarchive client and their documents (admin only)
+  app.post("/api/admin/clients/:id/unarchive", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const clientId = req.params.id;
+      
+      const client = await storage.getUser(clientId);
+      if (!client) {
+        return res.status(404).json({ message: "Client not found" });
+      }
+      
+      // Unarchive the client
+      await storage.updateUser(clientId, { 
+        isArchived: false, 
+        archivedAt: null 
+      });
+      
+      // Unarchive all documents belonging to this client
+      await storage.archiveUserDocuments(clientId, false);
+      
+      res.json({ message: "Client and their documents have been restored" });
+    } catch (error) {
+      console.error("Error unarchiving client:", error);
+      res.status(500).json({ message: "Failed to unarchive client" });
+    }
+  });
+
   // Return from impersonation (back to admin)
   app.post("/api/admin/return", isAuthenticated, async (req: any, res) => {
     try {
