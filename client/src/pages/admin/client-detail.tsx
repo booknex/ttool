@@ -9,6 +9,17 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useState } from "react";
@@ -30,7 +41,9 @@ import {
   X,
   Loader2,
   ClipboardList,
-  LogIn
+  LogIn,
+  Archive,
+  ArchiveRestore
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -60,6 +73,30 @@ export default function AdminClientDetail() {
     onError: (error: any) => {
       toast({ 
         title: "Failed to login as client", 
+        description: error.message || "Please try again",
+        variant: "destructive" 
+      });
+    },
+  });
+
+  const archiveMutation = useMutation({
+    mutationFn: async (archive: boolean) => {
+      const endpoint = archive ? "archive" : "unarchive";
+      return apiRequest("POST", `/api/admin/clients/${clientId}/${endpoint}`);
+    },
+    onSuccess: (_, archive) => {
+      toast({ 
+        title: archive ? "Client archived" : "Client restored", 
+        description: archive 
+          ? "The client and their documents have been archived" 
+          : "The client and their documents have been restored"
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/clients"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/clients", clientId] });
+    },
+    onError: (error: any, archive) => {
+      toast({ 
+        title: archive ? "Failed to archive client" : "Failed to restore client", 
         description: error.message || "Please try again",
         variant: "destructive" 
       });
@@ -294,6 +331,42 @@ export default function AdminClientDetail() {
                 <Edit className="w-4 h-4 mr-2" />
                 Edit Info
               </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button 
+                    variant={client.isArchived ? "outline" : "destructive"}
+                    disabled={archiveMutation.isPending}
+                  >
+                    {archiveMutation.isPending ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : client.isArchived ? (
+                      <ArchiveRestore className="w-4 h-4 mr-2" />
+                    ) : (
+                      <Archive className="w-4 h-4 mr-2" />
+                    )}
+                    {client.isArchived ? "Restore" : "Archive"}
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>
+                      {client.isArchived ? "Restore Client?" : "Archive Client?"}
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      {client.isArchived 
+                        ? "This will restore the client and all their documents. They will be able to access their portal again."
+                        : "This will archive the client and all their documents. They will no longer appear in your active client list. You can restore them later from the archived clients filter."
+                      }
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => archiveMutation.mutate(!client.isArchived)}>
+                      {client.isArchived ? "Restore" : "Archive"}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </>
           ) : (
             <>
