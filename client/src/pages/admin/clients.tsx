@@ -18,6 +18,13 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useState } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { 
   FileText, 
   MessageSquare, 
@@ -28,11 +35,28 @@ import {
   AlertCircle,
   ChevronRight,
   Plus,
-  UserPlus
+  UserPlus,
+  Search,
+  X
 } from "lucide-react";
+
+const RETURN_PREP_STATUSES = [
+  { value: "all", label: "All Statuses" },
+  { value: "not_started", label: "Not Started" },
+  { value: "documents_gathering", label: "Gathering Docs" },
+  { value: "information_review", label: "Info Review" },
+  { value: "return_preparation", label: "Prep" },
+  { value: "quality_review", label: "QA Review" },
+  { value: "client_review", label: "Client Review" },
+  { value: "signature_required", label: "Signatures" },
+  { value: "filing", label: "Filing" },
+  { value: "filed", label: "Filed" },
+];
 
 export default function AdminClients() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [newClient, setNewClient] = useState({
     email: "",
     password: "",
@@ -47,6 +71,19 @@ export default function AdminClients() {
   const { data: clients, isLoading } = useQuery<any[]>({
     queryKey: ["/api/admin/clients"],
   });
+
+  const filteredClients = clients?.filter((client) => {
+    const matchesSearch = searchQuery === "" || 
+      (client.firstName?.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (client.lastName?.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (client.email?.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (`${client.firstName || ""} ${client.lastName || ""}`.toLowerCase().includes(searchQuery.toLowerCase()));
+    
+    const clientStatus = client.stats?.returnPrepStatus || "not_started";
+    const matchesStatus = statusFilter === "all" || clientStatus === statusFilter;
+    
+    return matchesSearch && matchesStatus;
+  }) || [];
 
   const createClientMutation = useMutation({
     mutationFn: async (data: typeof newClient) => {
@@ -72,20 +109,20 @@ export default function AdminClients() {
     createClientMutation.mutate(newClient);
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "completed":
-        return <Badge variant="default" className="bg-green-500">Completed</Badge>;
-      case "approved":
-      case "refund_sent":
-        return <Badge variant="default" className="bg-blue-500">In Progress</Badge>;
-      case "processing":
-      case "submitted":
-      case "accepted":
-        return <Badge variant="secondary">Processing</Badge>;
-      default:
-        return <Badge variant="outline">Not Filed</Badge>;
-    }
+  const getReturnPrepStatusBadge = (status: string | undefined) => {
+    const statusConfig: Record<string, { label: string; className: string }> = {
+      not_started: { label: "Not Started", className: "bg-gray-100 text-gray-800" },
+      documents_gathering: { label: "Gathering Docs", className: "bg-yellow-100 text-yellow-800" },
+      information_review: { label: "Info Review", className: "bg-blue-100 text-blue-800" },
+      return_preparation: { label: "Prep", className: "bg-purple-100 text-purple-800" },
+      quality_review: { label: "QA Review", className: "bg-indigo-100 text-indigo-800" },
+      client_review: { label: "Client Review", className: "bg-orange-100 text-orange-800" },
+      signature_required: { label: "Signatures", className: "bg-pink-100 text-pink-800" },
+      filing: { label: "Filing", className: "bg-cyan-100 text-cyan-800" },
+      filed: { label: "Filed", className: "bg-green-100 text-green-800" },
+    };
+    const config = statusConfig[status || "not_started"] || statusConfig.not_started;
+    return <Badge variant="outline" className={config.className}>{config.label}</Badge>;
   };
 
   if (isLoading) {
@@ -196,15 +233,62 @@ export default function AdminClients() {
         </div>
       </div>
 
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by name or email..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 pr-10"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-full sm:w-[180px]">
+            <SelectValue placeholder="Filter by status" />
+          </SelectTrigger>
+          <SelectContent>
+            {RETURN_PREP_STATUSES.map((status) => (
+              <SelectItem key={status.value} value={status.value}>
+                {status.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {filteredClients.length === 0 && clients && clients.length > 0 && (
+        <Card>
+          <CardContent className="p-12 text-center">
+            <p className="text-muted-foreground">No clients match your search criteria.</p>
+            <Button 
+              variant="ghost" 
+              onClick={() => { setSearchQuery(""); setStatusFilter("all"); }}
+              className="mt-2"
+            >
+              Clear filters
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       {clients?.length === 0 ? (
         <Card>
           <CardContent className="p-12 text-center">
             <p className="text-muted-foreground">No clients yet. Click "Add Client" to create one.</p>
           </CardContent>
         </Card>
-      ) : (
+      ) : filteredClients.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {clients?.map((client) => (
+          {filteredClients.map((client) => (
             <Link key={client.id} href={`/admin/clients/${client.id}`}>
               <Card className="hover-elevate cursor-pointer" data-testid={`card-client-${client.id}`}>
                 <CardContent className="p-6">
@@ -225,7 +309,7 @@ export default function AdminClients() {
                       </h3>
                       <p className="text-sm text-muted-foreground truncate">{client.email}</p>
                       <div className="mt-2">
-                        {getStatusBadge(client.stats?.refundStatus)}
+                        {getReturnPrepStatusBadge(client.stats?.returnPrepStatus)}
                       </div>
                     </div>
                     <ChevronRight className="w-5 h-5 text-muted-foreground" />
@@ -264,7 +348,7 @@ export default function AdminClients() {
             </Link>
           ))}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }
