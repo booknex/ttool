@@ -149,6 +149,8 @@ Core data entities:
   - Login as Client: Button on client detail page to impersonate a client (view portal as they see it)
   - Impersonation Banner: Orange banner shown when admin is viewing as client, with "Return to Admin" button
   - Session data stored securely server-side in PostgreSQL (not in client cookies)
+  - Search & Filter: Search clients by name/email, filter by return prep status with color-coded badges
+  - Archive Clients: Archive/unarchive clients and their documents, toggle to show archived clients, cannot archive admin accounts
 
 ### API Endpoints
 
