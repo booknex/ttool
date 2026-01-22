@@ -857,6 +857,31 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
     }
   });
 
+  // Regenerate document checklists for all clients based on their questionnaire answers (admin only)
+  app.post("/api/admin/regenerate-all-checklists", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const allClients = await storage.getAllUsers();
+      let updatedCount = 0;
+      
+      for (const client of allClients) {
+        if (client.isAdmin) continue;
+        
+        const responses = await storage.getQuestionnaireResponses(client.id);
+        if (responses.length === 0) continue;
+        
+        const responseData = responses.map(r => ({ questionId: r.questionId, answer: r.answer }));
+        const requiredDocs = generateRequiredDocuments(responseData);
+        await storage.regenerateRequiredDocuments(client.id, requiredDocs);
+        updatedCount++;
+      }
+      
+      res.json({ message: `Updated document checklists for ${updatedCount} clients` });
+    } catch (error) {
+      console.error("Error regenerating checklists:", error);
+      res.status(500).json({ message: "Failed to regenerate checklists" });
+    }
+  });
+
   // Return from impersonation (back to admin)
   app.post("/api/admin/return", isAuthenticated, async (req: any, res) => {
     try {
