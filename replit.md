@@ -151,6 +151,7 @@ Core data entities:
   - Session data stored securely server-side in PostgreSQL (not in client cookies)
   - Search & Filter: Search clients by name/email, filter by return prep status with color-coded badges
   - Archive Clients: Archive/unarchive clients and their documents, toggle to show archived clients, cannot archive admin accounts
+  - Delete Archived Clients: Permanently delete archived clients and all their data (documents, messages, signatures, invoices, questionnaire responses)
 
 ### API Endpoints
 
