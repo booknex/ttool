@@ -2,6 +2,7 @@ import type { Express } from "express";
 import type { Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, hashPassword, verifyPassword } from "./auth";
+import { generateRequiredDocuments } from "./document-requirements";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -514,6 +515,12 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
         });
         savedResponses.push(response);
       }
+
+      // Generate required documents checklist based on questionnaire answers
+      const allResponses = await storage.getQuestionnaireResponses(userId);
+      const responseData = allResponses.map(r => ({ questionId: r.questionId, answer: r.answer }));
+      const requiredDocs = generateRequiredDocuments(responseData);
+      await storage.regenerateRequiredDocuments(userId, requiredDocs);
 
       res.json(savedResponses);
     } catch (error) {

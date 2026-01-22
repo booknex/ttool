@@ -57,6 +57,8 @@ export interface IStorage {
   getRequiredDocuments(userId: string): Promise<RequiredDocument[]>;
   createRequiredDocument(doc: InsertRequiredDocument): Promise<RequiredDocument>;
   updateRequiredDocument(id: string, updates: Partial<RequiredDocument>): Promise<RequiredDocument | undefined>;
+  clearRequiredDocuments(userId: string): Promise<void>;
+  regenerateRequiredDocuments(userId: string, documents: { type: string; description: string }[]): Promise<void>;
 
   // Signatures
   getSignatures(userId: string): Promise<Signature[]>;
@@ -227,6 +229,23 @@ export class DatabaseStorage implements IStorage {
   async updateRequiredDocument(id: string, updates: Partial<RequiredDocument>): Promise<RequiredDocument | undefined> {
     const [updated] = await db.update(requiredDocuments).set(updates).where(eq(requiredDocuments.id, id)).returning();
     return updated;
+  }
+
+  async clearRequiredDocuments(userId: string): Promise<void> {
+    await db.delete(requiredDocuments).where(eq(requiredDocuments.userId, userId));
+  }
+
+  async regenerateRequiredDocuments(userId: string, docs: { type: string; description: string }[]): Promise<void> {
+    await this.clearRequiredDocuments(userId);
+    
+    for (const doc of docs) {
+      await this.createRequiredDocument({
+        userId,
+        documentType: doc.type as any,
+        description: doc.description,
+        taxYear: 2024,
+      });
+    }
   }
 
   // Signatures
