@@ -37,7 +37,8 @@ import {
   Plus,
   UserPlus,
   Search,
-  X
+  X,
+  Archive
 } from "lucide-react";
 
 const RETURN_PREP_STATUSES = [
@@ -57,6 +58,7 @@ export default function AdminClients() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [showArchived, setShowArchived] = useState(false);
   const [newClient, setNewClient] = useState({
     email: "",
     password: "",
@@ -73,6 +75,8 @@ export default function AdminClients() {
   });
 
   const filteredClients = clients?.filter((client) => {
+    const matchesArchived = showArchived ? client.isArchived : !client.isArchived;
+    
     const matchesSearch = searchQuery === "" || 
       (client.firstName?.toLowerCase().includes(searchQuery.toLowerCase())) ||
       (client.lastName?.toLowerCase().includes(searchQuery.toLowerCase())) ||
@@ -82,8 +86,11 @@ export default function AdminClients() {
     const clientStatus = client.stats?.returnPrepStatus || "not_started";
     const matchesStatus = statusFilter === "all" || clientStatus === statusFilter;
     
-    return matchesSearch && matchesStatus;
+    return matchesArchived && matchesSearch && matchesStatus;
   }) || [];
+
+  const archivedCount = clients?.filter(c => c.isArchived).length || 0;
+  const activeCount = clients?.filter(c => !c.isArchived).length || 0;
 
   const createClientMutation = useMutation({
     mutationFn: async (data: typeof newClient) => {
@@ -263,12 +270,24 @@ export default function AdminClients() {
             ))}
           </SelectContent>
         </Select>
+        <Button
+          variant={showArchived ? "default" : "outline"}
+          onClick={() => setShowArchived(!showArchived)}
+          className="gap-2"
+        >
+          <Archive className="w-4 h-4" />
+          {showArchived ? `Archived (${archivedCount})` : `Show Archived (${archivedCount})`}
+        </Button>
       </div>
 
       {filteredClients.length === 0 && clients && clients.length > 0 && (
         <Card>
           <CardContent className="p-12 text-center">
-            <p className="text-muted-foreground">No clients match your search criteria.</p>
+            <p className="text-muted-foreground">
+              {showArchived 
+                ? "No archived clients match your search criteria." 
+                : "No active clients match your search criteria."}
+            </p>
             <Button 
               variant="ghost" 
               onClick={() => { setSearchQuery(""); setStatusFilter("all"); }}
@@ -308,8 +327,14 @@ export default function AdminClients() {
                         }
                       </h3>
                       <p className="text-sm text-muted-foreground truncate">{client.email}</p>
-                      <div className="mt-2">
+                      <div className="mt-2 flex gap-2">
                         {getReturnPrepStatusBadge(client.stats?.returnPrepStatus)}
+                        {client.isArchived && (
+                          <Badge variant="outline" className="bg-gray-100 text-gray-600">
+                            <Archive className="w-3 h-3 mr-1" />
+                            Archived
+                          </Badge>
+                        )}
                       </div>
                     </div>
                     <ChevronRight className="w-5 h-5 text-muted-foreground" />
