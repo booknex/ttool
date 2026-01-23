@@ -39,52 +39,6 @@ import { ImpersonationBanner } from "@/components/impersonation-banner";
 import { Button } from "@/components/ui/button";
 import { MessageSquare, Shield } from "lucide-react";
 import { Link, useLocation } from "wouter";
-import { createContext, useContext, useState, useEffect } from "react";
-
-type ViewMode = "admin" | "customer";
-
-interface ViewModeContextType {
-  viewMode: ViewMode;
-  setViewMode: (mode: ViewMode) => void;
-  isAdmin: boolean;
-}
-
-const ViewModeContext = createContext<ViewModeContextType | null>(null);
-
-export function useViewMode() {
-  const context = useContext(ViewModeContext);
-  if (!context) {
-    throw new Error("useViewMode must be used within ViewModeProvider");
-  }
-  return context;
-}
-
-function ViewModeProvider({ children, isAdmin }: { children: React.ReactNode; isAdmin: boolean }) {
-  const [viewMode, setViewModeState] = useState<ViewMode>(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("adminViewMode");
-      return (stored as ViewMode) || "admin";
-    }
-    return "admin";
-  });
-
-  const setViewMode = (mode: ViewMode) => {
-    setViewModeState(mode);
-    localStorage.setItem("adminViewMode", mode);
-  };
-
-  useEffect(() => {
-    if (!isAdmin) {
-      localStorage.removeItem("adminViewMode");
-    }
-  }, [isAdmin]);
-
-  return (
-    <ViewModeContext.Provider value={{ viewMode, setViewMode, isAdmin }}>
-      {children}
-    </ViewModeContext.Provider>
-  );
-}
 
 function ClientLayout({ children, user }: { children: React.ReactNode; user: any }) {
   const style = {

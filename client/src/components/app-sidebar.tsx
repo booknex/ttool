@@ -56,6 +56,7 @@ export function AppSidebar({ user }: AppSidebarProps) {
 
   const handleLogout = async () => {
     try {
+      localStorage.removeItem("adminViewMode");
       await apiRequest("POST", "/api/auth/logout");
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       setLocation("/");
