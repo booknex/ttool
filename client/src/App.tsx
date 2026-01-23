@@ -37,14 +37,68 @@ import AffiliateDashboard from "@/pages/affiliate/dashboard";
 import { BooknexMascot } from "@/components/booknex-mascot";
 import { ImpersonationBanner } from "@/components/impersonation-banner";
 import { Button } from "@/components/ui/button";
-import { MessageSquare } from "lucide-react";
-import { Link } from "wouter";
+import { MessageSquare, Shield } from "lucide-react";
+import { Link, useLocation } from "wouter";
+import { createContext, useContext, useState, useEffect } from "react";
+
+type ViewMode = "admin" | "customer";
+
+interface ViewModeContextType {
+  viewMode: ViewMode;
+  setViewMode: (mode: ViewMode) => void;
+  isAdmin: boolean;
+}
+
+const ViewModeContext = createContext<ViewModeContextType | null>(null);
+
+export function useViewMode() {
+  const context = useContext(ViewModeContext);
+  if (!context) {
+    throw new Error("useViewMode must be used within ViewModeProvider");
+  }
+  return context;
+}
+
+function ViewModeProvider({ children, isAdmin }: { children: React.ReactNode; isAdmin: boolean }) {
+  const [viewMode, setViewModeState] = useState<ViewMode>(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("adminViewMode");
+      return (stored as ViewMode) || "admin";
+    }
+    return "admin";
+  });
+
+  const setViewMode = (mode: ViewMode) => {
+    setViewModeState(mode);
+    localStorage.setItem("adminViewMode", mode);
+  };
+
+  useEffect(() => {
+    if (!isAdmin) {
+      localStorage.removeItem("adminViewMode");
+    }
+  }, [isAdmin]);
+
+  return (
+    <ViewModeContext.Provider value={{ viewMode, setViewMode, isAdmin }}>
+      {children}
+    </ViewModeContext.Provider>
+  );
+}
 
 function ClientLayout({ children, user }: { children: React.ReactNode; user: any }) {
   const style = {
     "--sidebar-width": "16rem",
     "--sidebar-width-icon": "3rem",
   } as React.CSSProperties;
+
+  const [, setLocation] = useLocation();
+  
+  const handleSwitchToAdmin = () => {
+    localStorage.setItem("adminViewMode", "admin");
+    setLocation("/admin");
+    window.location.reload();
+  };
 
   return (
     <SidebarProvider style={style}>
@@ -54,12 +108,25 @@ function ClientLayout({ children, user }: { children: React.ReactNode; user: any
         <div className="flex flex-col flex-1 min-w-0">
           <header className="flex items-center justify-between gap-4 p-3 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-40">
             <SidebarTrigger data-testid="button-sidebar-toggle" />
-            <Link href="/messages">
-              <Button variant="default" className="gap-2">
-                <MessageSquare className="h-4 w-4" />
-                <span>Messages</span>
-              </Button>
-            </Link>
+            <div className="flex items-center gap-2">
+              {user?.isAdmin && (
+                <Button 
+                  variant="outline" 
+                  className="gap-2"
+                  onClick={handleSwitchToAdmin}
+                  data-testid="button-switch-to-admin"
+                >
+                  <Shield className="h-4 w-4" />
+                  <span>Admin View</span>
+                </Button>
+              )}
+              <Link href="/messages">
+                <Button variant="default" className="gap-2">
+                  <MessageSquare className="h-4 w-4" />
+                  <span>Messages</span>
+                </Button>
+              </Link>
+            </div>
           </header>
           <main className="flex-1 overflow-auto bg-muted/30">
             {children}
@@ -129,7 +196,11 @@ function Router() {
     );
   }
 
-  if (user?.isAdmin) {
+  const viewMode = typeof window !== "undefined" 
+    ? localStorage.getItem("adminViewMode") || "admin" 
+    : "admin";
+
+  if (user?.isAdmin && viewMode === "admin") {
     return (
       <AdminLayout user={user}>
         <Switch>

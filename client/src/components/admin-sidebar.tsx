@@ -25,6 +25,7 @@ import {
   Shield,
   ListChecks,
   Kanban,
+  User,
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
@@ -105,8 +106,8 @@ export function AdminSidebar({ user }: AdminSidebarProps) {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-4">
-        <div className="flex items-center gap-3 mb-3">
+      <SidebarFooter className="p-4 space-y-3">
+        <div className="flex items-center gap-3">
           <Avatar className="h-9 w-9">
             <AvatarImage src={user?.profileImageUrl} />
             <AvatarFallback>{getInitials()}</AvatarFallback>
@@ -120,6 +121,19 @@ export function AdminSidebar({ user }: AdminSidebarProps) {
             </p>
           </div>
         </div>
+        <Button 
+          variant="default" 
+          className="w-full justify-start gap-2" 
+          onClick={() => {
+            localStorage.setItem("adminViewMode", "customer");
+            setLocation("/");
+            window.location.reload();
+          }}
+          data-testid="button-switch-to-customer"
+        >
+          <User className="w-4 h-4" />
+          My Customer Portal
+        </Button>
         <Button 
           variant="outline" 
           className="w-full justify-start gap-2" 
