@@ -22,13 +22,14 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { DollarSign, Plus, Trash2 } from "lucide-react";
+import { DollarSign, Plus, Trash2, Archive } from "lucide-react";
 import { format } from "date-fns";
 
 export default function AdminInvoices() {
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState("");
+  const [showArchived, setShowArchived] = useState(false);
   const [invoiceItems, setInvoiceItems] = useState([
     { description: "", rate: "", quantity: 1, amount: "" }
   ]);
@@ -40,6 +41,12 @@ export default function AdminInvoices() {
   const { data: clients } = useQuery<any[]>({
     queryKey: ["/api/admin/clients"],
   });
+
+  const filteredInvoices = invoices?.filter((inv) => 
+    showArchived ? inv.clientIsArchived : !inv.clientIsArchived
+  ) || [];
+
+  const archivedCount = invoices?.filter(i => i.clientIsArchived).length || 0;
 
   const createInvoiceMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -138,7 +145,16 @@ export default function AdminInvoices() {
         <h1 className="text-2xl font-semibold" data-testid="text-admin-invoices-title">
           Invoices
         </h1>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <div className="flex items-center gap-3">
+          <Button
+            variant={showArchived ? "default" : "outline"}
+            onClick={() => setShowArchived(!showArchived)}
+            className="gap-2"
+          >
+            <Archive className="w-4 h-4" />
+            {showArchived ? `Archived (${archivedCount})` : `Show Archived (${archivedCount})`}
+          </Button>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button data-testid="button-create-invoice">
               <Plus className="w-4 h-4 mr-2" />
@@ -227,19 +243,22 @@ export default function AdminInvoices() {
               </div>
             </div>
           </DialogContent>
-        </Dialog>
+          </Dialog>
+        </div>
       </div>
 
-      {invoices?.length === 0 ? (
+      {filteredInvoices.length === 0 ? (
         <Card>
           <CardContent className="p-12 text-center">
             <DollarSign className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-            <p className="text-muted-foreground">No invoices yet.</p>
+            <p className="text-muted-foreground">
+              {showArchived ? "No invoices from archived clients." : "No invoices yet."}
+            </p>
           </CardContent>
         </Card>
       ) : (
         <div className="space-y-4">
-          {invoices?.map((inv) => (
+          {filteredInvoices.map((inv) => (
             <Card key={inv.id} data-testid={`card-invoice-${inv.id}`}>
               <CardContent className="p-4">
                 <div className="flex items-center gap-4">
@@ -251,6 +270,12 @@ export default function AdminInvoices() {
                     <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="font-medium">{inv.invoiceNumber}</h3>
                       {getStatusBadge(inv.status)}
+                      {inv.clientIsArchived && (
+                        <Badge variant="outline" className="bg-gray-100 text-gray-600 text-xs">
+                          <Archive className="w-3 h-3 mr-1" />
+                          Archived
+                        </Badge>
+                      )}
                     </div>
                     <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1 flex-wrap">
                       <span>{inv.clientName}</span>

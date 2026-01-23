@@ -17,16 +17,25 @@ import {
   CheckCircle, 
   XCircle,
   Clock,
-  Loader2
+  Loader2,
+  Archive
 } from "lucide-react";
 import { format } from "date-fns";
+import { useState } from "react";
 
 export default function AdminDocuments() {
   const { toast } = useToast();
+  const [showArchived, setShowArchived] = useState(false);
   
   const { data: documents, isLoading } = useQuery<any[]>({
     queryKey: ["/api/admin/documents"],
   });
+
+  const filteredDocuments = documents?.filter((doc) => 
+    showArchived ? doc.clientIsArchived : !doc.clientIsArchived
+  ) || [];
+
+  const archivedCount = documents?.filter(d => d.clientIsArchived).length || 0;
 
   const updateDocumentMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
@@ -107,23 +116,35 @@ export default function AdminDocuments() {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <h1 className="text-2xl font-semibold" data-testid="text-admin-documents-title">
           Documents
         </h1>
-        <Badge variant="outline">{documents?.length || 0} Total</Badge>
+        <div className="flex items-center gap-3">
+          <Badge variant="outline">{filteredDocuments.length} Showing</Badge>
+          <Button
+            variant={showArchived ? "default" : "outline"}
+            onClick={() => setShowArchived(!showArchived)}
+            className="gap-2"
+          >
+            <Archive className="w-4 h-4" />
+            {showArchived ? `Archived (${archivedCount})` : `Show Archived (${archivedCount})`}
+          </Button>
+        </div>
       </div>
 
-      {documents?.length === 0 ? (
+      {filteredDocuments.length === 0 ? (
         <Card>
           <CardContent className="p-12 text-center">
             <FileText className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-            <p className="text-muted-foreground">No documents uploaded yet.</p>
+            <p className="text-muted-foreground">
+              {showArchived ? "No documents from archived clients." : "No documents uploaded yet."}
+            </p>
           </CardContent>
         </Card>
       ) : (
         <div className="space-y-4">
-          {documents?.map((doc) => (
+          {filteredDocuments.map((doc) => (
             <Card key={doc.id} data-testid={`card-document-${doc.id}`}>
               <CardContent className="p-4">
                 <div className="flex items-center gap-4">
@@ -135,6 +156,12 @@ export default function AdminDocuments() {
                     <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="font-medium truncate">{doc.originalName}</h3>
                       {getStatusBadge(doc.status)}
+                      {doc.clientIsArchived && (
+                        <Badge variant="outline" className="bg-gray-100 text-gray-600 text-xs">
+                          <Archive className="w-3 h-3 mr-1" />
+                          Archived
+                        </Badge>
+                      )}
                     </div>
                     <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1 flex-wrap">
                       <span>{doc.clientName}</span>

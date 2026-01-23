@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { TrendingUp, Edit2 } from "lucide-react";
+import { TrendingUp, Edit2, Archive } from "lucide-react";
 import { format } from "date-fns";
 
 const refundStatuses = [
@@ -37,6 +37,7 @@ const refundStatuses = [
 export default function AdminRefunds() {
   const { toast } = useToast();
   const [editingRefund, setEditingRefund] = useState<any>(null);
+  const [showArchived, setShowArchived] = useState(false);
   const [formData, setFormData] = useState({
     federalStatus: "",
     federalAmount: "",
@@ -47,6 +48,12 @@ export default function AdminRefunds() {
   const { data: refunds, isLoading } = useQuery<any[]>({
     queryKey: ["/api/admin/refunds"],
   });
+
+  const filteredRefunds = refunds?.filter((ref) => 
+    showArchived ? ref.clientIsArchived : !ref.clientIsArchived
+  ) || [];
+
+  const archivedCount = refunds?.filter(r => r.clientIsArchived).length || 0;
 
   const updateRefundMutation = useMutation({
     mutationFn: async ({ userId, data }: { userId: string; data: any }) => {
@@ -117,28 +124,48 @@ export default function AdminRefunds() {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <h1 className="text-2xl font-semibold" data-testid="text-admin-refunds-title">
           Refund Tracking
         </h1>
-        <Badge variant="outline">{refunds?.length || 0} Clients</Badge>
+        <div className="flex items-center gap-3">
+          <Badge variant="outline">{filteredRefunds.length} Showing</Badge>
+          <Button
+            variant={showArchived ? "default" : "outline"}
+            onClick={() => setShowArchived(!showArchived)}
+            className="gap-2"
+          >
+            <Archive className="w-4 h-4" />
+            {showArchived ? `Archived (${archivedCount})` : `Show Archived (${archivedCount})`}
+          </Button>
+        </div>
       </div>
 
-      {refunds?.length === 0 ? (
+      {filteredRefunds.length === 0 ? (
         <Card>
           <CardContent className="p-12 text-center">
             <TrendingUp className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-            <p className="text-muted-foreground">No refund tracking data yet.</p>
+            <p className="text-muted-foreground">
+              {showArchived ? "No refund data from archived clients." : "No refund tracking data yet."}
+            </p>
           </CardContent>
         </Card>
       ) : (
         <div className="space-y-4">
-          {refunds?.map((refund) => (
+          {filteredRefunds.map((refund) => (
             <Card key={refund.id} data-testid={`card-refund-${refund.id}`}>
               <CardContent className="p-4">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
-                    <h3 className="font-medium">{refund.clientName}</h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-medium">{refund.clientName}</h3>
+                      {refund.clientIsArchived && (
+                        <Badge variant="outline" className="bg-gray-100 text-gray-600 text-xs">
+                          <Archive className="w-3 h-3 mr-1" />
+                          Archived
+                        </Badge>
+                      )}
+                    </div>
                     <p className="text-sm text-muted-foreground">{refund.clientEmail}</p>
                     
                     <div className="grid grid-cols-2 gap-4 mt-4">

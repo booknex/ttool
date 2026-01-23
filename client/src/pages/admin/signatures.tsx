@@ -1,14 +1,24 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PenTool, CheckCircle } from "lucide-react";
+import { PenTool, CheckCircle, Archive } from "lucide-react";
 import { format } from "date-fns";
 
 export default function AdminSignatures() {
+  const [showArchived, setShowArchived] = useState(false);
+  
   const { data: signatures, isLoading } = useQuery<any[]>({
     queryKey: ["/api/admin/signatures"],
   });
+
+  const filteredSignatures = signatures?.filter((sig) => 
+    showArchived ? sig.clientIsArchived : !sig.clientIsArchived
+  ) || [];
+
+  const archivedCount = signatures?.filter(s => s.clientIsArchived).length || 0;
 
   const getDocumentTypeLabel = (type: string) => {
     switch (type) {
@@ -40,23 +50,35 @@ export default function AdminSignatures() {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <h1 className="text-2xl font-semibold" data-testid="text-admin-signatures-title">
           E-Signatures
         </h1>
-        <Badge variant="outline">{signatures?.length || 0} Total</Badge>
+        <div className="flex items-center gap-3">
+          <Badge variant="outline">{filteredSignatures.length} Showing</Badge>
+          <Button
+            variant={showArchived ? "default" : "outline"}
+            onClick={() => setShowArchived(!showArchived)}
+            className="gap-2"
+          >
+            <Archive className="w-4 h-4" />
+            {showArchived ? `Archived (${archivedCount})` : `Show Archived (${archivedCount})`}
+          </Button>
+        </div>
       </div>
 
-      {signatures?.length === 0 ? (
+      {filteredSignatures.length === 0 ? (
         <Card>
           <CardContent className="p-12 text-center">
             <PenTool className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-            <p className="text-muted-foreground">No signatures yet.</p>
+            <p className="text-muted-foreground">
+              {showArchived ? "No signatures from archived clients." : "No signatures yet."}
+            </p>
           </CardContent>
         </Card>
       ) : (
         <div className="space-y-4">
-          {signatures?.map((sig) => (
+          {filteredSignatures.map((sig) => (
             <Card key={sig.id} data-testid={`card-signature-${sig.id}`}>
               <CardContent className="p-4">
                 <div className="flex items-start gap-4">
@@ -68,6 +90,12 @@ export default function AdminSignatures() {
                     <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="font-medium">{getDocumentTypeLabel(sig.documentType)}</h3>
                       <Badge variant="default" className="bg-green-500">Signed</Badge>
+                      {sig.clientIsArchived && (
+                        <Badge variant="outline" className="bg-gray-100 text-gray-600 text-xs">
+                          <Archive className="w-3 h-3 mr-1" />
+                          Archived
+                        </Badge>
+                      )}
                     </div>
                     <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1 flex-wrap">
                       <span>{sig.clientName}</span>

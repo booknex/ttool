@@ -9,17 +9,24 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { MessageSquare, Send, ArrowLeft } from "lucide-react";
+import { MessageSquare, Send, ArrowLeft, Archive } from "lucide-react";
 import { format } from "date-fns";
 
 export default function AdminMessages() {
   const { toast } = useToast();
   const [selectedClient, setSelectedClient] = useState<any>(null);
   const [replyContent, setReplyContent] = useState("");
+  const [showArchived, setShowArchived] = useState(false);
 
   const { data: messageGroups, isLoading } = useQuery<any[]>({
     queryKey: ["/api/admin/messages"],
   });
+
+  const filteredMessageGroups = messageGroups?.filter((group) => 
+    showArchived ? group.clientIsArchived : !group.clientIsArchived
+  ) || [];
+
+  const archivedCount = messageGroups?.filter(g => g.clientIsArchived).length || 0;
 
   const replyMutation = useMutation({
     mutationFn: async ({ userId, content }: { userId: string; content: string }) => {
@@ -127,25 +134,37 @@ export default function AdminMessages() {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <h1 className="text-2xl font-semibold" data-testid="text-admin-messages-title">
           Messages
         </h1>
-        <Badge variant="outline">
-          {messageGroups?.reduce((sum, g) => sum + g.unreadCount, 0) || 0} Unread
-        </Badge>
+        <div className="flex items-center gap-3">
+          <Badge variant="outline">
+            {filteredMessageGroups.reduce((sum, g) => sum + g.unreadCount, 0)} Unread
+          </Badge>
+          <Button
+            variant={showArchived ? "default" : "outline"}
+            onClick={() => setShowArchived(!showArchived)}
+            className="gap-2"
+          >
+            <Archive className="w-4 h-4" />
+            {showArchived ? `Archived (${archivedCount})` : `Show Archived (${archivedCount})`}
+          </Button>
+        </div>
       </div>
 
-      {!messageGroups || messageGroups.length === 0 ? (
+      {filteredMessageGroups.length === 0 ? (
         <Card>
           <CardContent className="p-12 text-center">
             <MessageSquare className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-            <p className="text-muted-foreground">No messages yet.</p>
+            <p className="text-muted-foreground">
+              {showArchived ? "No messages from archived clients." : "No messages yet."}
+            </p>
           </CardContent>
         </Card>
       ) : (
         <div className="space-y-4">
-          {messageGroups
+          {filteredMessageGroups
             .sort((a, b) => {
               if (a.unreadCount > 0 && b.unreadCount === 0) return -1;
               if (a.unreadCount === 0 && b.unreadCount > 0) return 1;
@@ -172,6 +191,12 @@ export default function AdminMessages() {
                         <h3 className="font-medium truncate">{group.clientName}</h3>
                         {group.unreadCount > 0 && (
                           <Badge variant="destructive">{group.unreadCount}</Badge>
+                        )}
+                        {group.clientIsArchived && (
+                          <Badge variant="outline" className="bg-gray-100 text-gray-600 text-xs">
+                            <Archive className="w-3 h-3 mr-1" />
+                            Archived
+                          </Badge>
                         )}
                       </div>
                       <p className="text-sm text-muted-foreground truncate">
