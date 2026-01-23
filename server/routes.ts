@@ -1009,6 +1009,7 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
             ...doc,
             clientName: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email : 'Unknown',
             clientEmail: user?.email,
+            clientIsArchived: user?.isArchived || false,
           };
         })
       );
@@ -1050,6 +1051,7 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
             userId: msg.userId,
             clientName: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email : 'Unknown',
             clientEmail: user?.email,
+            clientIsArchived: user?.isArchived || false,
             messages: [],
             unreadCount: 0,
             lastMessage: null,
@@ -1100,6 +1102,7 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
             ...sig,
             clientName: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email : 'Unknown',
             clientEmail: user?.email,
+            clientIsArchived: user?.isArchived || false,
           };
         })
       );
@@ -1124,6 +1127,7 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
             ...inv,
             clientName: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email : 'Unknown',
             clientEmail: user?.email,
+            clientIsArchived: user?.isArchived || false,
             items,
           };
         })
@@ -1200,6 +1204,7 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
             ...refund,
             clientName: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email : 'Unknown',
             clientEmail: user?.email,
+            clientIsArchived: user?.isArchived || false,
           };
         })
       );
