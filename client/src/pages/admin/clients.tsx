@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -38,8 +38,18 @@ import {
   UserPlus,
   Search,
   X,
-  Archive
+  Archive,
+  Phone,
+  Mail
 } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 const RETURN_PREP_STATUSES = [
   { value: "all", label: "All Statuses" },
@@ -55,6 +65,7 @@ const RETURN_PREP_STATUSES = [
 ];
 
 export default function AdminClients() {
+  const [, navigate] = useLocation();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -136,17 +147,36 @@ export default function AdminClients() {
     return (
       <div className="p-6 space-y-6">
         <h1 className="text-2xl font-semibold">Clients</h1>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {[...Array(6)].map((_, i) => (
-            <Card key={i}>
-              <CardContent className="p-6">
-                <Skeleton className="h-12 w-12 rounded-full mb-4" />
-                <Skeleton className="h-4 w-32 mb-2" />
-                <Skeleton className="h-3 w-48" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[250px]">Client</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-center">Docs</TableHead>
+                  <TableHead className="text-center">Signed</TableHead>
+                  <TableHead className="text-center">Messages</TableHead>
+                  <TableHead className="text-center">Invoices</TableHead>
+                  <TableHead>Phone</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {[...Array(6)].map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-20" /></TableCell>
+                    <TableCell className="text-center"><Skeleton className="h-4 w-8 mx-auto" /></TableCell>
+                    <TableCell className="text-center"><Skeleton className="h-4 w-8 mx-auto" /></TableCell>
+                    <TableCell className="text-center"><Skeleton className="h-4 w-8 mx-auto" /></TableCell>
+                    <TableCell className="text-center"><Skeleton className="h-4 w-8 mx-auto" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -306,73 +336,124 @@ export default function AdminClients() {
           </CardContent>
         </Card>
       ) : filteredClients.length > 0 ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {filteredClients.map((client) => (
-            <Link key={client.id} href={`/admin/clients/${client.id}`}>
-              <Card className="hover-elevate cursor-pointer" data-testid={`card-client-${client.id}`}>
-                <CardContent className="p-6">
-                  <div className="flex items-start gap-4">
-                    <Avatar className="h-12 w-12">
-                      <AvatarImage src={client.profileImageUrl} />
-                      <AvatarFallback>
-                        {client.firstName?.[0] || client.email?.[0]?.toUpperCase() || "C"}
-                        {client.lastName?.[0] || ""}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-medium truncate">
-                        {client.firstName && client.lastName 
-                          ? `${client.firstName} ${client.lastName}`
-                          : client.email || "Unknown Client"
-                        }
-                      </h3>
-                      <p className="text-sm text-muted-foreground truncate">{client.email}</p>
-                      <div className="mt-2 flex gap-2">
-                        {getReturnPrepStatusBadge(client.stats?.returnPrepStatus)}
-                        {client.isArchived && (
-                          <Badge variant="outline" className="bg-gray-100 text-gray-600">
-                            <Archive className="w-3 h-3 mr-1" />
-                            Archived
-                          </Badge>
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/50">
+                  <TableHead className="w-[280px]">Client</TableHead>
+                  <TableHead className="w-[130px]">Status</TableHead>
+                  <TableHead className="text-center w-[80px]">Docs</TableHead>
+                  <TableHead className="text-center w-[80px]">Signed</TableHead>
+                  <TableHead className="text-center w-[100px]">Messages</TableHead>
+                  <TableHead className="text-center w-[90px]">Invoices</TableHead>
+                  <TableHead className="w-[140px]">Phone</TableHead>
+                  <TableHead className="w-[40px]" aria-hidden="true"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredClients.map((client) => (
+                  <TableRow 
+                    key={client.id} 
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => navigate(`/admin/clients/${client.id}`)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        navigate(`/admin/clients/${client.id}`);
+                      }
+                    }}
+                    tabIndex={0}
+                    role="link"
+                    data-testid={`row-client-${client.id}`}
+                  >
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-9 w-9">
+                          <AvatarImage src={client.profileImageUrl} />
+                          <AvatarFallback className="text-sm">
+                            {client.firstName?.[0] || client.email?.[0]?.toUpperCase() || "C"}
+                            {client.lastName?.[0] || ""}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0">
+                          <div className="font-medium truncate flex items-center gap-2">
+                            {client.firstName && client.lastName 
+                              ? `${client.firstName} ${client.lastName}`
+                              : client.email || "Unknown Client"
+                            }
+                            {client.isArchived && (
+                              <Badge variant="outline" className="bg-gray-100 text-gray-600 text-xs">
+                                <Archive className="w-3 h-3 mr-1" />
+                                Archived
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="text-sm text-muted-foreground truncate flex items-center gap-1">
+                            <Mail className="w-3 h-3" />
+                            {client.email}
+                          </div>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {getReturnPrepStatusBadge(client.stats?.returnPrepStatus)}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="flex items-center justify-center gap-1">
+                        <FileText className="w-4 h-4 text-muted-foreground" />
+                        <span>{client.stats?.documentsCount || 0}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="flex items-center justify-center gap-1">
+                        <PenTool className="w-4 h-4 text-muted-foreground" />
+                        <span>{client.stats?.signaturesCount || 0}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className={`flex items-center justify-center gap-1 ${client.stats?.unreadMessages > 0 ? 'text-orange-600 font-medium' : ''}`}>
+                        <MessageSquare className={`w-4 h-4 ${client.stats?.unreadMessages > 0 ? 'text-orange-500' : 'text-muted-foreground'}`} />
+                        <span>
+                          {client.stats?.unreadMessages > 0 
+                            ? client.stats.unreadMessages
+                            : 0
+                          }
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className={`flex items-center justify-center gap-1 ${client.stats?.pendingInvoices > 0 ? 'text-red-600 font-medium' : ''}`}>
+                        <DollarSign className={`w-4 h-4 ${client.stats?.pendingInvoices > 0 ? 'text-red-500' : 'text-muted-foreground'}`} />
+                        <span>
+                          {client.stats?.pendingInvoices > 0 
+                            ? client.stats.pendingInvoices
+                            : 0
+                          }
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-sm text-muted-foreground flex items-center gap-1">
+                        {client.phone ? (
+                          <>
+                            <Phone className="w-3 h-3" />
+                            {client.phone}
+                          </>
+                        ) : (
+                          <span className="text-gray-400">-</span>
                         )}
                       </div>
-                    </div>
-                    <ChevronRight className="w-5 h-5 text-muted-foreground" />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t">
-                    <div className="flex items-center gap-2 text-sm">
-                      <FileText className="w-4 h-4 text-muted-foreground" />
-                      <span>{client.stats?.documentsCount || 0} docs</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <PenTool className="w-4 h-4 text-muted-foreground" />
-                      <span>{client.stats?.signaturesCount || 0} signed</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <MessageSquare className={`w-4 h-4 ${client.stats?.unreadMessages > 0 ? 'text-orange-500' : 'text-muted-foreground'}`} />
-                      <span>
-                        {client.stats?.unreadMessages > 0 
-                          ? `${client.stats.unreadMessages} unread`
-                          : "No messages"
-                        }
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <DollarSign className={`w-4 h-4 ${client.stats?.pendingInvoices > 0 ? 'text-red-500' : 'text-muted-foreground'}`} />
-                      <span>
-                        {client.stats?.pendingInvoices > 0 
-                          ? `${client.stats.pendingInvoices} unpaid`
-                          : "Paid"
-                        }
-                      </span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
-        </div>
+                    </TableCell>
+                    <TableCell aria-hidden="true">
+                      <ChevronRight className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       ) : null}
     </div>
   );
