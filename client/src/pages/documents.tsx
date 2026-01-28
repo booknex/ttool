@@ -104,8 +104,10 @@ export default function Documents() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [selectedDoc, setSelectedDoc] = useState<Document | null>(null);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [currentFileIndex, setCurrentFileIndex] = useState(0);
   const [selectedChecklistItem, setSelectedChecklistItem] = useState<string>("");
   const [showChecklistDialog, setShowChecklistDialog] = useState(false);
+  const [fileChecklistMap, setFileChecklistMap] = useState<Map<number, string>>(new Map());
 
   const { data: documents, isLoading: docsLoading } = useQuery<Document[]>({
     queryKey: ["/api/documents"],
@@ -115,30 +117,19 @@ export default function Documents() {
     queryKey: ["/api/required-documents"],
   });
 
-  const uploadMutation = useMutation({
-    mutationFn: async ({ files, requiredDocumentId }: { files: File[]; requiredDocumentId?: string }) => {
-      setUploading(true);
-      setUploadProgress(0);
-
+  const uploadSingleFileMutation = useMutation({
+    mutationFn: async ({ file, requiredDocumentId }: { file: File; requiredDocumentId?: string }) => {
       const formData = new FormData();
-      files.forEach((file) => {
-        formData.append("files", file);
-      });
+      formData.append("files", file);
       if (requiredDocumentId) {
         formData.append("requiredDocumentId", requiredDocumentId);
       }
-
-      const progressInterval = setInterval(() => {
-        setUploadProgress((prev) => Math.min(prev + 10, 90));
-      }, 200);
 
       const response = await fetch("/api/documents/upload", {
         method: "POST",
         body: formData,
         credentials: "include",
       });
-
-      clearInterval(progressInterval);
 
       if (!response.ok) {
         throw new Error("Upload failed");
@@ -149,43 +140,85 @@ export default function Documents() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
       queryClient.invalidateQueries({ queryKey: ["/api/required-documents"] });
-      toast({
-        title: "Upload Successful",
-        description: "Your documents have been uploaded and are being processed.",
-      });
-      setUploadProgress(100);
-      setTimeout(() => {
-        setUploading(false);
-        setUploadProgress(0);
-        setPendingFiles([]);
-        setSelectedChecklistItem("");
-        setShowChecklistDialog(false);
-      }, 1000);
     },
     onError: () => {
       toast({
         title: "Upload Failed",
-        description: "There was an error uploading your documents. Please try again.",
+        description: "There was an error uploading a document. Please try again.",
         variant: "destructive",
       });
-      setUploading(false);
-      setUploadProgress(0);
     },
   });
 
-  const handleUploadWithSelection = () => {
-    if (pendingFiles.length > 0) {
-      uploadMutation.mutate({ 
-        files: pendingFiles, 
-        requiredDocumentId: selectedChecklistItem || undefined 
+  const processNextFile = () => {
+    const nextIndex = currentFileIndex + 1;
+    if (nextIndex < pendingFiles.length) {
+      setCurrentFileIndex(nextIndex);
+      setSelectedChecklistItem("");
+    } else {
+      finishUpload();
+    }
+  };
+
+  const finishUpload = async () => {
+    setUploading(true);
+    setUploadProgress(0);
+
+    const progressInterval = setInterval(() => {
+      setUploadProgress((prev) => Math.min(prev + 10, 90));
+    }, 200);
+
+    try {
+      for (let i = 0; i < pendingFiles.length; i++) {
+        const file = pendingFiles[i];
+        const checklistItemId = fileChecklistMap.get(i);
+        await uploadSingleFileMutation.mutateAsync({ 
+          file, 
+          requiredDocumentId: checklistItemId 
+        });
+      }
+      
+      toast({
+        title: "Upload Successful",
+        description: `${pendingFiles.length} document${pendingFiles.length > 1 ? 's have' : ' has'} been uploaded and ${pendingFiles.length > 1 ? 'are' : 'is'} being processed.`,
       });
+      setUploadProgress(100);
+    } catch {
+      setUploadProgress(0);
+    } finally {
+      clearInterval(progressInterval);
+      setTimeout(() => {
+        setUploading(false);
+        setUploadProgress(0);
+        setPendingFiles([]);
+        setCurrentFileIndex(0);
+        setSelectedChecklistItem("");
+        setShowChecklistDialog(false);
+        setFileChecklistMap(new Map());
+      }, 1000);
+    }
+  };
+
+  const handleUploadWithSelection = () => {
+    if (pendingFiles.length > 0 && currentFileIndex < pendingFiles.length) {
+      if (selectedChecklistItem) {
+        setFileChecklistMap(prev => new Map(prev).set(currentFileIndex, selectedChecklistItem));
+      }
+      processNextFile();
     }
   };
 
   const handleSkipSelection = () => {
-    if (pendingFiles.length > 0) {
-      uploadMutation.mutate({ files: pendingFiles });
+    if (pendingFiles.length > 0 && currentFileIndex < pendingFiles.length) {
+      processNextFile();
     }
+  };
+
+  const handleSkipAllRemaining = () => {
+    if (selectedChecklistItem) {
+      setFileChecklistMap(prev => new Map(prev).set(currentFileIndex, selectedChecklistItem));
+    }
+    finishUpload();
   };
 
   const deleteMutation = useMutation({
@@ -209,20 +242,59 @@ export default function Documents() {
     },
   });
 
-  const incompleteChecklistItems = requiredDocs?.filter(d => !d.isUploaded) || [];
+  const getIncompleteChecklistItems = useCallback(() => {
+    const alreadySelected = new Set(fileChecklistMap.values());
+    return requiredDocs?.filter(d => !d.isUploaded && !alreadySelected.has(d.id)) || [];
+  }, [requiredDocs, fileChecklistMap]);
+
+  const incompleteChecklistItems = getIncompleteChecklistItems();
 
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
       if (acceptedFiles.length > 0) {
-        if (incompleteChecklistItems.length > 0) {
+        if (reqDocsLoading) {
+          toast({
+            title: "Please Wait",
+            description: "Loading your document checklist. Please try again in a moment.",
+          });
+          return;
+        }
+        
+        const incompleteItems = requiredDocs?.filter(d => !d.isUploaded) || [];
+        if (incompleteItems.length > 0) {
           setPendingFiles(acceptedFiles);
+          setCurrentFileIndex(0);
+          setFileChecklistMap(new Map());
+          setSelectedChecklistItem("");
           setShowChecklistDialog(true);
         } else {
-          uploadMutation.mutate({ files: acceptedFiles });
+          setUploading(true);
+          setUploadProgress(0);
+          const progressInterval = setInterval(() => {
+            setUploadProgress((prev) => Math.min(prev + 10, 90));
+          }, 200);
+          
+          Promise.all(acceptedFiles.map(file => 
+            uploadSingleFileMutation.mutateAsync({ file })
+          )).then(() => {
+            toast({
+              title: "Upload Successful",
+              description: `${acceptedFiles.length} document${acceptedFiles.length > 1 ? 's have' : ' has'} been uploaded.`,
+            });
+            setUploadProgress(100);
+          }).catch(() => {
+            setUploadProgress(0);
+          }).finally(() => {
+            clearInterval(progressInterval);
+            setTimeout(() => {
+              setUploading(false);
+              setUploadProgress(0);
+            }, 1000);
+          });
         }
       }
     },
-    [uploadMutation, incompleteChecklistItems.length]
+    [reqDocsLoading, requiredDocs, toast, uploadSingleFileMutation]
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -615,14 +687,16 @@ export default function Documents() {
         if (!open && !uploading) {
           setShowChecklistDialog(false);
           setPendingFiles([]);
+          setCurrentFileIndex(0);
           setSelectedChecklistItem("");
+          setFileChecklistMap(new Map());
         }
       }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <FileCheck className="w-5 h-5" />
-              What document is this?
+              {pendingFiles.length > 1 ? `File ${currentFileIndex + 1} of ${pendingFiles.length}` : "What document is this?"}
             </DialogTitle>
             <DialogDescription>
               Select which item from your checklist this document is for. This helps us process your tax return faster.
@@ -630,59 +704,90 @@ export default function Documents() {
           </DialogHeader>
           
           <div className="space-y-4 py-4">
+            {pendingFiles[currentFileIndex] && (
+              <div className="p-3 rounded-lg bg-primary/5 border border-primary/20">
+                <p className="text-xs text-muted-foreground mb-1">Current file:</p>
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <FileText className="w-4 h-4 text-primary" />
+                  <span className="truncate">{pendingFiles[currentFileIndex].name}</span>
+                </div>
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="checklist-select">Document type</Label>
-              <Select value={selectedChecklistItem} onValueChange={setSelectedChecklistItem}>
-                <SelectTrigger id="checklist-select">
-                  <SelectValue placeholder="Select from your checklist..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {incompleteChecklistItems.map((item) => (
-                    <SelectItem key={item.id} value={item.id}>
-                      <div className="flex items-center gap-2">
-                        <CircleDashed className="w-4 h-4 text-muted-foreground" />
-                        <span>{documentTypeLabels[item.documentType || "other"]}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {incompleteChecklistItems.length > 0 ? (
+                <Select value={selectedChecklistItem} onValueChange={setSelectedChecklistItem}>
+                  <SelectTrigger id="checklist-select">
+                    <SelectValue placeholder="Select from your checklist..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {incompleteChecklistItems.map((item) => (
+                      <SelectItem key={item.id} value={item.id}>
+                        <div className="flex items-center gap-2">
+                          <CircleDashed className="w-4 h-4 text-muted-foreground" />
+                          <span>{documentTypeLabels[item.documentType || "other"]}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <div className="p-3 rounded-lg bg-amber-50 border border-amber-200 text-sm text-amber-800">
+                  <p className="font-medium">No more checklist items available</p>
+                  <p className="text-xs mt-1">All your required documents have been assigned. This file will be uploaded as an additional document.</p>
+                </div>
+              )}
             </div>
 
-            {pendingFiles.length > 0 && (
+            {pendingFiles.length > 1 && (
               <div className="p-3 rounded-lg bg-muted/50">
-                <p className="text-xs text-muted-foreground mb-2">Files to upload:</p>
-                {pendingFiles.map((file, i) => (
-                  <div key={i} className="flex items-center gap-2 text-sm">
-                    <FileText className="w-4 h-4" />
-                    <span className="truncate">{file.name}</span>
-                  </div>
-                ))}
+                <p className="text-xs text-muted-foreground mb-2">Remaining files ({pendingFiles.length - currentFileIndex - 1}):</p>
+                <div className="space-y-1 max-h-24 overflow-y-auto">
+                  {pendingFiles.slice(currentFileIndex + 1).map((file, i) => (
+                    <div key={i} className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <FileText className="w-3 h-3" />
+                      <span className="truncate">{file.name}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
 
           <DialogFooter className="gap-2 sm:gap-0">
+            {pendingFiles.length > 1 && currentFileIndex < pendingFiles.length - 1 && (
+              <Button 
+                variant="ghost" 
+                onClick={handleSkipAllRemaining}
+                disabled={uploading}
+                className="mr-auto"
+              >
+                Skip All & Upload
+              </Button>
+            )}
             <Button 
               variant="outline" 
               onClick={handleSkipSelection}
               disabled={uploading}
             >
-              Skip
+              {currentFileIndex < pendingFiles.length - 1 ? "Skip File" : "Skip"}
             </Button>
             <Button 
-              onClick={handleUploadWithSelection}
-              disabled={!selectedChecklistItem || uploading}
+              onClick={incompleteChecklistItems.length === 0 ? handleSkipSelection : handleUploadWithSelection}
+              disabled={(incompleteChecklistItems.length > 0 && !selectedChecklistItem) || uploading}
             >
               {uploading ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Uploading...
                 </>
+              ) : currentFileIndex < pendingFiles.length - 1 ? (
+                incompleteChecklistItems.length === 0 ? "Continue" : "Next File"
               ) : (
                 <>
                   <Upload className="w-4 h-4 mr-2" />
-                  Upload
+                  {incompleteChecklistItems.length === 0 ? "Upload" : "Upload All"}
                 </>
               )}
             </Button>
