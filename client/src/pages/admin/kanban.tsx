@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -21,19 +23,23 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useState } from "react";
-import { User, GripVertical } from "lucide-react";
+import { User, GripVertical, Building2, Filter } from "lucide-react";
 
-interface Client {
+interface Return {
   id: string;
-  email: string;
-  firstName: string | null;
-  lastName: string | null;
-  returnPrepStatus: string;
+  returnType: 'personal' | 'business';
+  name: string;
+  businessId: string | null;
+  status: string;
+  taxYear: number;
+  clientId: string;
+  clientName: string;
+  clientEmail: string;
   createdAt: string;
 }
 
 interface KanbanData {
-  columns: Record<string, Client[]>;
+  columns: Record<string, Return[]>;
   statuses: string[];
 }
 
@@ -61,28 +67,35 @@ const statusColors: Record<string, string> = {
   filed: "bg-green-50 border-green-300",
 };
 
-function ClientCard({ client, isDragging }: { client: Client; isDragging?: boolean }) {
-  const name = [client.firstName, client.lastName].filter(Boolean).join(" ") || client.email;
-  
+function ReturnCard({ ret, isDragging }: { ret: Return; isDragging?: boolean }) {
   return (
     <div
       className={`bg-white rounded border shadow-sm px-2 py-1.5 ${
         isDragging ? "shadow-lg ring-2 ring-primary" : ""
       }`}
     >
-      <div className="flex items-center gap-1.5">
-        <div className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
-          <User className="h-3 w-3 text-gray-500" />
+      <div className="flex items-start gap-1.5">
+        <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${
+          ret.returnType === 'personal' ? 'bg-blue-100' : 'bg-amber-100'
+        }`}>
+          {ret.returnType === 'personal' ? (
+            <User className="h-3 w-3 text-blue-600" />
+          ) : (
+            <Building2 className="h-3 w-3 text-amber-600" />
+          )}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="font-medium text-xs truncate">{name}</p>
+          <p className="font-medium text-xs truncate">{ret.clientName}</p>
+          <p className="text-[10px] text-muted-foreground truncate">
+            {ret.returnType === 'personal' ? 'Personal' : ret.name}
+          </p>
         </div>
       </div>
     </div>
   );
 }
 
-function SortableClientCard({ client }: { client: Client }) {
+function SortableReturnCard({ ret }: { ret: Return }) {
   const {
     attributes,
     listeners,
@@ -90,7 +103,7 @@ function SortableClientCard({ client }: { client: Client }) {
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: client.id, data: { client } });
+  } = useSortable({ id: ret.id, data: { ret } });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -103,7 +116,7 @@ function SortableClientCard({ client }: { client: Client }) {
       <div className="flex items-center gap-0.5">
         <GripVertical className="h-3 w-3 text-gray-400 flex-shrink-0" />
         <div className="flex-1">
-          <ClientCard client={client} isDragging={isDragging} />
+          <ReturnCard ret={ret} isDragging={isDragging} />
         </div>
       </div>
     </div>
@@ -112,10 +125,10 @@ function SortableClientCard({ client }: { client: Client }) {
 
 function KanbanColumn({
   status,
-  clients,
+  returns,
 }: {
   status: string;
-  clients: Client[];
+  returns: Return[];
 }) {
   const { setNodeRef, isOver } = useDroppable({
     id: status,
@@ -125,18 +138,18 @@ function KanbanColumn({
     <div className={`flex flex-col rounded-lg border-2 ${statusColors[status]} min-w-[160px] w-[160px] ${isOver ? 'ring-2 ring-primary ring-offset-2' : ''}`}>
       <div className="px-2 py-1.5 border-b bg-white/50">
         <h3 className="font-semibold text-xs">{statusLabels[status]}</h3>
-        <span className="text-[10px] text-gray-500">{clients.length}</span>
+        <span className="text-[10px] text-gray-500">{returns.length}</span>
       </div>
       <div 
         ref={setNodeRef}
         className={`p-1.5 flex-1 overflow-y-auto min-h-[200px] max-h-[calc(100vh-240px)] ${isOver ? 'bg-primary/5' : ''}`}
       >
-        <SortableContext items={clients.map(c => c.id)} strategy={verticalListSortingStrategy}>
+        <SortableContext items={returns.map(r => r.id)} strategy={verticalListSortingStrategy}>
           <div className="space-y-1">
-            {clients.map((client) => (
-              <SortableClientCard key={client.id} client={client} />
+            {returns.map((ret) => (
+              <SortableReturnCard key={ret.id} ret={ret} />
             ))}
-            {clients.length === 0 && (
+            {returns.length === 0 && (
               <div className="h-16 flex items-center justify-center text-xs text-gray-400 border-2 border-dashed border-gray-200 rounded">
                 Drop here
               </div>
@@ -151,26 +164,31 @@ function KanbanColumn({
 export default function AdminKanban() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [activeClient, setActiveClient] = useState<Client | null>(null);
+  const [activeReturn, setActiveReturn] = useState<Return | null>(null);
+  const [typeFilter, setTypeFilter] = useState<'all' | 'personal' | 'business'>('all');
 
   const { data, isLoading } = useQuery<KanbanData>({
-    queryKey: ["/api/admin/kanban"],
+    queryKey: ["/api/admin/kanban?type=" + typeFilter],
   });
 
   const updateStatusMutation = useMutation({
-    mutationFn: async ({ userId, returnPrepStatus }: { userId: string; returnPrepStatus: string }) => {
-      return apiRequest("PATCH", `/api/admin/kanban/${userId}`, { returnPrepStatus });
+    mutationFn: async ({ returnId, status }: { returnId: string; status: string }) => {
+      return apiRequest("PATCH", `/api/admin/kanban/${returnId}`, { status });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/kanban"] });
+      queryClient.invalidateQueries({ predicate: (query) => 
+        typeof query.queryKey[0] === 'string' && query.queryKey[0].startsWith('/api/admin/kanban')
+      });
     },
     onError: (error: any) => {
       toast({
         title: "Failed to update",
-        description: error.message || "Could not update client status",
+        description: error.message || "Could not update return status",
         variant: "destructive",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/kanban"] });
+      queryClient.invalidateQueries({ predicate: (query) => 
+        typeof query.queryKey[0] === 'string' && query.queryKey[0].startsWith('/api/admin/kanban')
+      });
     },
   });
 
@@ -183,20 +201,20 @@ export default function AdminKanban() {
   );
 
   const handleDragStart = (event: DragStartEvent) => {
-    const client = event.active.data.current?.client as Client;
-    if (client) {
-      setActiveClient(client);
+    const ret = event.active.data.current?.ret as Return;
+    if (ret) {
+      setActiveReturn(ret);
     }
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    setActiveClient(null);
+    setActiveReturn(null);
 
     if (!over || !data) return;
 
-    const draggedClient = active.data.current?.client as Client;
-    if (!draggedClient) return;
+    const draggedReturn = active.data.current?.ret as Return;
+    if (!draggedReturn) return;
 
     let targetStatus: string | null = null;
     const overId = over.id.toString();
@@ -205,35 +223,35 @@ export default function AdminKanban() {
     if (data.statuses.includes(overId)) {
       targetStatus = overId;
     } else {
-      // Check if dropped on a client card - find which column that client is in
-      for (const [status, clients] of Object.entries(data.columns)) {
-        if (clients.some(c => c.id === overId)) {
+      // Check if dropped on a return card - find which column that return is in
+      for (const [status, returns] of Object.entries(data.columns)) {
+        if (returns.some(r => r.id === overId)) {
           targetStatus = status;
           break;
         }
       }
     }
 
-    if (targetStatus && targetStatus !== draggedClient.returnPrepStatus) {
+    if (targetStatus && targetStatus !== draggedReturn.status) {
       // Optimistic update
-      queryClient.setQueryData(["/api/admin/kanban"], (old: KanbanData | undefined) => {
+      queryClient.setQueryData(["/api/admin/kanban?type=" + typeFilter], (old: KanbanData | undefined) => {
         if (!old) return old;
         
-        const newColumns: Record<string, Client[]> = {};
+        const newColumns: Record<string, Return[]> = {};
         for (const status of old.statuses) {
-          newColumns[status] = old.columns[status]?.filter(c => c.id !== draggedClient.id) || [];
+          newColumns[status] = old.columns[status]?.filter(r => r.id !== draggedReturn.id) || [];
         }
         newColumns[targetStatus] = [
           ...newColumns[targetStatus],
-          { ...draggedClient, returnPrepStatus: targetStatus },
+          { ...draggedReturn, status: targetStatus },
         ];
         
         return { ...old, columns: newColumns };
       });
 
       updateStatusMutation.mutate({
-        userId: draggedClient.id,
-        returnPrepStatus: targetStatus,
+        returnId: draggedReturn.id,
+        status: targetStatus,
       });
     }
   };
@@ -261,9 +279,42 @@ export default function AdminKanban() {
 
   return (
     <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Client Workflow Board</h1>
-        <p className="text-gray-500">Drag clients between columns to update their return preparation status</p>
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Returns Workflow Board</h1>
+          <p className="text-gray-500">Drag returns between columns to update their preparation status</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Filter className="h-4 w-4 text-muted-foreground" />
+          <div className="flex rounded-lg border overflow-hidden">
+            <Button
+              variant={typeFilter === 'all' ? 'default' : 'ghost'}
+              size="sm"
+              className="rounded-none"
+              onClick={() => setTypeFilter('all')}
+            >
+              All
+            </Button>
+            <Button
+              variant={typeFilter === 'personal' ? 'default' : 'ghost'}
+              size="sm"
+              className="rounded-none border-x"
+              onClick={() => setTypeFilter('personal')}
+            >
+              <User className="h-3.5 w-3.5 mr-1" />
+              Personal
+            </Button>
+            <Button
+              variant={typeFilter === 'business' ? 'default' : 'ghost'}
+              size="sm"
+              className="rounded-none"
+              onClick={() => setTypeFilter('business')}
+            >
+              <Building2 className="h-3.5 w-3.5 mr-1" />
+              Business
+            </Button>
+          </div>
+        </div>
       </div>
 
       <DndContext
@@ -277,13 +328,13 @@ export default function AdminKanban() {
             <KanbanColumn
               key={status}
               status={status}
-              clients={data.columns[status] || []}
+              returns={data.columns[status] || []}
             />
           ))}
         </div>
 
         <DragOverlay>
-          {activeClient && <ClientCard client={activeClient} isDragging />}
+          {activeReturn && <ReturnCard ret={activeReturn} isDragging />}
         </DragOverlay>
       </DndContext>
     </div>

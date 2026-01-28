@@ -211,6 +211,40 @@ export default function AdminClientDetail() {
     enabled: !!clientId,
   });
 
+  const { data: returns } = useQuery<any[]>({
+    queryKey: ["/api/admin/clients", clientId, "returns"],
+    enabled: !!clientId,
+  });
+
+  const updateReturnMutation = useMutation({
+    mutationFn: async (data: { id: string; updates: any }) => {
+      return apiRequest("PATCH", `/api/admin/returns/${data.id}`, data.updates);
+    },
+    onSuccess: () => {
+      toast({ title: "Return updated", description: "Return status has been saved" });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/clients", clientId, "returns"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to update return",
+        description: error.message || "Please try again",
+        variant: "destructive"
+      });
+    },
+  });
+
+  const returnStatusLabels: Record<string, string> = {
+    not_started: "Not Started",
+    documents_gathering: "Gathering Docs",
+    information_review: "Info Review",
+    return_preparation: "Prep",
+    quality_review: "QA Review",
+    client_review: "Client Review",
+    signature_required: "Signatures",
+    filing: "Filing",
+    filed: "Filed",
+  };
+
   const questionLabels: Record<string, { section: string; question: string }> = {
     filing_status: { section: "Filing Status", question: "What is your filing status for 2025?" },
     marital_change: { section: "Filing Status", question: "Did your marital status change during 2025?" },
@@ -642,6 +676,9 @@ export default function AdminClientDetail() {
               <TabsTrigger value="businesses" data-testid="tab-businesses">
                 Businesses ({businesses?.length || 0})
               </TabsTrigger>
+              <TabsTrigger value="returns" data-testid="tab-returns">
+                Returns ({returns?.length || 0})
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="documents">
@@ -968,6 +1005,105 @@ export default function AdminClientDetail() {
                               )}
                             </>
                           )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="returns">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Tax Returns</CardTitle>
+                  <CardDescription>Personal and business returns with status tracking</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {!returns || returns.length === 0 ? (
+                    <p className="text-muted-foreground text-center py-8">No returns found for this client</p>
+                  ) : (
+                    <div className="space-y-4">
+                      {returns.map((ret: any) => (
+                        <div key={ret.id} className="p-4 rounded-lg border bg-card" data-testid={`return-${ret.id}`}>
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <Badge variant={ret.returnType === 'personal' ? 'default' : 'secondary'}>
+                                  {ret.returnType === 'personal' ? 'Personal' : 'Business'}
+                                </Badge>
+                                <span className="font-medium">{ret.name}</span>
+                                <span className="text-sm text-muted-foreground">Tax Year {ret.taxYear}</span>
+                              </div>
+                              <div className="grid grid-cols-2 gap-4 mt-3">
+                                <div>
+                                  <Label className="text-xs text-muted-foreground">Preparation Status</Label>
+                                  <select
+                                    className="w-full mt-1 rounded-md border bg-background px-3 py-2 text-sm"
+                                    value={ret.status || 'not_started'}
+                                    onChange={(e) => updateReturnMutation.mutate({ id: ret.id, updates: { status: e.target.value } })}
+                                  >
+                                    {Object.entries(returnStatusLabels).map(([value, label]) => (
+                                      <option key={value} value={value}>{label}</option>
+                                    ))}
+                                  </select>
+                                </div>
+                                <div>
+                                  <Label className="text-xs text-muted-foreground">Federal Filing Status</Label>
+                                  <select
+                                    className="w-full mt-1 rounded-md border bg-background px-3 py-2 text-sm"
+                                    value={ret.federalStatus || 'not_filed'}
+                                    onChange={(e) => updateReturnMutation.mutate({ id: ret.id, updates: { federalStatus: e.target.value } })}
+                                  >
+                                    <option value="not_filed">Not Filed</option>
+                                    <option value="accepted">Accepted</option>
+                                    <option value="processing">Processing</option>
+                                    <option value="approved">Approved</option>
+                                    <option value="refund_sent">Refund Sent</option>
+                                    <option value="completed">Completed</option>
+                                  </select>
+                                </div>
+                              </div>
+                              <div className="grid grid-cols-2 gap-4 mt-3">
+                                <div>
+                                  <Label className="text-xs text-muted-foreground">Federal Amount</Label>
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <span className="text-muted-foreground">$</span>
+                                    <Input
+                                      type="number"
+                                      placeholder="0.00"
+                                      className="h-9"
+                                      defaultValue={ret.federalAmount || ''}
+                                      onBlur={(e) => {
+                                        const val = e.target.value;
+                                        if (val !== (ret.federalAmount || '')) {
+                                          updateReturnMutation.mutate({ id: ret.id, updates: { federalAmount: val || null } });
+                                        }
+                                      }}
+                                    />
+                                  </div>
+                                </div>
+                                <div>
+                                  <Label className="text-xs text-muted-foreground">State Amount</Label>
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <span className="text-muted-foreground">$</span>
+                                    <Input
+                                      type="number"
+                                      placeholder="0.00"
+                                      className="h-9"
+                                      defaultValue={ret.stateAmount || ''}
+                                      onBlur={(e) => {
+                                        const val = e.target.value;
+                                        if (val !== (ret.stateAmount || '')) {
+                                          updateReturnMutation.mutate({ id: ret.id, updates: { stateAmount: val || null } });
+                                        }
+                                      }}
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       ))}
                     </div>

@@ -1415,6 +1415,66 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
     }
   });
 
+  // Get client's returns (admin view)
+  app.get("/api/admin/clients/:id/returns", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const returns = await storage.getReturns(req.params.id);
+      res.json(returns);
+    } catch (error) {
+      console.error("Error fetching client returns:", error);
+      res.status(500).json({ message: "Failed to fetch returns" });
+    }
+  });
+
+  // Update return status (admin)
+  app.patch("/api/admin/returns/:id", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const returnId = req.params.id;
+      const { status, federalStatus, federalAmount, stateStatus, stateAmount, stateName } = req.body;
+      const updates: any = {};
+      if (status !== undefined) updates.status = status;
+      if (federalStatus !== undefined) updates.federalStatus = federalStatus;
+      if (federalAmount !== undefined) updates.federalAmount = federalAmount;
+      if (stateStatus !== undefined) updates.stateStatus = stateStatus;
+      if (stateAmount !== undefined) updates.stateAmount = stateAmount;
+      if (stateName !== undefined) updates.stateName = stateName;
+      
+      const updatedReturn = await storage.updateReturn(returnId, updates);
+      if (!updatedReturn) {
+        return res.status(404).json({ message: "Return not found" });
+      }
+      res.json(updatedReturn);
+    } catch (error) {
+      console.error("Error updating return:", error);
+      res.status(500).json({ message: "Failed to update return" });
+    }
+  });
+
+  // Get all returns (admin view for Kanban)
+  app.get("/api/admin/returns", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const allUsers = await storage.getAllUsers();
+      const allReturns: any[] = [];
+      
+      for (const user of allUsers) {
+        if (user.isArchived) continue;
+        const userReturns = await storage.getReturns(user.id);
+        for (const ret of userReturns) {
+          allReturns.push({
+            ...ret,
+            clientName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email,
+            clientEmail: user.email,
+          });
+        }
+      }
+      
+      res.json(allReturns);
+    } catch (error) {
+      console.error("Error fetching all returns:", error);
+      res.status(500).json({ message: "Failed to fetch returns" });
+    }
+  });
+
   // Get all documents (admin view)
   app.get("/api/admin/documents", isAuthenticated, isAdmin, async (req: any, res) => {
     try {
@@ -1952,23 +2012,34 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
   // ADMIN KANBAN ROUTES
   // =====================================================
 
-  // Get clients grouped by return prep status for Kanban board
+  // Get returns grouped by status for Kanban board (new returns-based approach)
   app.get("/api/admin/kanban", isAuthenticated, isAdmin, async (req: any, res) => {
     try {
-      const clients = await storage.getAllClients();
-      const allRefunds = await storage.getAllRefundTracking();
+      const { type } = req.query; // optional filter: 'all', 'personal', 'business'
+      const allUsers = await storage.getAllUsers();
+      const allReturns: any[] = [];
       
-      const clientsWithStatus = clients.map(client => {
-        const refund = allRefunds.find(r => r.userId === client.id);
-        return {
-          id: client.id,
-          email: client.email,
-          firstName: client.firstName,
-          lastName: client.lastName,
-          returnPrepStatus: refund?.returnPrepStatus || 'not_started',
-          createdAt: client.createdAt,
-        };
-      });
+      for (const user of allUsers) {
+        if (user.isArchived || user.isAdmin) continue;
+        const userReturns = await storage.getReturns(user.id);
+        for (const ret of userReturns) {
+          // Apply type filter if specified
+          if (type && type !== 'all' && ret.returnType !== type) continue;
+          
+          allReturns.push({
+            id: ret.id,
+            returnType: ret.returnType,
+            name: ret.name,
+            businessId: ret.businessId,
+            status: ret.status || 'not_started',
+            taxYear: ret.taxYear,
+            clientId: user.id,
+            clientName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email,
+            clientEmail: user.email,
+            createdAt: ret.createdAt,
+          });
+        }
+      }
       
       // Group by status
       const statuses = [
@@ -1979,7 +2050,7 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
       
       const columns: Record<string, any[]> = {};
       statuses.forEach(status => {
-        columns[status] = clientsWithStatus.filter(c => c.returnPrepStatus === status);
+        columns[status] = allReturns.filter(r => r.status === status);
       });
       
       res.json({ columns, statuses });
@@ -1989,20 +2060,20 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
     }
   });
 
-  // Update client status via drag and drop
-  app.patch("/api/admin/kanban/:userId", isAuthenticated, isAdmin, async (req: any, res) => {
+  // Update return status via drag and drop (now updates individual return)
+  app.patch("/api/admin/kanban/:returnId", isAuthenticated, isAdmin, async (req: any, res) => {
     try {
-      const { userId } = req.params;
-      const { returnPrepStatus } = req.body;
+      const { returnId } = req.params;
+      const { status } = req.body;
       
-      if (!returnPrepStatus) {
-        return res.status(400).json({ message: "Return prep status is required" });
+      if (!status) {
+        return res.status(400).json({ message: "Status is required" });
       }
       
-      const updated = await storage.upsertRefundTracking({
-        userId,
-        returnPrepStatus,
-      });
+      const updated = await storage.updateReturn(returnId, { status });
+      if (!updated) {
+        return res.status(404).json({ message: "Return not found" });
+      }
       
       res.json(updated);
     } catch (error) {
