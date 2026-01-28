@@ -10,6 +10,10 @@ import {
   invoiceItems,
   affiliates,
   affiliateReferrals,
+  businesses,
+  businessOwners,
+  businessExpenses,
+  returns,
   type User,
   type UpsertUser,
   type Document,
@@ -32,6 +36,14 @@ import {
   type InsertAffiliate,
   type AffiliateReferral,
   type InsertAffiliateReferral,
+  type Business,
+  type InsertBusiness,
+  type BusinessOwner,
+  type InsertBusinessOwner,
+  type BusinessExpense,
+  type InsertBusinessExpense,
+  type Return,
+  type InsertReturn,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, ne, inArray } from "drizzle-orm";
@@ -116,6 +128,36 @@ export interface IStorage {
   createAffiliateReferral(data: InsertAffiliateReferral): Promise<AffiliateReferral>;
   updateAffiliateReferral(id: string, updates: Partial<AffiliateReferral>): Promise<AffiliateReferral | undefined>;
   getReferralByClientId(clientUserId: string): Promise<AffiliateReferral | undefined>;
+
+  // Business operations
+  getBusinesses(userId: string): Promise<Business[]>;
+  getBusiness(id: string): Promise<Business | undefined>;
+  createBusiness(data: InsertBusiness): Promise<Business>;
+  updateBusiness(id: string, updates: Partial<Business>): Promise<Business | undefined>;
+  deleteBusiness(id: string): Promise<void>;
+
+  // Business owner operations
+  getBusinessOwner(id: string): Promise<BusinessOwner | undefined>;
+  getBusinessOwners(businessId: string): Promise<BusinessOwner[]>;
+  createBusinessOwner(data: InsertBusinessOwner): Promise<BusinessOwner>;
+  updateBusinessOwner(id: string, updates: Partial<BusinessOwner>): Promise<BusinessOwner | undefined>;
+  deleteBusinessOwner(id: string): Promise<void>;
+
+  // Business expense operations
+  getBusinessExpense(id: string): Promise<BusinessExpense | undefined>;
+  getBusinessExpenses(businessId: string): Promise<BusinessExpense[]>;
+  createBusinessExpense(data: InsertBusinessExpense): Promise<BusinessExpense>;
+  updateBusinessExpense(id: string, updates: Partial<BusinessExpense>): Promise<BusinessExpense | undefined>;
+  deleteBusinessExpense(id: string): Promise<void>;
+
+  // Return operations
+  getReturns(userId: string): Promise<Return[]>;
+  getReturn(id: string): Promise<Return | undefined>;
+  createReturn(data: InsertReturn): Promise<Return>;
+  updateReturn(id: string, updates: Partial<Return>): Promise<Return | undefined>;
+  deleteReturn(id: string): Promise<void>;
+  getReturnByBusiness(businessId: string): Promise<Return | undefined>;
+  ensurePersonalReturn(userId: string): Promise<Return>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -547,6 +589,143 @@ export class DatabaseStorage implements IStorage {
   async getReferralByClientId(clientUserId: string): Promise<AffiliateReferral | undefined> {
     const [referral] = await db.select().from(affiliateReferrals).where(eq(affiliateReferrals.clientUserId, clientUserId));
     return referral;
+  }
+
+  // Business operations
+  async getBusinesses(userId: string): Promise<Business[]> {
+    return db.select().from(businesses).where(eq(businesses.userId, userId)).orderBy(desc(businesses.createdAt));
+  }
+
+  async getBusiness(id: string): Promise<Business | undefined> {
+    const [business] = await db.select().from(businesses).where(eq(businesses.id, id));
+    return business;
+  }
+
+  async createBusiness(data: InsertBusiness): Promise<Business> {
+    const [business] = await db.insert(businesses).values(data).returning();
+    return business;
+  }
+
+  async updateBusiness(id: string, updates: Partial<Business>): Promise<Business | undefined> {
+    const [updated] = await db
+      .update(businesses)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(businesses.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteBusiness(id: string): Promise<void> {
+    await db.delete(businessExpenses).where(eq(businessExpenses.businessId, id));
+    await db.delete(businessOwners).where(eq(businessOwners.businessId, id));
+    await db.delete(returns).where(eq(returns.businessId, id));
+    await db.update(documents).set({ businessId: null }).where(eq(documents.businessId, id));
+    await db.delete(businesses).where(eq(businesses.id, id));
+  }
+
+  // Business owner operations
+  async getBusinessOwner(id: string): Promise<BusinessOwner | undefined> {
+    const [owner] = await db.select().from(businessOwners).where(eq(businessOwners.id, id));
+    return owner;
+  }
+
+  async getBusinessOwners(businessId: string): Promise<BusinessOwner[]> {
+    return db.select().from(businessOwners).where(eq(businessOwners.businessId, businessId));
+  }
+
+  async createBusinessOwner(data: InsertBusinessOwner): Promise<BusinessOwner> {
+    const [owner] = await db.insert(businessOwners).values(data).returning();
+    return owner;
+  }
+
+  async updateBusinessOwner(id: string, updates: Partial<BusinessOwner>): Promise<BusinessOwner | undefined> {
+    const [updated] = await db
+      .update(businessOwners)
+      .set(updates)
+      .where(eq(businessOwners.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteBusinessOwner(id: string): Promise<void> {
+    await db.delete(businessOwners).where(eq(businessOwners.id, id));
+  }
+
+  // Business expense operations
+  async getBusinessExpense(id: string): Promise<BusinessExpense | undefined> {
+    const [expense] = await db.select().from(businessExpenses).where(eq(businessExpenses.id, id));
+    return expense;
+  }
+
+  async getBusinessExpenses(businessId: string): Promise<BusinessExpense[]> {
+    return db.select().from(businessExpenses).where(eq(businessExpenses.businessId, businessId));
+  }
+
+  async createBusinessExpense(data: InsertBusinessExpense): Promise<BusinessExpense> {
+    const [expense] = await db.insert(businessExpenses).values(data).returning();
+    return expense;
+  }
+
+  async updateBusinessExpense(id: string, updates: Partial<BusinessExpense>): Promise<BusinessExpense | undefined> {
+    const [updated] = await db
+      .update(businessExpenses)
+      .set(updates)
+      .where(eq(businessExpenses.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteBusinessExpense(id: string): Promise<void> {
+    await db.delete(businessExpenses).where(eq(businessExpenses.id, id));
+  }
+
+  // Return operations
+  async getReturns(userId: string): Promise<Return[]> {
+    return db.select().from(returns).where(eq(returns.userId, userId)).orderBy(desc(returns.createdAt));
+  }
+
+  async getReturn(id: string): Promise<Return | undefined> {
+    const [ret] = await db.select().from(returns).where(eq(returns.id, id));
+    return ret;
+  }
+
+  async createReturn(data: InsertReturn): Promise<Return> {
+    const [ret] = await db.insert(returns).values(data).returning();
+    return ret;
+  }
+
+  async updateReturn(id: string, updates: Partial<Return>): Promise<Return | undefined> {
+    const [updated] = await db
+      .update(returns)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(returns.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteReturn(id: string): Promise<void> {
+    await db.delete(returns).where(eq(returns.id, id));
+  }
+
+  async getReturnByBusiness(businessId: string): Promise<Return | undefined> {
+    const [ret] = await db.select().from(returns).where(eq(returns.businessId, businessId));
+    return ret;
+  }
+
+  async ensurePersonalReturn(userId: string): Promise<Return> {
+    const existingReturns = await db.select().from(returns).where(
+      and(eq(returns.userId, userId), eq(returns.returnType, 'personal'))
+    );
+    if (existingReturns.length > 0) {
+      return existingReturns[0];
+    }
+    const [newReturn] = await db.insert(returns).values({
+      userId,
+      returnType: 'personal',
+      name: 'Personal Return',
+      taxYear: 2025,
+    }).returning();
+    return newReturn;
   }
 }
 

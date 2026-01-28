@@ -606,6 +606,293 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
     }
   });
 
+  // Business routes
+  app.get("/api/businesses", isAuthenticated, resolveDbUser, async (req: any, res) => {
+    try {
+      const userId = req.dbUser.id;
+      const businessList = await storage.getBusinesses(userId);
+      res.json(businessList);
+    } catch (error) {
+      console.error("Error fetching businesses:", error);
+      res.status(500).json({ message: "Failed to fetch businesses" });
+    }
+  });
+
+  app.get("/api/businesses/:id", isAuthenticated, resolveDbUser, async (req: any, res) => {
+    try {
+      const userId = req.dbUser.id;
+      const business = await storage.getBusiness(req.params.id);
+      
+      if (!business || business.userId !== userId) {
+        return res.status(404).json({ message: "Business not found" });
+      }
+
+      res.json(business);
+    } catch (error) {
+      console.error("Error fetching business:", error);
+      res.status(500).json({ message: "Failed to fetch business" });
+    }
+  });
+
+  app.post("/api/businesses", isAuthenticated, resolveDbUser, async (req: any, res) => {
+    try {
+      const userId = req.dbUser.id;
+      const business = await storage.createBusiness({
+        ...req.body,
+        userId,
+        taxYear: 2025,
+      });
+
+      // Also create a business return for this business
+      await storage.createReturn({
+        userId,
+        businessId: business.id,
+        returnType: 'business',
+        name: business.name,
+        taxYear: 2025,
+      });
+
+      res.status(201).json(business);
+    } catch (error) {
+      console.error("Error creating business:", error);
+      res.status(500).json({ message: "Failed to create business" });
+    }
+  });
+
+  app.patch("/api/businesses/:id", isAuthenticated, resolveDbUser, async (req: any, res) => {
+    try {
+      const userId = req.dbUser.id;
+      const business = await storage.getBusiness(req.params.id);
+      
+      if (!business || business.userId !== userId) {
+        return res.status(404).json({ message: "Business not found" });
+      }
+
+      const updated = await storage.updateBusiness(req.params.id, req.body);
+      
+      // Also update the return name if business name changed
+      if (req.body.name) {
+        const businessReturn = await storage.getReturnByBusiness(req.params.id);
+        if (businessReturn) {
+          await storage.updateReturn(businessReturn.id, { name: req.body.name });
+        }
+      }
+      
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating business:", error);
+      res.status(500).json({ message: "Failed to update business" });
+    }
+  });
+
+  app.delete("/api/businesses/:id", isAuthenticated, resolveDbUser, async (req: any, res) => {
+    try {
+      const userId = req.dbUser.id;
+      const business = await storage.getBusiness(req.params.id);
+      
+      if (!business || business.userId !== userId) {
+        return res.status(404).json({ message: "Business not found" });
+      }
+
+      await storage.deleteBusiness(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting business:", error);
+      res.status(500).json({ message: "Failed to delete business" });
+    }
+  });
+
+  // Business owners routes
+  app.get("/api/businesses/:id/owners", isAuthenticated, resolveDbUser, async (req: any, res) => {
+    try {
+      const userId = req.dbUser.id;
+      const business = await storage.getBusiness(req.params.id);
+      
+      if (!business || business.userId !== userId) {
+        return res.status(404).json({ message: "Business not found" });
+      }
+
+      const owners = await storage.getBusinessOwners(req.params.id);
+      res.json(owners);
+    } catch (error) {
+      console.error("Error fetching business owners:", error);
+      res.status(500).json({ message: "Failed to fetch business owners" });
+    }
+  });
+
+  app.post("/api/businesses/:id/owners", isAuthenticated, resolveDbUser, async (req: any, res) => {
+    try {
+      const userId = req.dbUser.id;
+      const business = await storage.getBusiness(req.params.id);
+      
+      if (!business || business.userId !== userId) {
+        return res.status(404).json({ message: "Business not found" });
+      }
+
+      const owner = await storage.createBusinessOwner({
+        ...req.body,
+        businessId: req.params.id,
+      });
+      res.status(201).json(owner);
+    } catch (error) {
+      console.error("Error creating business owner:", error);
+      res.status(500).json({ message: "Failed to create business owner" });
+    }
+  });
+
+  app.patch("/api/business-owners/:id", isAuthenticated, resolveDbUser, async (req: any, res) => {
+    try {
+      const userId = req.dbUser.id;
+      const owner = await storage.getBusinessOwner(req.params.id);
+      if (!owner) {
+        return res.status(404).json({ message: "Business owner not found" });
+      }
+      
+      const business = await storage.getBusiness(owner.businessId);
+      if (!business || business.userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const updated = await storage.updateBusinessOwner(req.params.id, req.body);
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating business owner:", error);
+      res.status(500).json({ message: "Failed to update business owner" });
+    }
+  });
+
+  app.delete("/api/business-owners/:id", isAuthenticated, resolveDbUser, async (req: any, res) => {
+    try {
+      const userId = req.dbUser.id;
+      const owner = await storage.getBusinessOwner(req.params.id);
+      if (!owner) {
+        return res.status(404).json({ message: "Business owner not found" });
+      }
+      
+      const business = await storage.getBusiness(owner.businessId);
+      if (!business || business.userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      await storage.deleteBusinessOwner(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting business owner:", error);
+      res.status(500).json({ message: "Failed to delete business owner" });
+    }
+  });
+
+  // Business expenses routes
+  app.get("/api/businesses/:id/expenses", isAuthenticated, resolveDbUser, async (req: any, res) => {
+    try {
+      const userId = req.dbUser.id;
+      const business = await storage.getBusiness(req.params.id);
+      
+      if (!business || business.userId !== userId) {
+        return res.status(404).json({ message: "Business not found" });
+      }
+
+      const expenses = await storage.getBusinessExpenses(req.params.id);
+      res.json(expenses);
+    } catch (error) {
+      console.error("Error fetching business expenses:", error);
+      res.status(500).json({ message: "Failed to fetch business expenses" });
+    }
+  });
+
+  app.post("/api/businesses/:id/expenses", isAuthenticated, resolveDbUser, async (req: any, res) => {
+    try {
+      const userId = req.dbUser.id;
+      const business = await storage.getBusiness(req.params.id);
+      
+      if (!business || business.userId !== userId) {
+        return res.status(404).json({ message: "Business not found" });
+      }
+
+      const expense = await storage.createBusinessExpense({
+        ...req.body,
+        businessId: req.params.id,
+        taxYear: 2025,
+      });
+      res.status(201).json(expense);
+    } catch (error) {
+      console.error("Error creating business expense:", error);
+      res.status(500).json({ message: "Failed to create business expense" });
+    }
+  });
+
+  app.patch("/api/business-expenses/:id", isAuthenticated, resolveDbUser, async (req: any, res) => {
+    try {
+      const userId = req.dbUser.id;
+      const expense = await storage.getBusinessExpense(req.params.id);
+      if (!expense) {
+        return res.status(404).json({ message: "Business expense not found" });
+      }
+      
+      const business = await storage.getBusiness(expense.businessId);
+      if (!business || business.userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const updated = await storage.updateBusinessExpense(req.params.id, req.body);
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating business expense:", error);
+      res.status(500).json({ message: "Failed to update business expense" });
+    }
+  });
+
+  app.delete("/api/business-expenses/:id", isAuthenticated, resolveDbUser, async (req: any, res) => {
+    try {
+      const userId = req.dbUser.id;
+      const expense = await storage.getBusinessExpense(req.params.id);
+      if (!expense) {
+        return res.status(404).json({ message: "Business expense not found" });
+      }
+      
+      const business = await storage.getBusiness(expense.businessId);
+      if (!business || business.userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      await storage.deleteBusinessExpense(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting business expense:", error);
+      res.status(500).json({ message: "Failed to delete business expense" });
+    }
+  });
+
+  // Returns routes
+  app.get("/api/returns", isAuthenticated, resolveDbUser, async (req: any, res) => {
+    try {
+      const userId = req.dbUser.id;
+      // Ensure user has a personal return
+      await storage.ensurePersonalReturn(userId);
+      const returnsList = await storage.getReturns(userId);
+      res.json(returnsList);
+    } catch (error) {
+      console.error("Error fetching returns:", error);
+      res.status(500).json({ message: "Failed to fetch returns" });
+    }
+  });
+
+  app.get("/api/returns/:id", isAuthenticated, resolveDbUser, async (req: any, res) => {
+    try {
+      const userId = req.dbUser.id;
+      const ret = await storage.getReturn(req.params.id);
+      
+      if (!ret || ret.userId !== userId) {
+        return res.status(404).json({ message: "Return not found" });
+      }
+
+      res.json(ret);
+    } catch (error) {
+      console.error("Error fetching return:", error);
+      res.status(500).json({ message: "Failed to fetch return" });
+    }
+  });
+
   const isAdmin = async (req: any, res: any, next: any) => {
     try {
       const userId = (req.session as any).userId;

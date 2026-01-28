@@ -20,6 +20,7 @@ import Refund from "@/pages/refund";
 import Signatures from "@/pages/signatures";
 import Invoices from "@/pages/invoices";
 import ReturnStatus from "@/pages/return-status";
+import Businesses from "@/pages/businesses";
 
 import AdminDashboard from "@/pages/admin/dashboard";
 import AdminClients from "@/pages/admin/clients";
@@ -204,6 +205,7 @@ function Router() {
         <Route path="/refund" component={Refund} />
         <Route path="/signatures" component={Signatures} />
         <Route path="/invoices" component={Invoices} />
+        <Route path="/businesses" component={Businesses} />
         <Route component={NotFound} />
       </Switch>
     </ClientLayout>

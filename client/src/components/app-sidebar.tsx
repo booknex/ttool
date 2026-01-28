@@ -24,6 +24,7 @@ import {
   LogOut,
   Shield,
   ListChecks,
+  Building2,
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { RefundTracking } from "@shared/schema";
@@ -32,6 +33,7 @@ const getMenuItems = (isFiled: boolean) => [
   { title: "Return Status", url: "/", icon: ListChecks },
   { title: "Summary", url: "/summary", icon: LayoutDashboard },
   { title: "Documents", url: "/documents", icon: FileText },
+  { title: "Businesses", url: "/businesses", icon: Building2 },
   { title: "Questionnaire", url: "/questionnaire", icon: ClipboardList },
   ...(isFiled ? [{ title: "Refund Tracker", url: "/refund", icon: DollarSign }] : []),
   { title: "E-Signatures", url: "/signatures", icon: PenTool },

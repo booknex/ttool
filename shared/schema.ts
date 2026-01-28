@@ -56,6 +56,14 @@ export const commissionStatusEnum = pgEnum('commission_status', [
   'pending', 'approved', 'paid', 'cancelled'
 ]);
 
+export const entityTypeEnum = pgEnum('entity_type', [
+  'sole_proprietorship', 'llc', 's_corp', 'c_corp', 'partnership', 'other'
+]);
+
+export const returnTypeEnum = pgEnum('return_type', [
+  'personal', 'business'
+]);
+
 // Session storage table - required for Replit Auth
 export const sessions = pgTable(
   "sessions",
@@ -91,13 +99,14 @@ export const users = pgTable("users", {
 export const documents = pgTable("documents", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id),
+  businessId: varchar("business_id"), // optional link to a business
   fileName: varchar("file_name").notNull(),
   originalName: varchar("original_name").notNull(),
   fileType: varchar("file_type").notNull(),
   fileSize: integer("file_size").notNull(),
   documentType: documentTypeEnum("document_type").default('other'),
   status: documentStatusEnum("status").default('pending'),
-  taxYear: integer("tax_year").default(2024),
+  taxYear: integer("tax_year").default(2025),
   aiClassification: jsonb("ai_classification"),
   isArchived: boolean("is_archived").default(false),
   uploadedAt: timestamp("uploaded_at").defaultNow(),
@@ -112,7 +121,7 @@ export const requiredDocuments = pgTable("required_documents", {
   isRequired: boolean("is_required").default(true),
   isUploaded: boolean("is_uploaded").default(false),
   documentId: varchar("document_id").references(() => documents.id),
-  taxYear: integer("tax_year").default(2024),
+  taxYear: integer("tax_year").default(2025),
 });
 
 // Signatures table
@@ -123,7 +132,7 @@ export const signatures = pgTable("signatures", {
   signatureData: text("signature_data").notNull(), // base64 signature image
   signedAt: timestamp("signed_at").defaultNow(),
   ipAddress: varchar("ip_address"),
-  taxYear: integer("tax_year").default(2024),
+  taxYear: integer("tax_year").default(2025),
 });
 
 // Refund tracking table
@@ -138,7 +147,7 @@ export const refundTracking = pgTable("refund_tracking", {
   stateAmount: decimal("state_amount", { precision: 10, scale: 2 }),
   stateEstimatedDate: timestamp("state_estimated_date"),
   stateName: varchar("state_name"),
-  taxYear: integer("tax_year").default(2024),
+  taxYear: integer("tax_year").default(2025),
   lastChecked: timestamp("last_checked").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -162,7 +171,7 @@ export const questionnaireResponses = pgTable("questionnaire_responses", {
   userId: varchar("user_id").notNull().references(() => users.id),
   questionId: varchar("question_id").notNull(),
   answer: jsonb("answer").notNull(),
-  taxYear: integer("tax_year").default(2024),
+  taxYear: integer("tax_year").default(2025),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
@@ -179,7 +188,7 @@ export const invoices = pgTable("invoices", {
   paidAt: timestamp("paid_at"),
   paymentMethod: varchar("payment_method"),
   stripePaymentIntentId: varchar("stripe_payment_intent_id"),
-  taxYear: integer("tax_year").default(2024),
+  taxYear: integer("tax_year").default(2025),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -191,6 +200,62 @@ export const invoiceItems = pgTable("invoice_items", {
   quantity: integer("quantity").default(1),
   rate: decimal("rate", { precision: 10, scale: 2 }).notNull(),
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+});
+
+// Businesses table
+export const businesses = pgTable("businesses", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  name: varchar("name").notNull(),
+  entityType: entityTypeEnum("entity_type").default('sole_proprietorship'),
+  taxId: varchar("tax_id"), // EIN
+  industry: varchar("industry"),
+  description: text("description"),
+  address: text("address"),
+  taxYear: integer("tax_year").default(2025),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Business owners table
+export const businessOwners = pgTable("business_owners", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  businessId: varchar("business_id").notNull().references(() => businesses.id),
+  name: varchar("name").notNull(),
+  ownershipPercentage: decimal("ownership_percentage", { precision: 5, scale: 2 }),
+  ssn: varchar("ssn"), // Last 4 only for display
+  email: varchar("email"),
+  phone: varchar("phone"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Business expenses table
+export const businessExpenses = pgTable("business_expenses", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  businessId: varchar("business_id").notNull().references(() => businesses.id),
+  category: varchar("category").notNull(),
+  description: text("description"),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  taxYear: integer("tax_year").default(2025),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Returns table (tracks personal and business returns separately)
+export const returns = pgTable("returns", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  businessId: varchar("business_id").references(() => businesses.id), // null for personal returns
+  returnType: returnTypeEnum("return_type").notNull(),
+  name: varchar("name").notNull(), // "Personal Return" or business name
+  status: returnPrepStatusEnum("status").default('not_started'),
+  taxYear: integer("tax_year").default(2025),
+  federalStatus: refundStatusEnum("federal_status").default('not_filed'),
+  federalAmount: decimal("federal_amount", { precision: 10, scale: 2 }),
+  stateStatus: refundStatusEnum("state_status").default('not_filed'),
+  stateAmount: decimal("state_amount", { precision: 10, scale: 2 }),
+  stateName: varchar("state_name"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // Affiliates table
@@ -251,6 +316,10 @@ export const insertInvoiceSchema = createInsertSchema(invoices).omit({ createdAt
 export const insertInvoiceItemSchema = createInsertSchema(invoiceItems);
 export const insertAffiliateSchema = createInsertSchema(affiliates).omit({ createdAt: true, updatedAt: true });
 export const insertAffiliateReferralSchema = createInsertSchema(affiliateReferrals).omit({ createdAt: true, updatedAt: true });
+export const insertBusinessSchema = createInsertSchema(businesses).omit({ createdAt: true, updatedAt: true });
+export const insertBusinessOwnerSchema = createInsertSchema(businessOwners).omit({ createdAt: true });
+export const insertBusinessExpenseSchema = createInsertSchema(businessExpenses).omit({ createdAt: true });
+export const insertReturnSchema = createInsertSchema(returns).omit({ createdAt: true, updatedAt: true });
 
 // Types
 export type UpsertUser = typeof users.$inferInsert;
@@ -275,3 +344,11 @@ export type Affiliate = typeof affiliates.$inferSelect;
 export type InsertAffiliate = z.infer<typeof insertAffiliateSchema>;
 export type AffiliateReferral = typeof affiliateReferrals.$inferSelect;
 export type InsertAffiliateReferral = z.infer<typeof insertAffiliateReferralSchema>;
+export type Business = typeof businesses.$inferSelect;
+export type InsertBusiness = z.infer<typeof insertBusinessSchema>;
+export type BusinessOwner = typeof businessOwners.$inferSelect;
+export type InsertBusinessOwner = z.infer<typeof insertBusinessOwnerSchema>;
+export type BusinessExpense = typeof businessExpenses.$inferSelect;
+export type InsertBusinessExpense = z.infer<typeof insertBusinessExpenseSchema>;
+export type Return = typeof returns.$inferSelect;
+export type InsertReturn = z.infer<typeof insertReturnSchema>;

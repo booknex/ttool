@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -19,8 +20,28 @@ import {
   ArrowRight,
   FileCheck,
   Sparkles,
+  Building2,
+  User,
+  ChevronRight,
 } from "lucide-react";
 import type { Document, Signature, RequiredDocument, QuestionnaireResponse, RefundTracking } from "@shared/schema";
+
+interface Return {
+  id: string;
+  userId: string;
+  businessId: string | null;
+  returnType: "personal" | "business";
+  name: string;
+  status: string | null;
+  taxYear: number | null;
+  federalStatus: string | null;
+  federalAmount: string | null;
+  stateStatus: string | null;
+  stateAmount: string | null;
+  stateName: string | null;
+  createdAt: Date | null;
+  updatedAt: Date | null;
+}
 
 const RETURN_PREP_STAGES = [
   "not_started",
@@ -57,6 +78,11 @@ type PrepStage = {
 
 export default function ReturnStatus() {
   const { toast } = useToast();
+  const [selectedReturnId, setSelectedReturnId] = useState<string | null>(null);
+
+  const { data: returns = [], isLoading: returnsLoading } = useQuery<Return[]>({
+    queryKey: ["/api/returns"],
+  });
 
   const { data: documents, isLoading: docsLoading } = useQuery<Document[]>({
     queryKey: ["/api/documents"],
@@ -78,6 +104,14 @@ export default function ReturnStatus() {
     queryKey: ["/api/refund"],
   });
 
+  // Select first return by default (personal return)
+  const selectedReturn = returns.find(r => r.id === selectedReturnId) || 
+                         returns.find(r => r.returnType === "personal") || 
+                         returns[0];
+  
+  const personalReturn = returns.find(r => r.returnType === "personal");
+  const businessReturns = returns.filter(r => r.returnType === "business");
+
   const advanceStatusMutation = useMutation({
     mutationFn: async () => {
       return apiRequest("POST", "/api/refund/advance-status");
@@ -98,7 +132,7 @@ export default function ReturnStatus() {
     },
   });
 
-  const isLoading = docsLoading || reqDocsLoading || sigsLoading || questLoading || refundLoading;
+  const isLoading = docsLoading || reqDocsLoading || sigsLoading || questLoading || refundLoading || returnsLoading;
 
   const uploadedReqDocs = requiredDocs?.filter((d) => d.isUploaded).length || 0;
   const totalReqDocs = requiredDocs?.length || 0;
@@ -223,6 +257,27 @@ export default function ReturnStatus() {
   const completedCount = stages.filter((s) => s.status === "completed").length;
   const progressPercent = Math.round((completedCount / stages.length) * 100);
 
+  const getStatusLabel = (status: string | null) => {
+    const labels: Record<string, string> = {
+      not_started: "Not Started",
+      documents_gathering: "Gathering Documents",
+      information_review: "Info Review",
+      return_preparation: "In Preparation",
+      quality_review: "Quality Review",
+      client_review: "Client Review",
+      signature_required: "Signature Required",
+      filing: "Filing",
+      filed: "Filed",
+    };
+    return labels[status || "not_started"] || "Not Started";
+  };
+
+  const getStatusColor = (status: string | null) => {
+    if (status === "filed") return "bg-green-100 text-green-800";
+    if (status === "filing" || status === "signature_required") return "bg-blue-100 text-blue-800";
+    return "bg-gray-100 text-gray-800";
+  };
+
   return (
     <div className="p-4 md:p-6 lg:p-8 max-w-4xl mx-auto space-y-6">
       <div className="flex items-start gap-4">
@@ -238,6 +293,118 @@ export default function ReturnStatus() {
           </p>
         </div>
       </div>
+
+      {/* Returns Selection */}
+      {returns.length > 0 && (
+        <div className="space-y-3">
+          <h2 className="text-lg font-semibold">Your Tax Returns</h2>
+          <div className="grid gap-3 md:grid-cols-2">
+            {/* Personal Return Card */}
+            {personalReturn && (
+              <Card
+                className={`cursor-pointer transition-colors ${
+                  selectedReturn?.id === personalReturn.id
+                    ? "border-primary bg-primary/5 ring-2 ring-primary/20"
+                    : "hover:border-muted-foreground/50"
+                }`}
+                onClick={() => setSelectedReturnId(personalReturn.id)}
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-blue-100 rounded-lg">
+                        <User className="h-5 w-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-medium">Personal Return</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Tax Year {personalReturn.taxYear}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge className={getStatusColor(personalReturn.status)}>
+                        {getStatusLabel(personalReturn.status)}
+                      </Badge>
+                      <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Business Return Cards */}
+            {businessReturns.map((bizReturn) => (
+              <Card
+                key={bizReturn.id}
+                className={`cursor-pointer transition-colors ${
+                  selectedReturn?.id === bizReturn.id
+                    ? "border-primary bg-primary/5 ring-2 ring-primary/20"
+                    : "hover:border-muted-foreground/50"
+                }`}
+                onClick={() => setSelectedReturnId(bizReturn.id)}
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-amber-100 rounded-lg">
+                        <Building2 className="h-5 w-5 text-amber-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-medium">{bizReturn.name}</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Business Return • Tax Year {bizReturn.taxYear}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge className={getStatusColor(bizReturn.status)}>
+                        {getStatusLabel(bizReturn.status)}
+                      </Badge>
+                      <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+
+            {/* Add Business Return Prompt */}
+            {businessReturns.length === 0 && (
+              <Link href="/businesses">
+                <Card className="border-dashed cursor-pointer hover:border-muted-foreground/50 transition-colors">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3 text-muted-foreground hover:text-foreground transition-colors">
+                      <div className="p-2 bg-muted rounded-lg">
+                        <Building2 className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <h3 className="font-medium">Add a Business</h3>
+                        <p className="text-sm">
+                          Have a business? Add it to track its return.
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Selected Return Details */}
+      {selectedReturn && (
+        <div className="pt-2">
+          <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            {selectedReturn.returnType === "personal" ? (
+              <User className="h-5 w-5 text-blue-600" />
+            ) : (
+              <Building2 className="h-5 w-5 text-amber-600" />
+            )}
+            {selectedReturn.name} - Progress
+          </h2>
+        </div>
+      )}
 
       <Card>
         <CardContent className="p-6">
