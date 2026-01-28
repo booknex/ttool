@@ -546,6 +546,28 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
       const requiredDocs = generateRequiredDocuments(responseData);
       await storage.regenerateRequiredDocuments(userId, requiredDocs);
 
+      // Auto-create businesses from questionnaire side_business_type answers
+      const sideBusinessResponse = allResponses.find(r => r.questionId === 'side_business_type');
+      if (sideBusinessResponse && Array.isArray(sideBusinessResponse.answer)) {
+        const businessNames = sideBusinessResponse.answer as string[];
+        const existingBusinesses = await storage.getBusinesses(userId);
+        const existingNames = existingBusinesses.map(b => b.name.toLowerCase());
+        
+        for (const businessName of businessNames) {
+          if (businessName && !existingNames.includes(businessName.toLowerCase())) {
+            // Create the business - this will also auto-create a business return
+            await storage.createBusiness({
+              userId,
+              name: businessName,
+              taxId: null,
+              entityType: 'llc', // Default, user can update later
+              address: null,
+              taxYear: 2025,
+            });
+          }
+        }
+      }
+
       res.json(savedResponses);
     } catch (error) {
       console.error("Error saving questionnaire:", error);
@@ -1190,6 +1212,46 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
     } catch (error) {
       console.error("Error regenerating checklists:", error);
       res.status(500).json({ message: "Failed to regenerate checklists" });
+    }
+  });
+
+  // Sync businesses from questionnaire data for all clients (admin only)
+  app.post("/api/admin/sync-businesses-from-questionnaire", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const allClients = await storage.getAllUsers();
+      let createdCount = 0;
+      
+      for (const client of allClients) {
+        if (client.isAdmin) continue;
+        
+        const responses = await storage.getQuestionnaireResponses(client.id);
+        const sideBusinessResponse = responses.find(r => r.questionId === 'side_business_type');
+        
+        if (sideBusinessResponse && Array.isArray(sideBusinessResponse.answer)) {
+          const businessNames = sideBusinessResponse.answer as string[];
+          const existingBusinesses = await storage.getBusinesses(client.id);
+          const existingNames = existingBusinesses.map(b => b.name.toLowerCase());
+          
+          for (const businessName of businessNames) {
+            if (businessName && !existingNames.includes(businessName.toLowerCase())) {
+              await storage.createBusiness({
+                userId: client.id,
+                name: businessName,
+                taxId: null,
+                entityType: 'llc',
+                address: null,
+                taxYear: 2025,
+              });
+              createdCount++;
+            }
+          }
+        }
+      }
+      
+      res.json({ message: `Created ${createdCount} businesses from questionnaire data` });
+    } catch (error) {
+      console.error("Error syncing businesses:", error);
+      res.status(500).json({ message: "Failed to sync businesses" });
     }
   });
 
