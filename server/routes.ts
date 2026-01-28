@@ -329,6 +329,9 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
         return res.status(404).json({ message: "Document not found" });
       }
 
+      // Unlink from checklist first (removes foreign key reference)
+      await storage.unlinkDocumentFromChecklist(req.params.id);
+
       // Delete the file
       const filePath = path.join(uploadDir, doc.fileName);
       if (fs.existsSync(filePath)) {
