@@ -726,7 +726,7 @@ export default function Documents() {
                       <SelectItem key={item.id} value={item.id}>
                         <div className="flex items-center gap-2">
                           <CircleDashed className="w-4 h-4 text-muted-foreground" />
-                          <span>{documentTypeLabels[item.documentType || "other"]}</span>
+                          <span>{item.description || documentTypeLabels[item.documentType || "other"]}</span>
                         </div>
                       </SelectItem>
                     ))}
