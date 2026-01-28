@@ -124,7 +124,7 @@ Core data entities:
 - **Summary**: Overview page with document progress, refund status, pending actions, and quick links
 - **Document Center**: Drag-and-drop upload with AI classification simulation, document checklist, and status tracking
 - **Messages**: Real-time messaging interface with auto-reply simulation
-- **Questionnaire**: Dynamic multi-section tax questionnaire with conditional questions, progress tracking, and multi-entry business inputs (add multiple businesses). Completing the questionnaire automatically generates a personalized document checklist based on answers.
+- **Questionnaire**: Dynamic multi-section tax questionnaire with conditional questions, progress tracking, and multi-entry business inputs (add multiple businesses). Completing the questionnaire automatically generates a personalized document checklist based on answers AND auto-creates business records for any businesses mentioned in the side_business_type question.
 - **Refund Tracker**: Visual progress tracker for federal and state refunds
 - **E-Signatures**: Signature pad using react-signature-canvas for engagement letter and Form 8879
 - **Invoices**: Invoice management with payment simulation (ready for Stripe integration)
@@ -203,3 +203,4 @@ Core data entities:
 - `PATCH /api/admin/refunds/:userId` - Update refund status
 - `POST /api/admin/return` - Return from client impersonation to admin
 - `GET /api/admin/impersonation-status` - Check if currently impersonating a client
+- `POST /api/admin/sync-businesses-from-questionnaire` - Create business records from existing questionnaire data for all clients
