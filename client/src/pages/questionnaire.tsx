@@ -62,7 +62,7 @@ const questions: Question[] = [
   {
     id: "filing_status",
     section: "Filing Status",
-    question: "What is your filing status for 2024?",
+    question: "What is your filing status for 2025?",
     type: "multiple",
     options: ["Single", "Married Filing Jointly", "Married Filing Separately", "Head of Household", "Qualifying Widow(er)"],
     icon: Home,
@@ -70,14 +70,14 @@ const questions: Question[] = [
   {
     id: "marital_change",
     section: "Filing Status",
-    question: "Did your marital status change during 2024?",
+    question: "Did your marital status change during 2025?",
     type: "yes_no",
     icon: Heart,
   },
   {
     id: "employment_type",
     section: "Income",
-    question: "What type of income did you have in 2024?",
+    question: "What type of income did you have in 2025?",
     type: "checkbox",
     options: ["W-2 Employment", "Self-Employment/1099", "Rental Income", "Investment Income", "Retirement Income", "Social Security", "Unemployment", "Other"],
     icon: Briefcase,
@@ -101,7 +101,7 @@ const questions: Question[] = [
   {
     id: "crypto_transactions",
     section: "Income",
-    question: "Did you buy, sell, or trade cryptocurrency in 2024?",
+    question: "Did you buy, sell, or trade cryptocurrency in 2025?",
     type: "yes_no",
     icon: DollarSign,
   },
@@ -115,21 +115,21 @@ const questions: Question[] = [
   {
     id: "mortgage_interest",
     section: "Deductions",
-    question: "Did you pay mortgage interest in 2024?",
+    question: "Did you pay mortgage interest in 2025?",
     type: "yes_no",
     dependsOn: { questionId: "homeowner", answer: true },
   },
   {
     id: "property_taxes",
     section: "Deductions",
-    question: "Did you pay property taxes in 2024?",
+    question: "Did you pay property taxes in 2025?",
     type: "yes_no",
     dependsOn: { questionId: "homeowner", answer: true },
   },
   {
     id: "charitable_donations",
     section: "Deductions",
-    question: "Did you make charitable donations in 2024?",
+    question: "Did you make charitable donations in 2025?",
     type: "yes_no",
     icon: Heart,
   },
@@ -151,7 +151,7 @@ const questions: Question[] = [
   {
     id: "student_loans",
     section: "Education",
-    question: "Did you pay student loan interest in 2024?",
+    question: "Did you pay student loan interest in 2025?",
     type: "yes_no",
     icon: GraduationCap,
   },
@@ -194,7 +194,7 @@ const questions: Question[] = [
   {
     id: "major_life_events",
     section: "Life Events",
-    question: "Did you experience any major life events in 2024?",
+    question: "Did you experience any major life events in 2025?",
     type: "checkbox",
     options: ["Got married", "Got divorced", "Had a baby", "Bought a home", "Sold a home", "Changed jobs", "Retired", "None of the above"],
     icon: Heart,

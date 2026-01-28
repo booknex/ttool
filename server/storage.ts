@@ -261,7 +261,7 @@ export class DatabaseStorage implements IStorage {
         userId,
         documentType: doc.type as any,
         description: doc.description,
-        taxYear: 2024,
+        taxYear: 2025,
       });
     }
   }
@@ -395,7 +395,7 @@ export class DatabaseStorage implements IStorage {
         description: doc.description,
         isRequired: true,
         isUploaded: false,
-        taxYear: 2024,
+        taxYear: 2025,
       });
     }
 
@@ -405,7 +405,7 @@ export class DatabaseStorage implements IStorage {
       federalStatus: "not_filed",
       stateStatus: "not_filed",
       stateName: "California",
-      taxYear: 2024,
+      taxYear: 2025,
     });
 
     // Create sample invoice
@@ -417,7 +417,7 @@ export class DatabaseStorage implements IStorage {
       tax: "0",
       total: "350.00",
       dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
-      taxYear: 2024,
+      taxYear: 2025,
     });
 
     // Add invoice items

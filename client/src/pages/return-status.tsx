@@ -234,7 +234,7 @@ export default function ReturnStatus() {
             Return Status
           </h1>
           <p className="text-muted-foreground">
-            Track the progress of your 2024 tax return preparation
+            Track the progress of your 2025 tax return preparation
           </p>
         </div>
       </div>
@@ -359,7 +359,7 @@ export default function ReturnStatus() {
               Congratulations!
             </h2>
             <p className="text-green-700 dark:text-green-400 mb-4">
-              Your 2024 tax return has been successfully filed and accepted.
+              Your 2025 tax return has been successfully filed and accepted.
             </p>
             <Button asChild>
               <Link href="/refund">Track Your Refund</Link>

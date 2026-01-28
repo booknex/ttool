@@ -102,7 +102,7 @@ export default function Dashboard() {
           Welcome Back
         </h1>
         <p className="text-muted-foreground">
-          Here's an overview of your tax filing status for 2024.
+          Here's an overview of your tax filing status for 2025.
         </p>
       </div>
 

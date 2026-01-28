@@ -61,7 +61,7 @@ function generateAIClassification(filename: string, documentType: string) {
   return {
     suggestedType: documentType,
     confidence: Number(confidence.toFixed(2)),
-    taxYear: 2024,
+    taxYear: 2025,
     extractedFields: {
       filename,
       analyzedAt: new Date().toISOString(),
@@ -278,7 +278,7 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
           fileSize: file.size,
           documentType: documentType as any,
           status: "processing",
-          taxYear: 2024,
+          taxYear: 2025,
           aiClassification,
         });
 
@@ -384,7 +384,7 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
         documentType,
         signatureData,
         ipAddress: req.ip,
-        taxYear: 2024,
+        taxYear: 2025,
       });
 
       res.json(sig);
@@ -440,7 +440,7 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
       const updated = await storage.upsertRefundTracking({
         userId,
         returnPrepStatus: "filing",
-        taxYear: 2024,
+        taxYear: 2025,
       });
 
       res.json(updated);
@@ -535,7 +535,7 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
           userId,
           questionId,
           answer: answer as any,
-          taxYear: 2024,
+          taxYear: 2025,
         });
         savedResponses.push(response);
       }
@@ -1191,7 +1191,7 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
         tax: "0",
         total: subtotal.toFixed(2),
         dueDate: dueDate ? new Date(dueDate) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-        taxYear: taxYear || 2024,
+        taxYear: taxYear || 2025,
       });
       
       // Create invoice items
@@ -1254,7 +1254,7 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
         stateStatus,
         stateAmount,
         stateEstimatedDate: stateEstimatedDate ? new Date(stateEstimatedDate) : undefined,
-        taxYear: 2024,
+        taxYear: 2025,
       });
       
       res.json(updated);

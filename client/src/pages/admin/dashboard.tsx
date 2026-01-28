@@ -98,7 +98,7 @@ export default function AdminDashboard() {
         <h1 className="text-2xl font-semibold" data-testid="text-admin-dashboard-title">
           Admin Dashboard
         </h1>
-        <Badge variant="outline">Tax Year 2024</Badge>
+        <Badge variant="outline">Tax Year 2025</Badge>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

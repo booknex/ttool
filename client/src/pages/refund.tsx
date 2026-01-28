@@ -103,7 +103,7 @@ export default function Refund() {
                 </div>
                 <div>
                   <CardTitle>Federal Refund</CardTitle>
-                  <CardDescription>IRS Tax Year 2024</CardDescription>
+                  <CardDescription>IRS Tax Year 2025</CardDescription>
                 </div>
               </div>
               {refund?.lastChecked && (
@@ -230,7 +230,7 @@ export default function Refund() {
                 <CardTitle>
                   State Refund {refund?.stateName && `(${refund.stateName})`}
                 </CardTitle>
-                <CardDescription>State Tax Year 2024</CardDescription>
+                <CardDescription>State Tax Year 2025</CardDescription>
               </div>
             </div>
           </CardHeader>
