@@ -160,9 +160,9 @@ export default function ReturnStatus() {
                   refund?.federalStatus === "refund_sent";
 
   const getStages = (): PrepStage[] => {
-    // Use admin-set status if available
-    const adminStatus = (refund as any)?.returnPrepStatus as string | null;
-    const currentStageIndex = adminStatus ? RETURN_PREP_STAGES.indexOf(adminStatus as any) : -1;
+    // Use the status from the selected return (set by admin on Kanban board)
+    const returnStatus = selectedReturn?.status as string | null;
+    const currentStageIndex = returnStatus ? RETURN_PREP_STAGES.indexOf(returnStatus as any) : -1;
 
     // Build stages from the RETURN_PREP_STAGES config
     const stages: PrepStage[] = RETURN_PREP_STAGES.map((stageId, index) => {
@@ -248,9 +248,8 @@ export default function ReturnStatus() {
     return stages;
   };
 
-  // Check if client can mark signature stage as complete
-  const adminStatus = (refund as any)?.returnPrepStatus as string | null;
-  const canMarkSignatureComplete = adminStatus === "signature_required" && hasForm8879;
+  // Check if client can mark signature stage as complete (uses the selected return's status)
+  const canMarkSignatureComplete = selectedReturn?.status === "signature_required" && hasForm8879;
 
   const stages = getStages();
   const currentStageIndex = stages.findIndex((s) => s.status === "current");
