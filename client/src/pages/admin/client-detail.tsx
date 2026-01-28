@@ -44,7 +44,10 @@ import {
   LogIn,
   Archive,
   ArchiveRestore,
-  Trash2
+  Trash2,
+  Building2,
+  Users,
+  Receipt
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -60,6 +63,54 @@ export default function AdminClientDetail() {
     email: "",
     phone: "",
   });
+  const [editingBusinessId, setEditingBusinessId] = useState<string | null>(null);
+  const [businessEditForm, setBusinessEditForm] = useState({
+    name: "",
+    entityType: "",
+    taxId: "",
+    address: "",
+  });
+
+  const updateBusinessMutation = useMutation({
+    mutationFn: async (data: { id: string; updates: any }) => {
+      return apiRequest("PATCH", `/api/admin/businesses/${data.id}`, data.updates);
+    },
+    onSuccess: () => {
+      toast({ title: "Business updated", description: "Business information has been saved" });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/clients", clientId, "businesses"] });
+      setEditingBusinessId(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to update business",
+        description: error.message || "Please try again",
+        variant: "destructive"
+      });
+    },
+  });
+
+  const startEditingBusiness = (business: any) => {
+    setEditingBusinessId(business.id);
+    setBusinessEditForm({
+      name: business.name || "",
+      entityType: business.entityType || "llc",
+      taxId: business.taxId || "",
+      address: business.address || "",
+    });
+  };
+
+  const saveBusinessEdit = () => {
+    if (!editingBusinessId) return;
+    updateBusinessMutation.mutate({
+      id: editingBusinessId,
+      updates: businessEditForm,
+    });
+  };
+
+  const cancelBusinessEdit = () => {
+    setEditingBusinessId(null);
+    setBusinessEditForm({ name: "", entityType: "", taxId: "", address: "" });
+  };
 
   const impersonateMutation = useMutation({
     mutationFn: async () => {
@@ -152,6 +203,11 @@ export default function AdminClientDetail() {
 
   const { data: questionnaire } = useQuery<any[]>({
     queryKey: ["/api/admin/clients", clientId, "questionnaire"],
+    enabled: !!clientId,
+  });
+
+  const { data: businesses } = useQuery<any[]>({
+    queryKey: ["/api/admin/clients", clientId, "businesses"],
     enabled: !!clientId,
   });
 
@@ -583,6 +639,9 @@ export default function AdminClientDetail() {
               <TabsTrigger value="invoices" data-testid="tab-invoices">
                 Invoices ({invoices?.length || 0})
               </TabsTrigger>
+              <TabsTrigger value="businesses" data-testid="tab-businesses">
+                Businesses ({businesses?.length || 0})
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="documents">
@@ -751,6 +810,164 @@ export default function AdminClientDetail() {
                           >
                             {inv.status?.charAt(0).toUpperCase() + inv.status?.slice(1) || "Draft"}
                           </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="businesses">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Businesses</CardTitle>
+                  <CardDescription>Client's business entities with owners and expenses</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {!businesses || businesses.length === 0 ? (
+                    <p className="text-muted-foreground text-center py-8">No businesses registered yet</p>
+                  ) : (
+                    <div className="space-y-4">
+                      {businesses.map((business: any) => (
+                        <div key={business.id} className="border rounded-lg p-4" data-testid={`business-${business.id}`}>
+                          {editingBusinessId === business.id ? (
+                            <div className="space-y-3">
+                              <div className="flex items-center gap-2 mb-2">
+                                <Building2 className="w-5 h-5 text-primary" />
+                                <span className="font-semibold">Edit Business</span>
+                              </div>
+                              <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                  <Label className="text-xs">Business Name</Label>
+                                  <Input 
+                                    value={businessEditForm.name}
+                                    onChange={(e) => setBusinessEditForm({ ...businessEditForm, name: e.target.value })}
+                                    placeholder="Business name"
+                                    className="mt-1"
+                                  />
+                                </div>
+                                <div>
+                                  <Label className="text-xs">Entity Type</Label>
+                                  <select 
+                                    value={businessEditForm.entityType}
+                                    onChange={(e) => setBusinessEditForm({ ...businessEditForm, entityType: e.target.value })}
+                                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm mt-1"
+                                  >
+                                    <option value="llc">LLC</option>
+                                    <option value="s_corp">S-Corp</option>
+                                    <option value="c_corp">C-Corp</option>
+                                    <option value="partnership">Partnership</option>
+                                    <option value="sole_proprietor">Sole Proprietor</option>
+                                  </select>
+                                </div>
+                                <div>
+                                  <Label className="text-xs">Tax ID (EIN)</Label>
+                                  <Input 
+                                    value={businessEditForm.taxId}
+                                    onChange={(e) => setBusinessEditForm({ ...businessEditForm, taxId: e.target.value })}
+                                    placeholder="XX-XXXXXXX"
+                                    className="mt-1"
+                                  />
+                                </div>
+                                <div>
+                                  <Label className="text-xs">Address</Label>
+                                  <Input 
+                                    value={businessEditForm.address}
+                                    onChange={(e) => setBusinessEditForm({ ...businessEditForm, address: e.target.value })}
+                                    placeholder="Business address"
+                                    className="mt-1"
+                                  />
+                                </div>
+                              </div>
+                              <div className="flex justify-end gap-2 mt-3">
+                                <Button variant="outline" size="sm" onClick={cancelBusinessEdit}>
+                                  <X className="w-4 h-4 mr-1" />
+                                  Cancel
+                                </Button>
+                                <Button size="sm" onClick={saveBusinessEdit} disabled={updateBusinessMutation.isPending}>
+                                  {updateBusinessMutation.isPending ? (
+                                    <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                                  ) : (
+                                    <Save className="w-4 h-4 mr-1" />
+                                  )}
+                                  Save
+                                </Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              <div className="flex items-start justify-between mb-3">
+                                <div className="flex items-center gap-3">
+                                  <Building2 className="w-5 h-5 text-primary" />
+                                  <div>
+                                    <p className="font-semibold">{business.name}</p>
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                      <Badge variant="outline" className="text-xs">
+                                        {business.entityType?.toUpperCase() || 'N/A'}
+                                      </Badge>
+                                      {business.taxId && <span>TIN: {business.taxId}</span>}
+                                      <span>Tax Year: {business.taxYear}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                                <Button variant="ghost" size="sm" onClick={() => startEditingBusiness(business)}>
+                                  <Edit className="w-4 h-4" />
+                                </Button>
+                              </div>
+                              
+                              {business.address && (
+                                <p className="text-sm text-muted-foreground mb-3">{business.address}</p>
+                              )}
+
+                              {/* Owners Section */}
+                              {business.owners && business.owners.length > 0 && (
+                                <div className="mb-3">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <Users className="w-4 h-4 text-muted-foreground" />
+                                    <p className="text-sm font-medium">Owners ({business.owners.length})</p>
+                                  </div>
+                                  <div className="pl-6 space-y-1">
+                                    {business.owners.map((owner: any) => (
+                                      <div key={owner.id} className="flex items-center justify-between text-sm bg-muted/50 rounded px-3 py-1.5">
+                                        <span>{owner.name}</span>
+                                        <div className="flex items-center gap-3 text-muted-foreground">
+                                          <span>{owner.ownershipPercentage}%</span>
+                                          {owner.ssn && <span>SSN: ***-**-{owner.ssn.slice(-4)}</span>}
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Expenses Section */}
+                              {business.expenses && business.expenses.length > 0 && (
+                                <div>
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <Receipt className="w-4 h-4 text-muted-foreground" />
+                                    <p className="text-sm font-medium">Expenses ({business.expenses.length})</p>
+                                  </div>
+                                  <div className="pl-6 space-y-1">
+                                    {business.expenses.slice(0, 5).map((expense: any) => (
+                                      <div key={expense.id} className="flex items-center justify-between text-sm bg-muted/50 rounded px-3 py-1.5">
+                                        <span>{expense.category}</span>
+                                        <div className="flex items-center gap-3">
+                                          <span className="font-medium">${parseFloat(expense.amount || 0).toFixed(2)}</span>
+                                          {expense.date && <span className="text-muted-foreground">{format(new Date(expense.date), "MMM d, yyyy")}</span>}
+                                        </div>
+                                      </div>
+                                    ))}
+                                    {business.expenses.length > 5 && (
+                                      <p className="text-xs text-muted-foreground text-center py-1">
+                                        +{business.expenses.length - 5} more expenses
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+                            </>
+                          )}
                         </div>
                       ))}
                     </div>

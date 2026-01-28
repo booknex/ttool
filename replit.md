@@ -192,6 +192,8 @@ Core data entities:
 - `GET /api/admin/clients/:id/signatures` - Client's signatures
 - `GET /api/admin/clients/:id/invoices` - Client's invoices
 - `GET /api/admin/clients/:id/questionnaire` - Client's questionnaire responses
+- `GET /api/admin/clients/:id/businesses` - Client's businesses with owners and expenses
+- `PATCH /api/admin/businesses/:id` - Update business info
 - `GET /api/admin/documents` - All documents
 - `PATCH /api/admin/documents/:id` - Update document status
 - `GET /api/admin/messages` - All messages grouped by client

@@ -1369,6 +1369,52 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
     }
   });
 
+  // Get client's businesses with owners and expenses (admin view)
+  app.get("/api/admin/clients/:id/businesses", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const businesses = await storage.getBusinesses(req.params.id);
+      const businessesWithDetails = await Promise.all(
+        businesses.map(async (business) => {
+          const owners = await storage.getBusinessOwners(business.id);
+          const expenses = await storage.getBusinessExpenses(business.id);
+          return {
+            ...business,
+            owners,
+            expenses,
+          };
+        })
+      );
+      res.json(businessesWithDetails);
+    } catch (error) {
+      console.error("Error fetching client businesses:", error);
+      res.status(500).json({ message: "Failed to fetch businesses" });
+    }
+  });
+
+  // Update business (admin)
+  app.patch("/api/admin/businesses/:id", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const businessId = req.params.id;
+      const { name, entityType, taxId, address, industry, description } = req.body;
+      const updates: any = {};
+      if (name !== undefined) updates.name = name;
+      if (entityType !== undefined) updates.entityType = entityType;
+      if (taxId !== undefined) updates.taxId = taxId;
+      if (address !== undefined) updates.address = address;
+      if (industry !== undefined) updates.industry = industry;
+      if (description !== undefined) updates.description = description;
+      
+      const updatedBusiness = await storage.updateBusiness(businessId, updates);
+      if (!updatedBusiness) {
+        return res.status(404).json({ message: "Business not found" });
+      }
+      res.json(updatedBusiness);
+    } catch (error) {
+      console.error("Error updating business:", error);
+      res.status(500).json({ message: "Failed to update business" });
+    }
+  });
+
   // Get all documents (admin view)
   app.get("/api/admin/documents", isAuthenticated, isAdmin, async (req: any, res) => {
     try {
