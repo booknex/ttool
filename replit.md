@@ -137,8 +137,8 @@ Core data entities:
 - **Admin Pages**:
   - Dashboard: Overview stats (total clients, documents, messages, revenue)
   - Clients: View all registered clients with their stats, click to open detail page
-  - Client Detail: View/edit client info, see documents/questionnaire/messages/signatures/invoices tabs
-  - Kanban Board: Visual drag-and-drop workflow management
+  - Client Detail: View/edit client info, see documents/questionnaire/messages/signatures/invoices/businesses/returns tabs
+  - Kanban Board: Returns-based drag-and-drop workflow management with type filter (All/Personal/Business)
   - Documents: Review and update document status for all clients
   - Messages: Respond to client messages with real replies
   - Invoices: Create and manage invoices for clients
@@ -194,6 +194,11 @@ Core data entities:
 - `GET /api/admin/clients/:id/questionnaire` - Client's questionnaire responses
 - `GET /api/admin/clients/:id/businesses` - Client's businesses with owners and expenses
 - `PATCH /api/admin/businesses/:id` - Update business info
+- `GET /api/admin/clients/:id/returns` - Client's tax returns (personal and business)
+- `PATCH /api/admin/returns/:id` - Update individual return status
+- `GET /api/admin/returns` - All returns for Kanban board
+- `GET /api/admin/kanban?type=all|personal|business` - Returns grouped by status for Kanban
+- `PATCH /api/admin/kanban/:returnId` - Update return status via drag-and-drop
 - `GET /api/admin/documents` - All documents
 - `PATCH /api/admin/documents/:id` - Update document status
 - `GET /api/admin/messages` - All messages grouped by client
