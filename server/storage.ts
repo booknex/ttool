@@ -56,6 +56,7 @@ export interface IStorage {
 
   // Required documents
   getRequiredDocuments(userId: string): Promise<RequiredDocument[]>;
+  getRequiredDocument(id: string): Promise<RequiredDocument | undefined>;
   createRequiredDocument(doc: InsertRequiredDocument): Promise<RequiredDocument>;
   updateRequiredDocument(id: string, updates: Partial<RequiredDocument>): Promise<RequiredDocument | undefined>;
   clearRequiredDocuments(userId: string): Promise<void>;
@@ -224,6 +225,11 @@ export class DatabaseStorage implements IStorage {
   // Required documents
   async getRequiredDocuments(userId: string): Promise<RequiredDocument[]> {
     return db.select().from(requiredDocuments).where(eq(requiredDocuments.userId, userId));
+  }
+
+  async getRequiredDocument(id: string): Promise<RequiredDocument | undefined> {
+    const [doc] = await db.select().from(requiredDocuments).where(eq(requiredDocuments.id, id));
+    return doc;
   }
 
   async createRequiredDocument(doc: InsertRequiredDocument): Promise<RequiredDocument> {

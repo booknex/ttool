@@ -250,6 +250,7 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
     try {
       const userId = req.dbUser.id;
       const files = req.files as Express.Multer.File[];
+      const requiredDocumentId = req.body.requiredDocumentId;
       
       if (!files || files.length === 0) {
         return res.status(400).json({ message: "No files uploaded" });
@@ -257,7 +258,16 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
 
       const uploadedDocs = [];
       for (const file of files) {
-        const documentType = detectDocumentType(file.originalname);
+        let documentType = detectDocumentType(file.originalname);
+        
+        // If user selected a specific checklist item, use its document type
+        if (requiredDocumentId) {
+          const reqDoc = await storage.getRequiredDocument(requiredDocumentId);
+          if (reqDoc && reqDoc.userId === userId && !reqDoc.isUploaded) {
+            documentType = reqDoc.documentType || documentType;
+          }
+        }
+        
         const aiClassification = generateAIClassification(file.originalname, documentType);
         
         const doc = await storage.createDocument({
@@ -274,16 +284,27 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
 
         uploadedDocs.push(doc);
 
-        // Update required documents if this matches one
-        const reqDocs = await storage.getRequiredDocuments(userId);
-        const matchingReq = reqDocs.find(
-          (rd) => rd.documentType === documentType && !rd.isUploaded
-        );
-        if (matchingReq) {
-          await storage.updateRequiredDocument(matchingReq.id, {
-            isUploaded: true,
-            documentId: doc.id,
-          });
+        // If user explicitly selected a checklist item, link to that
+        if (requiredDocumentId) {
+          const reqDoc = await storage.getRequiredDocument(requiredDocumentId);
+          if (reqDoc && reqDoc.userId === userId && !reqDoc.isUploaded) {
+            await storage.updateRequiredDocument(requiredDocumentId, {
+              isUploaded: true,
+              documentId: doc.id,
+            });
+          }
+        } else {
+          // Auto-match by document type if no explicit selection
+          const reqDocs = await storage.getRequiredDocuments(userId);
+          const matchingReq = reqDocs.find(
+            (rd) => rd.documentType === documentType && !rd.isUploaded
+          );
+          if (matchingReq) {
+            await storage.updateRequiredDocument(matchingReq.id, {
+              isUploaded: true,
+              documentId: doc.id,
+            });
+          }
         }
 
         // Simulate processing completion after a delay

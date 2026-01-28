@@ -13,7 +13,16 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import {
   Upload,
   FileText,
@@ -94,6 +103,9 @@ export default function Documents() {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [selectedDoc, setSelectedDoc] = useState<Document | null>(null);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [selectedChecklistItem, setSelectedChecklistItem] = useState<string>("");
+  const [showChecklistDialog, setShowChecklistDialog] = useState(false);
 
   const { data: documents, isLoading: docsLoading } = useQuery<Document[]>({
     queryKey: ["/api/documents"],
@@ -104,7 +116,7 @@ export default function Documents() {
   });
 
   const uploadMutation = useMutation({
-    mutationFn: async (files: File[]) => {
+    mutationFn: async ({ files, requiredDocumentId }: { files: File[]; requiredDocumentId?: string }) => {
       setUploading(true);
       setUploadProgress(0);
 
@@ -112,8 +124,10 @@ export default function Documents() {
       files.forEach((file) => {
         formData.append("files", file);
       });
+      if (requiredDocumentId) {
+        formData.append("requiredDocumentId", requiredDocumentId);
+      }
 
-      // Simulate progress
       const progressInterval = setInterval(() => {
         setUploadProgress((prev) => Math.min(prev + 10, 90));
       }, 200);
@@ -143,6 +157,9 @@ export default function Documents() {
       setTimeout(() => {
         setUploading(false);
         setUploadProgress(0);
+        setPendingFiles([]);
+        setSelectedChecklistItem("");
+        setShowChecklistDialog(false);
       }, 1000);
     },
     onError: () => {
@@ -155,6 +172,21 @@ export default function Documents() {
       setUploadProgress(0);
     },
   });
+
+  const handleUploadWithSelection = () => {
+    if (pendingFiles.length > 0) {
+      uploadMutation.mutate({ 
+        files: pendingFiles, 
+        requiredDocumentId: selectedChecklistItem || undefined 
+      });
+    }
+  };
+
+  const handleSkipSelection = () => {
+    if (pendingFiles.length > 0) {
+      uploadMutation.mutate({ files: pendingFiles });
+    }
+  };
 
   const deleteMutation = useMutation({
     mutationFn: async (docId: string) => {
@@ -177,13 +209,20 @@ export default function Documents() {
     },
   });
 
+  const incompleteChecklistItems = requiredDocs?.filter(d => !d.isUploaded) || [];
+
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
       if (acceptedFiles.length > 0) {
-        uploadMutation.mutate(acceptedFiles);
+        if (incompleteChecklistItems.length > 0) {
+          setPendingFiles(acceptedFiles);
+          setShowChecklistDialog(true);
+        } else {
+          uploadMutation.mutate({ files: acceptedFiles });
+        }
       }
     },
-    [uploadMutation]
+    [uploadMutation, incompleteChecklistItems.length]
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -564,11 +603,90 @@ export default function Documents() {
                   <p className="text-sm font-medium text-purple-800 dark:text-purple-300">AI Classification</p>
                 </div>
                 <pre className="text-xs text-purple-700 dark:text-purple-400 overflow-auto">
-                  {JSON.stringify(selectedDoc.aiClassification, null, 2)}
+                  {JSON.stringify(selectedDoc.aiClassification as object, null, 2)}
                 </pre>
               </div>
             )}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showChecklistDialog} onOpenChange={(open) => {
+        if (!open && !uploading) {
+          setShowChecklistDialog(false);
+          setPendingFiles([]);
+          setSelectedChecklistItem("");
+        }
+      }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileCheck className="w-5 h-5" />
+              What document is this?
+            </DialogTitle>
+            <DialogDescription>
+              Select which item from your checklist this document is for. This helps us process your tax return faster.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="checklist-select">Document type</Label>
+              <Select value={selectedChecklistItem} onValueChange={setSelectedChecklistItem}>
+                <SelectTrigger id="checklist-select">
+                  <SelectValue placeholder="Select from your checklist..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {incompleteChecklistItems.map((item) => (
+                    <SelectItem key={item.id} value={item.id}>
+                      <div className="flex items-center gap-2">
+                        <CircleDashed className="w-4 h-4 text-muted-foreground" />
+                        <span>{documentTypeLabels[item.documentType || "other"]}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {pendingFiles.length > 0 && (
+              <div className="p-3 rounded-lg bg-muted/50">
+                <p className="text-xs text-muted-foreground mb-2">Files to upload:</p>
+                {pendingFiles.map((file, i) => (
+                  <div key={i} className="flex items-center gap-2 text-sm">
+                    <FileText className="w-4 h-4" />
+                    <span className="truncate">{file.name}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button 
+              variant="outline" 
+              onClick={handleSkipSelection}
+              disabled={uploading}
+            >
+              Skip
+            </Button>
+            <Button 
+              onClick={handleUploadWithSelection}
+              disabled={!selectedChecklistItem || uploading}
+            >
+              {uploading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Uploading...
+                </>
+              ) : (
+                <>
+                  <Upload className="w-4 h-4 mr-2" />
+                  Upload
+                </>
+              )}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
