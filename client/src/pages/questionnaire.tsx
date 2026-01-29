@@ -413,6 +413,11 @@ export default function Questionnaire() {
     if (currentQuestion.type === "multi_entry" && Array.isArray(tempAnswer)) {
       answerToSave = tempAnswer.filter((name: string) => name && name.trim() !== "");
     }
+    if (currentQuestion.type === "dependent_details") {
+      // For dependent_details, store a marker indicating dependents were entered
+      // Actual dependent data is stored separately via the dependents API
+      answerToSave = dependentEntries.length > 0 ? "completed" : "skipped";
+    }
 
     const newAnswers = { ...answers, [currentQuestion.id]: answerToSave };
     setAnswers(newAnswers);
