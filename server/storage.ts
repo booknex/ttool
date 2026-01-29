@@ -73,7 +73,7 @@ export interface IStorage {
   updateRequiredDocument(id: string, updates: Partial<RequiredDocument>): Promise<RequiredDocument | undefined>;
   unlinkDocumentFromChecklist(documentId: string): Promise<void>;
   clearRequiredDocuments(userId: string): Promise<void>;
-  regenerateRequiredDocuments(userId: string, documents: { type: string; description: string }[]): Promise<void>;
+  regenerateRequiredDocuments(userId: string, documents: { type: string; description: string; isBusinessDoc: boolean }[], personalReturnId: string | null, businessReturnId: string | null): Promise<void>;
 
   // Signatures
   getSignatures(userId: string): Promise<Signature[]>;
@@ -295,12 +295,21 @@ export class DatabaseStorage implements IStorage {
     await db.delete(requiredDocuments).where(eq(requiredDocuments.userId, userId));
   }
 
-  async regenerateRequiredDocuments(userId: string, docs: { type: string; description: string }[]): Promise<void> {
+  async regenerateRequiredDocuments(
+    userId: string, 
+    docs: { type: string; description: string; isBusinessDoc: boolean }[],
+    personalReturnId: string | null,
+    businessReturnId: string | null
+  ): Promise<void> {
     await this.clearRequiredDocuments(userId);
     
     for (const doc of docs) {
+      // Link to appropriate return based on isBusinessDoc flag
+      const returnId = doc.isBusinessDoc ? businessReturnId : personalReturnId;
+      
       await this.createRequiredDocument({
         userId,
+        returnId: returnId || undefined,
         documentType: doc.type as any,
         description: doc.description,
         taxYear: 2025,

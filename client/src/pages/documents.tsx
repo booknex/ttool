@@ -39,10 +39,12 @@ import {
   Loader2,
   FileCheck,
   CircleDashed,
+  User,
+  Building2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import type { Document, RequiredDocument } from "@shared/schema";
+import type { Document, RequiredDocument, Return } from "@shared/schema";
 
 const documentTypeLabels: Record<string, string> = {
   w2: "W-2",
@@ -116,6 +118,22 @@ export default function Documents() {
   const { data: requiredDocs, isLoading: reqDocsLoading } = useQuery<RequiredDocument[]>({
     queryKey: ["/api/required-documents"],
   });
+
+  const { data: returns = [] } = useQuery<Return[]>({
+    queryKey: ["/api/returns"],
+  });
+
+  // Group required documents by return type
+  const personalReturn = returns.find(r => r.returnType === 'personal');
+  const businessReturns = returns.filter(r => r.returnType === 'business');
+  
+  const personalDocs = requiredDocs?.filter(d => 
+    !d.returnId || d.returnId === personalReturn?.id
+  ) || [];
+  
+  const businessDocs = requiredDocs?.filter(d => 
+    d.returnId && businessReturns.some(br => br.id === d.returnId)
+  ) || [];
 
   const uploadSingleFileMutation = useMutation({
     mutationFn: async ({ file, requiredDocumentId }: { file: File; requiredDocumentId?: string }) => {
@@ -578,31 +596,84 @@ export default function Documents() {
                   ))}
                 </div>
               ) : requiredDocs && requiredDocs.length > 0 ? (
-                <div className="space-y-2">
-                  {requiredDocs.map((doc) => (
-                    <div
-                      key={doc.id}
-                      className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${
-                        doc.isUploaded 
-                          ? "bg-green-50 dark:bg-green-900/10" 
-                          : "bg-muted/30"
-                      }`}
-                    >
-                      {doc.isUploaded ? (
-                        <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0" />
-                      ) : (
-                        <CircleDashed className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <p className={`text-sm font-medium truncate ${doc.isUploaded ? "text-green-800 dark:text-green-300" : ""}`}>
-                          {documentTypeLabels[doc.documentType || "other"]}
-                        </p>
-                        {doc.description && (
-                          <p className="text-xs text-muted-foreground truncate">{doc.description}</p>
-                        )}
+                <div className="space-y-4">
+                  {/* Personal Return Documents */}
+                  {personalDocs.length > 0 && (
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <User className="w-4 h-4 text-blue-600" />
+                        <span className="text-sm font-semibold text-blue-600">Personal Return</span>
+                        <span className="text-xs text-muted-foreground">
+                          ({personalDocs.filter(d => d.isUploaded).length}/{personalDocs.length})
+                        </span>
+                      </div>
+                      <div className="space-y-2">
+                        {personalDocs.map((doc) => (
+                          <div
+                            key={doc.id}
+                            className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${
+                              doc.isUploaded 
+                                ? "bg-green-50 dark:bg-green-900/10" 
+                                : "bg-muted/30"
+                            }`}
+                          >
+                            {doc.isUploaded ? (
+                              <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0" />
+                            ) : (
+                              <CircleDashed className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <p className={`text-sm font-medium truncate ${doc.isUploaded ? "text-green-800 dark:text-green-300" : ""}`}>
+                                {documentTypeLabels[doc.documentType || "other"]}
+                              </p>
+                              {doc.description && (
+                                <p className="text-xs text-muted-foreground truncate">{doc.description}</p>
+                              )}
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
-                  ))}
+                  )}
+
+                  {/* Business Return Documents */}
+                  {businessDocs.length > 0 && (
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Building2 className="w-4 h-4 text-purple-600" />
+                        <span className="text-sm font-semibold text-purple-600">Business Return</span>
+                        <span className="text-xs text-muted-foreground">
+                          ({businessDocs.filter(d => d.isUploaded).length}/{businessDocs.length})
+                        </span>
+                      </div>
+                      <div className="space-y-2">
+                        {businessDocs.map((doc) => (
+                          <div
+                            key={doc.id}
+                            className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${
+                              doc.isUploaded 
+                                ? "bg-green-50 dark:bg-green-900/10" 
+                                : "bg-muted/30"
+                            }`}
+                          >
+                            {doc.isUploaded ? (
+                              <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0" />
+                            ) : (
+                              <CircleDashed className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <p className={`text-sm font-medium truncate ${doc.isUploaded ? "text-green-800 dark:text-green-300" : ""}`}>
+                                {documentTypeLabels[doc.documentType || "other"]}
+                              </p>
+                              {doc.description && (
+                                <p className="text-xs text-muted-foreground truncate">{doc.description}</p>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="text-center py-6">
@@ -675,7 +746,7 @@ export default function Documents() {
                   <p className="text-sm font-medium text-purple-800 dark:text-purple-300">AI Classification</p>
                 </div>
                 <pre className="text-xs text-purple-700 dark:text-purple-400 overflow-auto">
-                  {JSON.stringify(selectedDoc.aiClassification as object, null, 2)}
+                  {JSON.stringify(selectedDoc.aiClassification as Record<string, unknown>, null, 2)}
                 </pre>
               </div>
             )}

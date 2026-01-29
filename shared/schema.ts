@@ -116,6 +116,7 @@ export const documents = pgTable("documents", {
 export const requiredDocuments = pgTable("required_documents", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id),
+  returnId: varchar("return_id"), // links to personal or business return
   documentType: documentTypeEnum("document_type").notNull(),
   description: text("description"),
   isRequired: boolean("is_required").default(true),

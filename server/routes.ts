@@ -540,13 +540,9 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
         savedResponses.push(response);
       }
 
-      // Generate required documents checklist based on questionnaire answers
+      // Auto-create businesses from questionnaire side_business_type answers FIRST
+      // (so we can link required documents to business returns)
       const allResponses = await storage.getQuestionnaireResponses(userId);
-      const responseData = allResponses.map(r => ({ questionId: r.questionId, answer: r.answer }));
-      const requiredDocs = generateRequiredDocuments(responseData);
-      await storage.regenerateRequiredDocuments(userId, requiredDocs);
-
-      // Auto-create businesses from questionnaire side_business_type answers
       const sideBusinessResponse = allResponses.find(r => r.questionId === 'side_business_type');
       if (sideBusinessResponse && Array.isArray(sideBusinessResponse.answer)) {
         const businessNames = sideBusinessResponse.answer as string[];
@@ -567,6 +563,21 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
           }
         }
       }
+
+      // Get user's returns to link documents properly
+      const userReturns = await storage.getReturns(userId);
+      const personalReturn = userReturns.find(r => r.returnType === 'personal');
+      const businessReturn = userReturns.find(r => r.returnType === 'business');
+      
+      // Generate required documents checklist based on questionnaire answers
+      const responseData = allResponses.map(r => ({ questionId: r.questionId, answer: r.answer }));
+      const requiredDocs = generateRequiredDocuments(responseData);
+      await storage.regenerateRequiredDocuments(
+        userId, 
+        requiredDocs,
+        personalReturn?.id || null,
+        businessReturn?.id || null
+      );
 
       res.json(savedResponses);
     } catch (error) {
@@ -1202,9 +1213,19 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
         const responses = await storage.getQuestionnaireResponses(client.id);
         if (responses.length === 0) continue;
         
+        // Get client's returns to link documents properly
+        const clientReturns = await storage.getReturns(client.id);
+        const personalReturn = clientReturns.find(r => r.returnType === 'personal');
+        const businessReturn = clientReturns.find(r => r.returnType === 'business');
+        
         const responseData = responses.map(r => ({ questionId: r.questionId, answer: r.answer }));
         const requiredDocs = generateRequiredDocuments(responseData);
-        await storage.regenerateRequiredDocuments(client.id, requiredDocs);
+        await storage.regenerateRequiredDocuments(
+          client.id, 
+          requiredDocs,
+          personalReturn?.id || null,
+          businessReturn?.id || null
+        );
         updatedCount++;
       }
       
