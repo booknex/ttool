@@ -14,6 +14,7 @@ import {
   businessOwners,
   businessExpenses,
   returns,
+  dependents,
   type User,
   type UpsertUser,
   type Document,
@@ -44,6 +45,8 @@ import {
   type InsertBusinessExpense,
   type Return,
   type InsertReturn,
+  type Dependent,
+  type InsertDependent,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, ne, inArray } from "drizzle-orm";
@@ -159,6 +162,14 @@ export interface IStorage {
   deleteReturn(id: string): Promise<void>;
   getReturnByBusiness(businessId: string): Promise<Return | undefined>;
   ensurePersonalReturn(userId: string): Promise<Return>;
+
+  // Dependent operations
+  getDependents(userId: string): Promise<Dependent[]>;
+  getDependent(id: string): Promise<Dependent | undefined>;
+  createDependent(data: InsertDependent): Promise<Dependent>;
+  updateDependent(id: string, updates: Partial<Dependent>): Promise<Dependent | undefined>;
+  deleteDependent(id: string): Promise<void>;
+  deleteUserDependents(userId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -744,6 +755,38 @@ export class DatabaseStorage implements IStorage {
       taxYear: 2025,
     }).returning();
     return newReturn;
+  }
+
+  // Dependent operations
+  async getDependents(userId: string): Promise<Dependent[]> {
+    return db.select().from(dependents).where(eq(dependents.userId, userId));
+  }
+
+  async getDependent(id: string): Promise<Dependent | undefined> {
+    const [dep] = await db.select().from(dependents).where(eq(dependents.id, id));
+    return dep;
+  }
+
+  async createDependent(data: InsertDependent): Promise<Dependent> {
+    const [dep] = await db.insert(dependents).values(data).returning();
+    return dep;
+  }
+
+  async updateDependent(id: string, updates: Partial<Dependent>): Promise<Dependent | undefined> {
+    const [updated] = await db
+      .update(dependents)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(dependents.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteDependent(id: string): Promise<void> {
+    await db.delete(dependents).where(eq(dependents.id, id));
+  }
+
+  async deleteUserDependents(userId: string): Promise<void> {
+    await db.delete(dependents).where(eq(dependents.userId, userId));
   }
 }
 

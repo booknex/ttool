@@ -216,6 +216,11 @@ export default function AdminClientDetail() {
     enabled: !!clientId,
   });
 
+  const { data: dependents } = useQuery<any[]>({
+    queryKey: ["/api/admin/clients", clientId, "dependents"],
+    enabled: !!clientId,
+  });
+
   const updateReturnMutation = useMutation({
     mutationFn: async (data: { id: string; updates: any }) => {
       return apiRequest("PATCH", `/api/admin/returns/${data.id}`, data.updates);
@@ -679,6 +684,9 @@ export default function AdminClientDetail() {
               <TabsTrigger value="returns" data-testid="tab-returns">
                 Returns ({returns?.length || 0})
               </TabsTrigger>
+              <TabsTrigger value="dependents" data-testid="tab-dependents">
+                Dependents ({dependents?.length || 0})
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="documents">
@@ -1100,6 +1108,55 @@ export default function AdminClientDetail() {
                                       }}
                                     />
                                   </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="dependents">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Dependents</CardTitle>
+                  <CardDescription>Dependent information for this client's tax return</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {!dependents || dependents.length === 0 ? (
+                    <p className="text-muted-foreground text-center py-8">No dependents recorded for this client</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {dependents.map((dep: any) => (
+                        <div key={dep.id} className="p-4 rounded-lg border bg-card" data-testid={`dependent-${dep.id}`}>
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className="font-medium">{dep.firstName} {dep.lastName}</span>
+                                <Badge variant="outline" className="capitalize">
+                                  {dep.relationship?.replace(/_/g, " ") || "Unknown"}
+                                </Badge>
+                              </div>
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                                <div>
+                                  <span className="text-muted-foreground">DOB:</span>{" "}
+                                  {dep.dateOfBirth ? format(new Date(dep.dateOfBirth), "MMM d, yyyy") : "Not provided"}
+                                </div>
+                                <div>
+                                  <span className="text-muted-foreground">SSN (last 4):</span>{" "}
+                                  {dep.ssnLastFour || "Not provided"}
+                                </div>
+                                <div>
+                                  <span className="text-muted-foreground">Months in Home:</span>{" "}
+                                  {dep.monthsLivedInHome ?? "Not provided"}
+                                </div>
+                                <div>
+                                  <span className="text-muted-foreground">Added:</span>{" "}
+                                  {dep.createdAt ? format(new Date(dep.createdAt), "MMM d, yyyy") : "N/A"}
                                 </div>
                               </div>
                             </div>

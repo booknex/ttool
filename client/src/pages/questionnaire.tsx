@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -40,13 +41,35 @@ type Question = {
   id: string;
   section: string;
   question: string;
-  type: "yes_no" | "multiple" | "text" | "number" | "checkbox" | "multi_entry";
+  type: "yes_no" | "multiple" | "text" | "number" | "checkbox" | "multi_entry" | "dependent_details";
   options?: string[];
   dependsOn?: { questionId: string; answer: string | boolean };
   icon?: any;
   helper?: string;
   entryPlaceholder?: string;
 };
+
+type DependentEntry = {
+  id?: string;
+  firstName: string;
+  lastName: string;
+  dateOfBirth: string;
+  ssnLastFour: string;
+  relationship: string;
+  monthsLivedInHome: number;
+};
+
+const relationshipOptions = [
+  { value: "child", label: "Child" },
+  { value: "stepchild", label: "Stepchild" },
+  { value: "foster_child", label: "Foster Child" },
+  { value: "grandchild", label: "Grandchild" },
+  { value: "sibling", label: "Sibling" },
+  { value: "parent", label: "Parent" },
+  { value: "grandparent", label: "Grandparent" },
+  { value: "other_relative", label: "Other Relative" },
+  { value: "other", label: "Other" },
+];
 
 
 const sectionIcons: Record<string, any> = {
@@ -184,6 +207,15 @@ const questions: Question[] = [
     dependsOn: { questionId: "dependents", answer: true },
   },
   {
+    id: "dependent_details",
+    section: "Family",
+    question: "Please enter information for each dependent",
+    type: "dependent_details",
+    dependsOn: { questionId: "dependents", answer: true },
+    helper: "We need this information to accurately prepare your return",
+    icon: Baby,
+  },
+  {
     id: "childcare_expenses",
     section: "Family",
     question: "Did you pay for childcare or dependent care?",
@@ -241,9 +273,58 @@ export default function Questionnaire() {
   const [hasChanges, setHasChanges] = useState(false);
 
   const isReviewing = user?.hasCompletedQuestionnaire === true;
+  const [dependentEntries, setDependentEntries] = useState<DependentEntry[]>([]);
 
   const { data: responses, isLoading } = useQuery<QuestionnaireResponse[]>({
     queryKey: ["/api/questionnaire"],
+  });
+
+  // Fetch existing dependents
+  const { data: existingDependents } = useQuery({
+    queryKey: ["/api/dependents"],
+  });
+
+  // Sync existing dependents to state
+  useEffect(() => {
+    if (existingDependents && Array.isArray(existingDependents)) {
+      const mapped = existingDependents.map((d: any) => ({
+        id: d.id,
+        firstName: d.firstName || "",
+        lastName: d.lastName || "",
+        dateOfBirth: d.dateOfBirth ? new Date(d.dateOfBirth).toISOString().split('T')[0] : "",
+        ssnLastFour: d.ssnLastFour || "",
+        relationship: d.relationship || "child",
+        monthsLivedInHome: d.monthsLivedInHome || 12,
+      }));
+      setDependentEntries(mapped);
+    }
+  }, [existingDependents]);
+
+  const createDependentMutation = useMutation({
+    mutationFn: async (data: Omit<DependentEntry, 'id'>) => {
+      return apiRequest("POST", "/api/dependents", data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/dependents"] });
+    },
+  });
+
+  const updateDependentMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<DependentEntry> }) => {
+      return apiRequest("PATCH", `/api/dependents/${id}`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/dependents"] });
+    },
+  });
+
+  const deleteDependentMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return apiRequest("DELETE", `/api/dependents/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/dependents"] });
+    },
   });
 
   const saveMutation = useMutation({
@@ -394,6 +475,10 @@ export default function Questionnaire() {
     if (currentQuestion.type === "multi_entry") {
       return Array.isArray(tempAnswer) && tempAnswer.length > 0 && tempAnswer.some((name: string) => name.trim() !== "");
     }
+    if (currentQuestion.type === "dependent_details") {
+      // For dependent_details, check if there are any saved dependents
+      return dependentEntries.length > 0 && dependentEntries.every(d => d.id);
+    }
     if (currentQuestion.type === "text" || currentQuestion.type === "number") {
       return tempAnswer !== null && tempAnswer !== undefined && tempAnswer !== "";
     }
@@ -428,6 +513,67 @@ export default function Questionnaire() {
   const updateEditBusinessEntry = (questionId: string, index: number, name: string) => {
     const current = Array.isArray(editingAnswers[questionId]) ? editingAnswers[questionId] : [];
     handleEditAnswer(questionId, current.map((entry: string, i: number) => i === index ? name : entry));
+  };
+
+  // Dependent entry helpers
+  const addDependentEntry = () => {
+    const newDependent: DependentEntry = {
+      firstName: "",
+      lastName: "",
+      dateOfBirth: "",
+      ssnLastFour: "",
+      relationship: "child",
+      monthsLivedInHome: 12,
+    };
+    setDependentEntries([...dependentEntries, newDependent]);
+  };
+
+  const removeDependentEntry = async (index: number) => {
+    const dep = dependentEntries[index];
+    if (dep.id) {
+      await deleteDependentMutation.mutateAsync(dep.id);
+    }
+    setDependentEntries(dependentEntries.filter((_, i) => i !== index));
+  };
+
+  const updateDependentEntry = (index: number, field: keyof DependentEntry, value: string | number) => {
+    const updated = dependentEntries.map((dep, i) => 
+      i === index ? { ...dep, [field]: value } : dep
+    );
+    setDependentEntries(updated);
+  };
+
+  const saveDependentEntry = async (index: number) => {
+    const dep = dependentEntries[index];
+    if (!dep.firstName || !dep.lastName) {
+      toast({
+        title: "Missing Information",
+        description: "Please enter first and last name for the dependent.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      if (dep.id) {
+        // Update existing
+        await updateDependentMutation.mutateAsync({ id: dep.id, data: dep });
+        toast({ title: "Dependent Updated", description: `${dep.firstName} ${dep.lastName} has been updated.` });
+      } else {
+        // Create new
+        const created = await createDependentMutation.mutateAsync(dep);
+        const updated = [...dependentEntries];
+        updated[index] = { ...dep, id: (created as any).id };
+        setDependentEntries(updated);
+        toast({ title: "Dependent Added", description: `${dep.firstName} ${dep.lastName} has been saved.` });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Could not save dependent. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   if (isLoading) {
@@ -623,6 +769,125 @@ export default function Questionnaire() {
                           >
                             <Plus className="h-4 w-4" />
                             Add Business
+                          </Button>
+                        </div>
+                      )}
+
+                      {q.type === "dependent_details" && (
+                        <div className="space-y-3">
+                          {dependentEntries.map((dep, idx) => (
+                            <Card key={idx} className="p-3">
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="font-medium text-sm">Dependent {idx + 1}</span>
+                                <div className="flex gap-2">
+                                  {dep.id && (
+                                    <Badge variant="outline" className="text-green-600 border-green-600 text-xs">Saved</Badge>
+                                  )}
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => removeDependentEntry(idx)}
+                                    className="text-destructive hover:text-destructive h-6 px-2"
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              </div>
+                              <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                  <Label className="text-xs">First Name *</Label>
+                                  <Input
+                                    value={dep.firstName}
+                                    onChange={(e) => updateDependentEntry(idx, "firstName", e.target.value)}
+                                    placeholder="First name"
+                                    className="h-8 text-sm"
+                                  />
+                                </div>
+                                <div>
+                                  <Label className="text-xs">Last Name *</Label>
+                                  <Input
+                                    value={dep.lastName}
+                                    onChange={(e) => updateDependentEntry(idx, "lastName", e.target.value)}
+                                    placeholder="Last name"
+                                    className="h-8 text-sm"
+                                  />
+                                </div>
+                                <div>
+                                  <Label className="text-xs">Date of Birth</Label>
+                                  <Input
+                                    type="date"
+                                    value={dep.dateOfBirth}
+                                    onChange={(e) => updateDependentEntry(idx, "dateOfBirth", e.target.value)}
+                                    className="h-8 text-sm"
+                                  />
+                                </div>
+                                <div>
+                                  <Label className="text-xs">SSN (last 4)</Label>
+                                  <Input
+                                    value={dep.ssnLastFour}
+                                    onChange={(e) => updateDependentEntry(idx, "ssnLastFour", e.target.value.slice(0, 4))}
+                                    placeholder="XXXX"
+                                    maxLength={4}
+                                    className="h-8 text-sm"
+                                  />
+                                </div>
+                                <div>
+                                  <Label className="text-xs">Relationship</Label>
+                                  <Select
+                                    value={dep.relationship}
+                                    onValueChange={(value) => updateDependentEntry(idx, "relationship", value)}
+                                  >
+                                    <SelectTrigger className="h-8 text-sm">
+                                      <SelectValue placeholder="Select..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {relationshipOptions.map((opt) => (
+                                        <SelectItem key={opt.value} value={opt.value}>
+                                          {opt.label}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                <div>
+                                  <Label className="text-xs">Months in Home</Label>
+                                  <Input
+                                    type="number"
+                                    value={dep.monthsLivedInHome}
+                                    onChange={(e) => updateDependentEntry(idx, "monthsLivedInHome", parseInt(e.target.value) || 0)}
+                                    min={0}
+                                    max={12}
+                                    className="h-8 text-sm"
+                                  />
+                                </div>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="mt-2 w-full h-8 text-xs"
+                                onClick={() => saveDependentEntry(idx)}
+                                disabled={createDependentMutation.isPending || updateDependentMutation.isPending}
+                              >
+                                {(createDependentMutation.isPending || updateDependentMutation.isPending) ? (
+                                  <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                                ) : (
+                                  <Save className="h-3 w-3 mr-1" />
+                                )}
+                                {dep.id ? "Update" : "Save"}
+                              </Button>
+                            </Card>
+                          ))}
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={addDependentEntry}
+                            className="gap-2 w-full"
+                          >
+                            <Plus className="h-4 w-4" />
+                            Add Dependent
                           </Button>
                         </div>
                       )}
@@ -834,6 +1099,124 @@ export default function Questionnaire() {
                   >
                     <Plus className="h-4 w-4" />
                     Add Business
+                  </Button>
+                </div>
+              )}
+
+              {currentQuestion.type === "dependent_details" && (
+                <div className="space-y-4">
+                  {dependentEntries.map((dep, idx) => (
+                    <Card key={idx} className="p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="font-medium text-sm">Dependent {idx + 1}</span>
+                        <div className="flex gap-2">
+                          {dep.id && (
+                            <Badge variant="outline" className="text-green-600 border-green-600">Saved</Badge>
+                          )}
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeDependentEntry(idx)}
+                            className="text-destructive hover:text-destructive h-7 px-2"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <Label className="text-xs">First Name *</Label>
+                          <Input
+                            value={dep.firstName}
+                            onChange={(e) => updateDependentEntry(idx, "firstName", e.target.value)}
+                            placeholder="First name"
+                            className="h-9"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Last Name *</Label>
+                          <Input
+                            value={dep.lastName}
+                            onChange={(e) => updateDependentEntry(idx, "lastName", e.target.value)}
+                            placeholder="Last name"
+                            className="h-9"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Date of Birth</Label>
+                          <Input
+                            type="date"
+                            value={dep.dateOfBirth}
+                            onChange={(e) => updateDependentEntry(idx, "dateOfBirth", e.target.value)}
+                            className="h-9"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs">SSN (last 4 digits)</Label>
+                          <Input
+                            value={dep.ssnLastFour}
+                            onChange={(e) => updateDependentEntry(idx, "ssnLastFour", e.target.value.slice(0, 4))}
+                            placeholder="XXXX"
+                            maxLength={4}
+                            className="h-9"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Relationship</Label>
+                          <Select
+                            value={dep.relationship}
+                            onValueChange={(value) => updateDependentEntry(idx, "relationship", value)}
+                          >
+                            <SelectTrigger className="h-9">
+                              <SelectValue placeholder="Select..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {relationshipOptions.map((opt) => (
+                                <SelectItem key={opt.value} value={opt.value}>
+                                  {opt.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label className="text-xs">Months in Home</Label>
+                          <Input
+                            type="number"
+                            value={dep.monthsLivedInHome}
+                            onChange={(e) => updateDependentEntry(idx, "monthsLivedInHome", parseInt(e.target.value) || 0)}
+                            min={0}
+                            max={12}
+                            className="h-9"
+                          />
+                        </div>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="mt-3 w-full"
+                        onClick={() => saveDependentEntry(idx)}
+                        disabled={createDependentMutation.isPending || updateDependentMutation.isPending}
+                      >
+                        {(createDependentMutation.isPending || updateDependentMutation.isPending) ? (
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        ) : (
+                          <Save className="h-4 w-4 mr-2" />
+                        )}
+                        {dep.id ? "Update" : "Save"} Dependent
+                      </Button>
+                    </Card>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={addDependentEntry}
+                    className="gap-2 w-full h-12"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Add Dependent
                   </Button>
                 </div>
               )}

@@ -526,6 +526,88 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
     }
   });
 
+  // Dependent routes
+  app.get("/api/dependents", isAuthenticated, resolveDbUser, async (req: any, res) => {
+    try {
+      const userId = req.dbUser.id;
+      const deps = await storage.getDependents(userId);
+      res.json(deps);
+    } catch (error) {
+      console.error("Error fetching dependents:", error);
+      res.status(500).json({ message: "Failed to fetch dependents" });
+    }
+  });
+
+  app.post("/api/dependents", isAuthenticated, resolveDbUser, async (req: any, res) => {
+    try {
+      const userId = req.dbUser.id;
+      const { firstName, lastName, dateOfBirth, ssn, relationship, monthsLivedInHome } = req.body;
+
+      if (!firstName || !lastName) {
+        return res.status(400).json({ message: "First name and last name are required" });
+      }
+
+      const dependent = await storage.createDependent({
+        userId,
+        firstName,
+        lastName,
+        dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+        ssn: ssn || null,
+        relationship: relationship || 'child',
+        monthsLivedInHome: monthsLivedInHome || 12,
+        taxYear: 2025,
+      });
+      res.status(201).json(dependent);
+    } catch (error) {
+      console.error("Error creating dependent:", error);
+      res.status(500).json({ message: "Failed to create dependent" });
+    }
+  });
+
+  app.patch("/api/dependents/:id", isAuthenticated, resolveDbUser, async (req: any, res) => {
+    try {
+      const userId = req.dbUser.id;
+      const depId = req.params.id;
+      const updates = req.body;
+
+      // Verify ownership
+      const existing = await storage.getDependent(depId);
+      if (!existing || existing.userId !== userId) {
+        return res.status(404).json({ message: "Dependent not found" });
+      }
+
+      // Handle dateOfBirth conversion
+      if (updates.dateOfBirth) {
+        updates.dateOfBirth = new Date(updates.dateOfBirth);
+      }
+
+      const updated = await storage.updateDependent(depId, updates);
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating dependent:", error);
+      res.status(500).json({ message: "Failed to update dependent" });
+    }
+  });
+
+  app.delete("/api/dependents/:id", isAuthenticated, resolveDbUser, async (req: any, res) => {
+    try {
+      const userId = req.dbUser.id;
+      const depId = req.params.id;
+
+      // Verify ownership
+      const existing = await storage.getDependent(depId);
+      if (!existing || existing.userId !== userId) {
+        return res.status(404).json({ message: "Dependent not found" });
+      }
+
+      await storage.deleteDependent(depId);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting dependent:", error);
+      res.status(500).json({ message: "Failed to delete dependent" });
+    }
+  });
+
   // Questionnaire routes
   app.get("/api/questionnaire", isAuthenticated, resolveDbUser, async (req: any, res) => {
     try {
@@ -1405,6 +1487,17 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
     } catch (error) {
       console.error("Error fetching client questionnaire:", error);
       res.status(500).json({ message: "Failed to fetch questionnaire" });
+    }
+  });
+
+  // Get client's dependents (admin view)
+  app.get("/api/admin/clients/:id/dependents", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const deps = await storage.getDependents(req.params.id);
+      res.json(deps);
+    } catch (error) {
+      console.error("Error fetching client dependents:", error);
+      res.status(500).json({ message: "Failed to fetch dependents" });
     }
   });
 

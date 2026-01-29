@@ -242,6 +242,25 @@ export const businessExpenses = pgTable("business_expenses", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Dependents table
+export const dependentRelationshipEnum = pgEnum('dependent_relationship', [
+  'child', 'stepchild', 'foster_child', 'grandchild', 'sibling', 'parent', 'grandparent', 'other_relative', 'other'
+]);
+
+export const dependents = pgTable("dependents", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  firstName: varchar("first_name").notNull(),
+  lastName: varchar("last_name").notNull(),
+  dateOfBirth: timestamp("date_of_birth"),
+  ssn: varchar("ssn"), // Stored encrypted or last 4 for display
+  relationship: dependentRelationshipEnum("relationship").default('child'),
+  monthsLivedInHome: integer("months_lived_in_home").default(12),
+  taxYear: integer("tax_year").default(2025),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Returns table (tracks personal and business returns separately)
 export const returns = pgTable("returns", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -322,6 +341,7 @@ export const insertBusinessSchema = createInsertSchema(businesses).omit({ create
 export const insertBusinessOwnerSchema = createInsertSchema(businessOwners).omit({ createdAt: true });
 export const insertBusinessExpenseSchema = createInsertSchema(businessExpenses).omit({ createdAt: true });
 export const insertReturnSchema = createInsertSchema(returns).omit({ createdAt: true, updatedAt: true });
+export const insertDependentSchema = createInsertSchema(dependents).omit({ createdAt: true, updatedAt: true });
 
 // Types
 export type UpsertUser = typeof users.$inferInsert;
@@ -354,3 +374,5 @@ export type BusinessExpense = typeof businessExpenses.$inferSelect;
 export type InsertBusinessExpense = z.infer<typeof insertBusinessExpenseSchema>;
 export type Return = typeof returns.$inferSelect;
 export type InsertReturn = z.infer<typeof insertReturnSchema>;
+export type Dependent = typeof dependents.$inferSelect;
+export type InsertDependent = z.infer<typeof insertDependentSchema>;
