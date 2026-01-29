@@ -53,6 +53,7 @@ Core data entities:
 - Refund Tracking (filing status)
 - Invoices and Invoice Items (billing)
 - Sessions (authentication persistence)
+- Dependents (dependent information for tax returns)
 
 ### Authentication Flow
 - Custom username/password authentication with bcrypt hashing
@@ -179,6 +180,10 @@ Core data entities:
 - `GET /api/invoices` - List invoices
 - `GET /api/invoices/:id/items` - Invoice line items
 - `POST /api/invoices/:id/pay` - Process payment
+- `GET /api/dependents` - List dependents
+- `POST /api/dependents` - Create dependent
+- `PATCH /api/dependents/:id` - Update dependent
+- `DELETE /api/dependents/:id` - Delete dependent
 
 #### Admin Endpoints (require isAdmin=true):
 - `GET /api/admin/stats` - Dashboard statistics
@@ -194,6 +199,7 @@ Core data entities:
 - `GET /api/admin/clients/:id/questionnaire` - Client's questionnaire responses
 - `GET /api/admin/clients/:id/businesses` - Client's businesses with owners and expenses
 - `PATCH /api/admin/businesses/:id` - Update business info
+- `GET /api/admin/clients/:id/dependents` - Client's dependents
 - `GET /api/admin/clients/:id/returns` - Client's tax returns (personal and business)
 - `PATCH /api/admin/returns/:id` - Update individual return status
 - `GET /api/admin/returns` - All returns for Kanban board
