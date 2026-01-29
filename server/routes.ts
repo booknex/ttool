@@ -226,11 +226,14 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
   app.post("/api/auth/complete-questionnaire", isAuthenticated, resolveDbUser, async (req: any, res) => {
     try {
       const userId = req.dbUser.id;
+      console.log("Completing questionnaire for user:", userId);
       await storage.updateUser(userId, { hasCompletedQuestionnaire: true });
+      console.log("Questionnaire completed successfully for user:", userId);
       res.json({ success: true });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error completing questionnaire:", error);
-      res.status(500).json({ message: "Failed to complete questionnaire" });
+      console.error("Error details:", error?.message, error?.stack);
+      res.status(500).json({ message: "Failed to complete questionnaire", error: error?.message });
     }
   });
 
@@ -631,6 +634,11 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
 
       const savedResponses = [];
       for (const [questionId, answer] of Object.entries(answers)) {
+        // Skip undefined/null answers to avoid database issues
+        if (answer === undefined || answer === null) {
+          console.log(`Skipping undefined/null answer for question: ${questionId}`);
+          continue;
+        }
         const response = await storage.upsertQuestionnaireResponse({
           userId,
           questionId,
@@ -680,9 +688,10 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
       );
 
       res.json(savedResponses);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving questionnaire:", error);
-      res.status(500).json({ message: "Failed to save questionnaire" });
+      console.error("Error details:", error?.message, error?.stack);
+      res.status(500).json({ message: "Failed to save questionnaire", error: error?.message });
     }
   });
 
