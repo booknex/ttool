@@ -74,6 +74,7 @@ export interface IStorage {
   unlinkDocumentFromChecklist(documentId: string): Promise<void>;
   clearRequiredDocuments(userId: string): Promise<void>;
   regenerateRequiredDocuments(userId: string, documents: { type: string; description: string; isBusinessDoc: boolean }[], personalReturnId: string | null, businessReturnId: string | null): Promise<void>;
+  markRequiredDocumentNotApplicable(userId: string, docId: string, notApplicable: boolean): Promise<RequiredDocument | null>;
 
   // Signatures
   getSignatures(userId: string): Promise<Signature[]>;
@@ -293,6 +294,14 @@ export class DatabaseStorage implements IStorage {
 
   async clearRequiredDocuments(userId: string): Promise<void> {
     await db.delete(requiredDocuments).where(eq(requiredDocuments.userId, userId));
+  }
+
+  async markRequiredDocumentNotApplicable(userId: string, docId: string, notApplicable: boolean): Promise<RequiredDocument | null> {
+    const [updated] = await db.update(requiredDocuments)
+      .set({ markedNotApplicable: notApplicable })
+      .where(and(eq(requiredDocuments.id, docId), eq(requiredDocuments.userId, userId)))
+      .returning();
+    return updated || null;
   }
 
   async regenerateRequiredDocuments(

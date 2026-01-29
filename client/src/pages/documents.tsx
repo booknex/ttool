@@ -41,6 +41,8 @@ import {
   CircleDashed,
   User,
   Building2,
+  XCircle,
+  Undo2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -260,9 +262,32 @@ export default function Documents() {
     },
   });
 
+  const markNotApplicableMutation = useMutation({
+    mutationFn: async ({ docId, notApplicable }: { docId: string; notApplicable: boolean }) => {
+      await apiRequest("PATCH", `/api/required-documents/${docId}/not-applicable`, { notApplicable });
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/required-documents"] });
+      toast({
+        title: variables.notApplicable ? "Marked as N/A" : "Unmarked",
+        description: variables.notApplicable 
+          ? "This document has been marked as not applicable."
+          : "This document requirement has been restored.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Update Failed",
+        description: "Could not update the document status. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const getIncompleteChecklistItems = useCallback(() => {
     const alreadySelected = new Set(fileChecklistMap.values());
-    return requiredDocs?.filter(d => !d.isUploaded && !alreadySelected.has(d.id)) || [];
+    // Exclude uploaded, N/A marked, and already selected items
+    return requiredDocs?.filter(d => !d.isUploaded && !d.markedNotApplicable && !alreadySelected.has(d.id)) || [];
   }, [requiredDocs, fileChecklistMap]);
 
   const incompleteChecklistItems = getIncompleteChecklistItems();
@@ -324,9 +349,10 @@ export default function Documents() {
     maxSize: 10 * 1024 * 1024,
   });
 
-  const uploadedReqDocs = requiredDocs?.filter((d) => d.isUploaded).length || 0;
+  // Count uploaded OR marked N/A as complete
+  const completedReqDocs = requiredDocs?.filter((d) => d.isUploaded || d.markedNotApplicable).length || 0;
   const totalReqDocs = requiredDocs?.length || 0;
-  const docProgress = totalReqDocs > 0 ? Math.round((uploadedReqDocs / totalReqDocs) * 100) : 0;
+  const docProgress = totalReqDocs > 0 ? Math.round((completedReqDocs / totalReqDocs) * 100) : 0;
 
   const verifiedDocs = documents?.filter((d) => d.status === "verified").length || 0;
   const processingDocs = documents?.filter((d) => d.status === "processing").length || 0;
@@ -581,7 +607,7 @@ export default function Documents() {
             <CardContent>
               <div className="mb-4">
                 <div className="flex items-center justify-between text-sm mb-2">
-                  <span className="text-muted-foreground">{uploadedReqDocs} of {totalReqDocs}</span>
+                  <span className="text-muted-foreground">{completedReqDocs} of {totalReqDocs}</span>
                   <span className="font-semibold text-primary">{docProgress}%</span>
                 </div>
                 <Progress value={docProgress} className="h-2" />
@@ -604,7 +630,7 @@ export default function Documents() {
                         <User className="w-4 h-4 text-blue-600" />
                         <span className="text-sm font-semibold text-blue-600">Personal Return</span>
                         <span className="text-xs text-muted-foreground">
-                          ({personalDocs.filter(d => d.isUploaded).length}/{personalDocs.length})
+                          ({personalDocs.filter(d => d.isUploaded || d.markedNotApplicable).length}/{personalDocs.length})
                         </span>
                       </div>
                       <div className="space-y-2">
@@ -614,22 +640,52 @@ export default function Documents() {
                             className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${
                               doc.isUploaded 
                                 ? "bg-green-50 dark:bg-green-900/10" 
-                                : "bg-muted/30"
+                                : doc.markedNotApplicable
+                                  ? "bg-gray-50 dark:bg-gray-900/10"
+                                  : "bg-muted/30"
                             }`}
                           >
                             {doc.isUploaded ? (
                               <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0" />
+                            ) : doc.markedNotApplicable ? (
+                              <XCircle className="w-5 h-5 text-gray-400 flex-shrink-0" />
                             ) : (
                               <CircleDashed className="w-5 h-5 text-muted-foreground flex-shrink-0" />
                             )}
                             <div className="flex-1 min-w-0">
-                              <p className={`text-sm font-medium truncate ${doc.isUploaded ? "text-green-800 dark:text-green-300" : ""}`}>
+                              <p className={`text-sm font-medium truncate ${
+                                doc.isUploaded 
+                                  ? "text-green-800 dark:text-green-300" 
+                                  : doc.markedNotApplicable 
+                                    ? "text-gray-500 line-through" 
+                                    : ""
+                              }`}>
                                 {documentTypeLabels[doc.documentType || "other"]}
                               </p>
                               {doc.description && (
-                                <p className="text-xs text-muted-foreground truncate">{doc.description}</p>
+                                <p className={`text-xs truncate ${doc.markedNotApplicable ? "text-gray-400" : "text-muted-foreground"}`}>
+                                  {doc.markedNotApplicable ? "Marked as N/A" : doc.description}
+                                </p>
                               )}
                             </div>
+                            {!doc.isUploaded && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className={`h-7 px-2 text-xs flex-shrink-0 ${doc.markedNotApplicable ? "text-blue-600 hover:text-blue-700" : "text-gray-500 hover:text-gray-700"}`}
+                                onClick={() => markNotApplicableMutation.mutate({ docId: doc.id, notApplicable: !doc.markedNotApplicable })}
+                                disabled={markNotApplicableMutation.isPending}
+                              >
+                                {doc.markedNotApplicable ? (
+                                  <>
+                                    <Undo2 className="w-3 h-3 mr-1" />
+                                    Undo
+                                  </>
+                                ) : (
+                                  "I don't have this"
+                                )}
+                              </Button>
+                            )}
                           </div>
                         ))}
                       </div>
@@ -643,7 +699,7 @@ export default function Documents() {
                         <Building2 className="w-4 h-4 text-purple-600" />
                         <span className="text-sm font-semibold text-purple-600">Business Return</span>
                         <span className="text-xs text-muted-foreground">
-                          ({businessDocs.filter(d => d.isUploaded).length}/{businessDocs.length})
+                          ({businessDocs.filter(d => d.isUploaded || d.markedNotApplicable).length}/{businessDocs.length})
                         </span>
                       </div>
                       <div className="space-y-2">
@@ -653,22 +709,52 @@ export default function Documents() {
                             className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${
                               doc.isUploaded 
                                 ? "bg-green-50 dark:bg-green-900/10" 
-                                : "bg-muted/30"
+                                : doc.markedNotApplicable
+                                  ? "bg-gray-50 dark:bg-gray-900/10"
+                                  : "bg-muted/30"
                             }`}
                           >
                             {doc.isUploaded ? (
                               <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0" />
+                            ) : doc.markedNotApplicable ? (
+                              <XCircle className="w-5 h-5 text-gray-400 flex-shrink-0" />
                             ) : (
                               <CircleDashed className="w-5 h-5 text-muted-foreground flex-shrink-0" />
                             )}
                             <div className="flex-1 min-w-0">
-                              <p className={`text-sm font-medium truncate ${doc.isUploaded ? "text-green-800 dark:text-green-300" : ""}`}>
+                              <p className={`text-sm font-medium truncate ${
+                                doc.isUploaded 
+                                  ? "text-green-800 dark:text-green-300" 
+                                  : doc.markedNotApplicable 
+                                    ? "text-gray-500 line-through" 
+                                    : ""
+                              }`}>
                                 {documentTypeLabels[doc.documentType || "other"]}
                               </p>
                               {doc.description && (
-                                <p className="text-xs text-muted-foreground truncate">{doc.description}</p>
+                                <p className={`text-xs truncate ${doc.markedNotApplicable ? "text-gray-400" : "text-muted-foreground"}`}>
+                                  {doc.markedNotApplicable ? "Marked as N/A" : doc.description}
+                                </p>
                               )}
                             </div>
+                            {!doc.isUploaded && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className={`h-7 px-2 text-xs flex-shrink-0 ${doc.markedNotApplicable ? "text-blue-600 hover:text-blue-700" : "text-gray-500 hover:text-gray-700"}`}
+                                onClick={() => markNotApplicableMutation.mutate({ docId: doc.id, notApplicable: !doc.markedNotApplicable })}
+                                disabled={markNotApplicableMutation.isPending}
+                              >
+                                {doc.markedNotApplicable ? (
+                                  <>
+                                    <Undo2 className="w-3 h-3 mr-1" />
+                                    Undo
+                                  </>
+                                ) : (
+                                  "I don't have this"
+                                )}
+                              </Button>
+                            )}
                           </div>
                         ))}
                       </div>

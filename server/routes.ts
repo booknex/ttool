@@ -358,6 +358,24 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
     }
   });
 
+  // Mark required document as not applicable (client doesn't have it)
+  app.patch("/api/required-documents/:id/not-applicable", isAuthenticated, resolveDbUser, async (req: any, res) => {
+    try {
+      const userId = req.dbUser.id;
+      const { id } = req.params;
+      const { notApplicable } = req.body;
+      
+      const updated = await storage.markRequiredDocumentNotApplicable(userId, id, notApplicable);
+      if (!updated) {
+        return res.status(404).json({ message: "Document requirement not found" });
+      }
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating required document:", error);
+      res.status(500).json({ message: "Failed to update document requirement" });
+    }
+  });
+
   // Signature routes
   app.get("/api/signatures", isAuthenticated, resolveDbUser, async (req: any, res) => {
     try {

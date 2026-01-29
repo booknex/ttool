@@ -121,6 +121,7 @@ export const requiredDocuments = pgTable("required_documents", {
   description: text("description"),
   isRequired: boolean("is_required").default(true),
   isUploaded: boolean("is_uploaded").default(false),
+  markedNotApplicable: boolean("marked_not_applicable").default(false),
   documentId: varchar("document_id").references(() => documents.id),
   taxYear: integer("tax_year").default(2025),
 });
