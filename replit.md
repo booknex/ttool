@@ -122,7 +122,7 @@ Core data entities:
 - **Landing Page**: Professional landing page with feature highlights and CTA buttons
 - **Return Status (Home)**: The default landing page showing tax return preparation status
 - **Summary**: Overview page with document progress, refund status, pending actions, and quick links
-- **Document Center**: Drag-and-drop upload with AI classification simulation, document checklist, and status tracking
+- **Document Center**: Drag-and-drop upload with AI classification simulation, document checklist grouped by return type (Personal Return vs Business Returns), and status tracking. Each required document is linked to a specific return via `returnId`.
 - **Messages**: Real-time messaging interface with auto-reply simulation
 - **Questionnaire**: Dynamic multi-section tax questionnaire with conditional questions, progress tracking, and multi-entry business inputs (add multiple businesses). Completing the questionnaire automatically generates a personalized document checklist based on answers AND auto-creates business records for any businesses mentioned in the side_business_type question.
 - **Refund Tracker**: Visual progress tracker for federal and state refunds
