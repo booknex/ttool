@@ -1,5 +1,6 @@
 import {
   users,
+  sessions,
   documents,
   requiredDocuments,
   signatures,
@@ -49,7 +50,7 @@ import {
   type InsertDependent,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc, ne, inArray } from "drizzle-orm";
+import { eq, and, desc, ne, inArray, sql } from "drizzle-orm";
 
 export interface IStorage {
   // User operations
@@ -243,6 +244,21 @@ export class DatabaseStorage implements IStorage {
     await db.delete(requiredDocuments).where(eq(requiredDocuments.userId, id));
     await db.delete(documents).where(eq(documents.userId, id));
     await db.delete(affiliateReferrals).where(eq(affiliateReferrals.clientUserId, id));
+    await db.delete(dependents).where(eq(dependents.userId, id));
+    await db.delete(returns).where(eq(returns.userId, id));
+    
+    const userBusinesses = await db.select({ id: businesses.id }).from(businesses).where(eq(businesses.userId, id));
+    const businessIds = userBusinesses.map(b => b.id);
+    
+    if (businessIds.length > 0) {
+      await db.delete(businessExpenses).where(inArray(businessExpenses.businessId, businessIds));
+      await db.delete(businessOwners).where(inArray(businessOwners.businessId, businessIds));
+    }
+    await db.delete(businesses).where(eq(businesses.userId, id));
+    
+    await db.execute(
+      sql`DELETE FROM sessions WHERE sess->'passport'->>'user' = ${id}`
+    );
     await db.delete(users).where(eq(users.id, id));
   }
 
