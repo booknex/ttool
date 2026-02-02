@@ -26,11 +26,21 @@ const upload = multer({
     fileSize: 10 * 1024 * 1024, // 10MB
   },
   fileFilter: (req, file, cb) => {
-    const allowedTypes = ["application/pdf", "image/png", "image/jpeg", "image/jpg", "image/gif", "image/webp"];
+    const allowedTypes = [
+      // Documents
+      "application/pdf",
+      // Images
+      "image/png", "image/jpeg", "image/jpg", "image/gif", "image/webp",
+      // Spreadsheets
+      "application/vnd.ms-excel", // .xls
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // .xlsx
+      "text/csv", // .csv
+      "application/csv", // .csv (alternate)
+    ];
     if (allowedTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error("Invalid file type"));
+      cb(new Error("Invalid file type. Allowed: PDF, images, and spreadsheets (xlsx, xls, csv)"));
     }
   },
 });

@@ -345,6 +345,9 @@ export default function Documents() {
     accept: {
       "application/pdf": [".pdf"],
       "image/*": [".png", ".jpg", ".jpeg", ".gif", ".webp"],
+      "application/vnd.ms-excel": [".xls"],
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
+      "text/csv": [".csv"],
     },
     maxSize: 10 * 1024 * 1024,
   });
@@ -825,17 +828,17 @@ export default function Documents() {
                 <div className="mt-0.5">{selectedDoc && getStatusBadge(selectedDoc.status)}</div>
               </div>
             </div>
-            {selectedDoc?.aiClassification && (
+            {selectedDoc?.aiClassification ? (
               <div className="p-4 rounded-lg bg-purple-50 dark:bg-purple-900/10 border border-purple-200 dark:border-purple-800">
                 <div className="flex items-center gap-2 mb-2">
                   <Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                   <p className="text-sm font-medium text-purple-800 dark:text-purple-300">AI Classification</p>
                 </div>
                 <pre className="text-xs text-purple-700 dark:text-purple-400 overflow-auto">
-                  {JSON.stringify(selectedDoc.aiClassification as Record<string, unknown>, null, 2)}
+                  {String(JSON.stringify(selectedDoc.aiClassification, null, 2))}
                 </pre>
               </div>
-            )}
+            ) : null}
           </div>
         </DialogContent>
       </Dialog>
