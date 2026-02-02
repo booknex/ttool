@@ -1,0 +1,25 @@
+utils.js:232 Uncaught TypeError: Cannot read properties of undefined (reading 'onChanged')
+    at utils.js:232:16
+tabutils.js:2 Uncaught TypeError: Cannot read properties of undefined (reading 'onUpdated')
+    at tabutils.js:2:13
+contextmenu.js:124 Uncaught TypeError: Cannot read properties of undefined (reading 'onClicked')
+    at contextmenu.js:124:21
+download.js:9 Uncaught TypeError: Cannot read properties of undefined (reading 'onCreated')
+    at download.js:9:18
+summary:1 Unchecked runtime.lastError: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+summary:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+summary:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+summary:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+summary:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+documents:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+documents:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+documents:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+documents:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+documents:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+documents:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+documents:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+documents:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+documents:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+documents:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+api/admin/impersonation-status:1  Failed to load resource: the server responded with a status of 500 ()
+api/documents/upload:1  Failed to load resource: the server responded with a status of 500 ()
