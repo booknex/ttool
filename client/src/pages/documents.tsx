@@ -107,6 +107,7 @@ export default function Documents() {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [selectedDoc, setSelectedDoc] = useState<Document | null>(null);
+  const [previewDoc, setPreviewDoc] = useState<Document | null>(null);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [currentFileIndex, setCurrentFileIndex] = useState(0);
   const [selectedChecklistItem, setSelectedChecklistItem] = useState<string>("");
@@ -839,6 +840,85 @@ export default function Documents() {
                 </pre>
               </div>
             ) : null}
+            <div className="flex gap-2 pt-2">
+              <Button 
+                className="flex-1"
+                onClick={() => {
+                  setPreviewDoc(selectedDoc);
+                  setSelectedDoc(null);
+                }}
+              >
+                <Eye className="w-4 h-4 mr-2" />
+                View File
+              </Button>
+              <Button 
+                variant="outline"
+                className="flex-1"
+                onClick={() => {
+                  if (selectedDoc) {
+                    window.open(`/api/documents/${selectedDoc.id}/file?download=true`, '_blank');
+                  }
+                }}
+              >
+                <FolderOpen className="w-4 h-4 mr-2" />
+                Download
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!previewDoc} onOpenChange={() => setPreviewDoc(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3">
+              {previewDoc && getFileIcon(previewDoc.fileType)}
+              <span className="truncate">{previewDoc?.originalName}</span>
+            </DialogTitle>
+            <DialogDescription>
+              {previewDoc?.documentType && documentTypeLabels[previewDoc.documentType]}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex-1 overflow-auto bg-muted/30 rounded-lg border">
+            {previewDoc?.fileType.includes("pdf") ? (
+              <iframe
+                src={`/api/documents/${previewDoc.id}/file`}
+                className="w-full h-[70vh] border-0"
+                title={previewDoc.originalName}
+              />
+            ) : previewDoc?.fileType.includes("image") ? (
+              <div className="flex items-center justify-center p-4">
+                <img
+                  src={`/api/documents/${previewDoc.id}/file`}
+                  alt={previewDoc.originalName}
+                  className="max-w-full max-h-[70vh] object-contain rounded-lg shadow-lg"
+                />
+              </div>
+            ) : previewDoc?.fileType.includes("csv") || previewDoc?.fileType.includes("spreadsheetml") || previewDoc?.fileType.includes("ms-excel") ? (
+              <div className="flex flex-col items-center justify-center p-8 text-center">
+                <FileText className="w-16 h-16 text-green-500 mb-4" />
+                <p className="text-lg font-medium mb-2">Spreadsheet File</p>
+                <p className="text-muted-foreground mb-4">
+                  This file type cannot be previewed in the browser.
+                </p>
+                <Button onClick={() => previewDoc && window.open(`/api/documents/${previewDoc.id}/file?download=true`, '_blank')}>
+                  <FolderOpen className="w-4 h-4 mr-2" />
+                  Download to View
+                </Button>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center p-8 text-center">
+                <File className="w-16 h-16 text-muted-foreground mb-4" />
+                <p className="text-lg font-medium mb-2">Preview Not Available</p>
+                <p className="text-muted-foreground mb-4">
+                  This file type cannot be previewed in the browser.
+                </p>
+                <Button onClick={() => previewDoc && window.open(`/api/documents/${previewDoc.id}/file?download=true`, '_blank')}>
+                  <FolderOpen className="w-4 h-4 mr-2" />
+                  Download to View
+                </Button>
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>

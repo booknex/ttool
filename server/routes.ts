@@ -342,6 +342,30 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
     }
   });
 
+  app.get("/api/documents/:id/file", isAuthenticated, resolveDbUser, async (req: any, res) => {
+    try {
+      const userId = req.dbUser.id;
+      const doc = await storage.getDocument(req.params.id);
+      
+      if (!doc || doc.userId !== userId) {
+        return res.status(404).json({ message: "Document not found" });
+      }
+
+      const filePath = path.join(uploadDir, doc.fileName);
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ message: "File not found" });
+      }
+
+      res.setHeader("Content-Type", doc.fileType);
+      const disposition = req.query.download === "true" ? "attachment" : "inline";
+      res.setHeader("Content-Disposition", `${disposition}; filename="${doc.originalName}"`);
+      res.sendFile(filePath);
+    } catch (error) {
+      console.error("Error serving file:", error);
+      res.status(500).json({ message: "Failed to serve file" });
+    }
+  });
+
   app.delete("/api/documents/:id", isAuthenticated, resolveDbUser, async (req: any, res) => {
     try {
       const userId = req.dbUser.id;
