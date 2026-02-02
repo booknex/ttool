@@ -214,6 +214,7 @@ export const businesses = pgTable("businesses", {
   industry: varchar("industry"),
   description: text("description"),
   address: text("address"),
+  grossIncome: decimal("gross_income", { precision: 12, scale: 2 }),
   taxYear: integer("tax_year").default(2025),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

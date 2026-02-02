@@ -51,6 +51,7 @@ interface Business {
   industry: string | null;
   description: string | null;
   address: string | null;
+  grossIncome: string | null;
   taxYear: number | null;
   createdAt: Date | null;
   updatedAt: Date | null;
@@ -121,6 +122,7 @@ export default function BusinessesPage() {
     industry: "",
     description: "",
     address: "",
+    grossIncome: "",
   });
   const [newOwner, setNewOwner] = useState({
     name: "",
@@ -172,6 +174,7 @@ export default function BusinessesPage() {
         industry: "",
         description: "",
         address: "",
+        grossIncome: "",
       });
       toast({ title: "Business added successfully" });
     },
@@ -409,7 +412,15 @@ export default function BusinessesPage() {
                               <p>{selectedBusiness.address}</p>
                             </div>
                           )}
-                          {!selectedBusiness.industry && !selectedBusiness.description && !selectedBusiness.address && (
+                          {selectedBusiness.grossIncome && (
+                            <div>
+                              <Label className="text-muted-foreground">Gross Income</Label>
+                              <p className="text-lg font-semibold text-green-600">
+                                ${parseFloat(selectedBusiness.grossIncome).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              </p>
+                            </div>
+                          )}
+                          {!selectedBusiness.industry && !selectedBusiness.description && !selectedBusiness.address && !selectedBusiness.grossIncome && (
                             <p className="text-muted-foreground text-sm">
                               No additional details provided. Click Edit to add more information.
                             </p>
@@ -612,6 +623,22 @@ export default function BusinessesPage() {
                 placeholder="123 Main St, City, State ZIP"
               />
             </div>
+            <div className="grid gap-2">
+              <Label htmlFor="grossIncome">Gross Income (Total Revenue)</Label>
+              <div className="relative">
+                <DollarSign className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="grossIncome"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  className="pl-9"
+                  value={newBusiness.grossIncome}
+                  onChange={(e) => setNewBusiness({ ...newBusiness, grossIncome: e.target.value })}
+                  placeholder="0.00"
+                />
+              </div>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsAddBusinessOpen(false)}>
@@ -689,6 +716,22 @@ export default function BusinessesPage() {
                 defaultValue={selectedBusiness?.address || ""}
                 onChange={(e) => setNewBusiness({ ...newBusiness, address: e.target.value })}
               />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="edit-grossIncome">Gross Income (Total Revenue)</Label>
+              <div className="relative">
+                <DollarSign className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="edit-grossIncome"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  className="pl-9"
+                  defaultValue={selectedBusiness?.grossIncome || ""}
+                  onChange={(e) => setNewBusiness({ ...newBusiness, grossIncome: e.target.value })}
+                  placeholder="0.00"
+                />
+              </div>
             </div>
           </div>
           <DialogFooter>
