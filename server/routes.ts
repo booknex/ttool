@@ -228,6 +228,15 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
       const userId = req.dbUser.id;
       console.log("Completing questionnaire for user:", userId);
       await storage.updateUser(userId, { hasCompletedQuestionnaire: true });
+      
+      // Auto-advance all returns to documents_gathering phase since they now have their document checklist
+      const userReturns = await storage.getReturns(userId);
+      for (const ret of userReturns) {
+        if (ret.status === 'not_started' || !ret.status) {
+          await storage.updateReturn(ret.id, { status: 'documents_gathering' });
+        }
+      }
+      
       console.log("Questionnaire completed successfully for user:", userId);
       res.json({ success: true });
     } catch (error: any) {

@@ -31,6 +31,9 @@ import {
   Save,
   Plus,
   Trash2,
+  User,
+  MapPin,
+  Calendar,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -73,6 +76,7 @@ const relationshipOptions = [
 
 
 const sectionIcons: Record<string, any> = {
+  "Personal Information": User,
   "Filing Status": Home,
   "Income": DollarSign,
   "Deductions": Briefcase,
@@ -82,6 +86,47 @@ const sectionIcons: Record<string, any> = {
 };
 
 const questions: Question[] = [
+  // Personal Information Section
+  {
+    id: "date_of_birth",
+    section: "Personal Information",
+    question: "What is your date of birth?",
+    type: "text",
+    helper: "Enter in MM/DD/YYYY format",
+    icon: Calendar,
+  },
+  {
+    id: "street_address",
+    section: "Personal Information",
+    question: "What is your street address?",
+    type: "text",
+    helper: "Enter your current mailing address",
+    icon: MapPin,
+  },
+  {
+    id: "city",
+    section: "Personal Information",
+    question: "What city do you live in?",
+    type: "text",
+    icon: MapPin,
+  },
+  {
+    id: "state",
+    section: "Personal Information",
+    question: "What state do you live in?",
+    type: "multiple",
+    options: ["AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA", "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY", "DC"],
+    icon: MapPin,
+  },
+  {
+    id: "zip_code",
+    section: "Personal Information",
+    question: "What is your ZIP code?",
+    type: "text",
+    helper: "5-digit ZIP code",
+    icon: MapPin,
+  },
+  // Filing Status Section
   {
     id: "filing_status",
     section: "Filing Status",
