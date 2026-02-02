@@ -659,13 +659,22 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
         
         for (const businessName of businessNames) {
           if (businessName && !existingNames.includes(businessName.toLowerCase())) {
-            // Create the business - this will also auto-create a business return
-            await storage.createBusiness({
+            // Create the business
+            const business = await storage.createBusiness({
               userId,
               name: businessName,
               taxId: null,
               entityType: 'llc', // Default, user can update later
               address: null,
+              taxYear: 2025,
+            });
+            
+            // Also create a business return for this business (matching POST /api/businesses behavior)
+            await storage.createReturn({
+              userId,
+              businessId: business.id,
+              returnType: 'business',
+              name: business.name,
               taxYear: 2025,
             });
           }
@@ -1364,7 +1373,7 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
           
           for (const businessName of businessNames) {
             if (businessName && !existingNames.includes(businessName.toLowerCase())) {
-              await storage.createBusiness({
+              const business = await storage.createBusiness({
                 userId: client.id,
                 name: businessName,
                 taxId: null,
@@ -1372,6 +1381,16 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
                 address: null,
                 taxYear: 2025,
               });
+              
+              // Also create a business return for this business
+              await storage.createReturn({
+                userId: client.id,
+                businessId: business.id,
+                returnType: 'business',
+                name: business.name,
+                taxYear: 2025,
+              });
+              
               createdCount++;
             }
           }
