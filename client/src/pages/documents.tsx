@@ -171,17 +171,7 @@ export default function Documents() {
     },
   });
 
-  const processNextFile = () => {
-    const nextIndex = currentFileIndex + 1;
-    if (nextIndex < pendingFiles.length) {
-      setCurrentFileIndex(nextIndex);
-      setSelectedChecklistItem("");
-    } else {
-      finishUpload();
-    }
-  };
-
-  const finishUpload = async () => {
+  const finishUpload = async (finalMap: Map<number, string>) => {
     setUploading(true);
     setUploadProgress(0);
 
@@ -192,7 +182,7 @@ export default function Documents() {
     try {
       for (let i = 0; i < pendingFiles.length; i++) {
         const file = pendingFiles[i];
-        const checklistItemId = fileChecklistMap.get(i);
+        const checklistItemId = finalMap.get(i);
         await uploadSingleFileMutation.mutateAsync({ 
           file, 
           requiredDocumentId: checklistItemId 
@@ -222,24 +212,41 @@ export default function Documents() {
 
   const handleUploadWithSelection = () => {
     if (pendingFiles.length > 0 && currentFileIndex < pendingFiles.length) {
+      const updatedMap = new Map(fileChecklistMap);
       if (selectedChecklistItem) {
-        setFileChecklistMap(prev => new Map(prev).set(currentFileIndex, selectedChecklistItem));
+        updatedMap.set(currentFileIndex, selectedChecklistItem);
+        setFileChecklistMap(updatedMap);
       }
-      processNextFile();
+      
+      const nextIndex = currentFileIndex + 1;
+      if (nextIndex < pendingFiles.length) {
+        setCurrentFileIndex(nextIndex);
+        setSelectedChecklistItem("");
+      } else {
+        finishUpload(updatedMap);
+      }
     }
   };
 
   const handleSkipSelection = () => {
     if (pendingFiles.length > 0 && currentFileIndex < pendingFiles.length) {
-      processNextFile();
+      const nextIndex = currentFileIndex + 1;
+      if (nextIndex < pendingFiles.length) {
+        setCurrentFileIndex(nextIndex);
+        setSelectedChecklistItem("");
+      } else {
+        finishUpload(fileChecklistMap);
+      }
     }
   };
 
   const handleSkipAllRemaining = () => {
+    const updatedMap = new Map(fileChecklistMap);
     if (selectedChecklistItem) {
-      setFileChecklistMap(prev => new Map(prev).set(currentFileIndex, selectedChecklistItem));
+      updatedMap.set(currentFileIndex, selectedChecklistItem);
+      setFileChecklistMap(updatedMap);
     }
-    finishUpload();
+    finishUpload(updatedMap);
   };
 
   const deleteMutation = useMutation({

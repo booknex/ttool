@@ -308,27 +308,13 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
 
         // If user explicitly selected a checklist item, link to that
         if (requiredDocumentId) {
-          console.log("=== CHECKLIST LINKING DEBUG ===");
-          console.log("requiredDocumentId:", requiredDocumentId);
-          console.log("userId (from session):", userId);
           const reqDoc = await storage.getRequiredDocument(requiredDocumentId);
-          console.log("reqDoc found:", reqDoc ? "yes" : "no");
-          if (reqDoc) {
-            console.log("reqDoc.userId:", reqDoc.userId);
-            console.log("reqDoc.isUploaded:", reqDoc.isUploaded);
-            console.log("userId match:", reqDoc.userId === userId);
-            console.log("All conditions met:", reqDoc.userId === userId && !reqDoc.isUploaded);
-          }
           if (reqDoc && reqDoc.userId === userId && !reqDoc.isUploaded) {
             await storage.updateRequiredDocument(requiredDocumentId, {
               isUploaded: true,
               documentId: doc.id,
             });
-            console.log("Checklist item updated successfully!");
-          } else {
-            console.log("Checklist item NOT updated - conditions not met");
           }
-          console.log("=== END DEBUG ===");
         } else {
           // Auto-match by document type if no explicit selection
           const reqDocs = await storage.getRequiredDocuments(userId);
