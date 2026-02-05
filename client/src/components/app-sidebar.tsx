@@ -15,28 +15,24 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
-  LayoutDashboard,
+  Home,
   FileText,
-  ClipboardList,
+  MessageSquare,
   Receipt,
   DollarSign,
-  PenTool,
   LogOut,
   Shield,
-  ListChecks,
   Building2,
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { RefundTracking } from "@shared/schema";
 
 const getMenuItems = (isFiled: boolean) => [
-  { title: "Return Status", url: "/", icon: ListChecks },
-  { title: "Summary", url: "/summary", icon: LayoutDashboard },
+  { title: "Home", url: "/summary", icon: Home },
   { title: "Documents", url: "/documents", icon: FileText },
   { title: "Businesses", url: "/businesses", icon: Building2 },
-  { title: "Questionnaire", url: "/questionnaire", icon: ClipboardList },
+  { title: "Messages", url: "/messages", icon: MessageSquare },
   ...(isFiled ? [{ title: "Refund Tracker", url: "/refund", icon: DollarSign }] : []),
-  { title: "E-Signatures", url: "/signatures", icon: PenTool },
   { title: "Invoices", url: "/invoices", icon: Receipt },
 ];
 
@@ -134,6 +130,11 @@ export function AppSidebar({ user }: AppSidebarProps) {
               {user?.email}
             </p>
           </div>
+        </div>
+        <div className="flex flex-wrap gap-x-3 gap-y-1 mb-3 text-xs text-muted-foreground">
+          <Link href="/" className="hover:text-foreground hover:underline">Status</Link>
+          <Link href="/questionnaire" className="hover:text-foreground hover:underline">Questionnaire</Link>
+          <Link href="/signatures" className="hover:text-foreground hover:underline">E-Sign</Link>
         </div>
         <Button
           variant="outline"
