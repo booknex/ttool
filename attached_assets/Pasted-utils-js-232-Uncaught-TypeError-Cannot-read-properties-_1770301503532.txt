@@ -1,0 +1,56 @@
+utils.js:232 Uncaught TypeError: Cannot read properties of undefined (reading 'onChanged')
+    at utils.js:232:16
+(anonymous) @ utils.js:232
+tabutils.js:2 Uncaught TypeError: Cannot read properties of undefined (reading 'onUpdated')
+    at tabutils.js:2:13
+(anonymous) @ tabutils.js:2
+contextmenu.js:124 Uncaught TypeError: Cannot read properties of undefined (reading 'onClicked')
+    at contextmenu.js:124:21
+(anonymous) @ contextmenu.js:124
+download.js:9 Uncaught TypeError: Cannot read properties of undefined (reading 'onCreated')
+    at download.js:9:18
+(anonymous) @ download.js:9
+index-DNLevMuO.js:48  POST https://client-hub-pro.replit.app/api/invoices/7dbfece5-a678-4537-8576-86a8c4bf06fa/pay 500 (Internal Server Error)
+Ee @ index-DNLevMuO.js:48
+mutationFn @ index-DNLevMuO.js:607
+fn @ index-DNLevMuO.js:48
+j @ index-DNLevMuO.js:48
+start @ index-DNLevMuO.js:48
+execute @ index-DNLevMuO.js:48
+await in execute
+mutate @ index-DNLevMuO.js:48
+(anonymous) @ index-DNLevMuO.js:48
+onClick @ index-DNLevMuO.js:607
+JE @ index-DNLevMuO.js:37
+t4 @ index-DNLevMuO.js:37
+n4 @ index-DNLevMuO.js:37
+vv @ index-DNLevMuO.js:37
+ej @ index-DNLevMuO.js:37
+(anonymous) @ index-DNLevMuO.js:37
+rx @ index-DNLevMuO.js:40
+Sw @ index-DNLevMuO.js:37
+Mp @ index-DNLevMuO.js:37
+Th @ index-DNLevMuO.js:37
+v4 @ index-DNLevMuO.js:37
+index-DNLevMuO.js:48  POST https://client-hub-pro.replit.app/api/invoices/7dbfece5-a678-4537-8576-86a8c4bf06fa/pay 500 (Internal Server Error)
+Ee @ index-DNLevMuO.js:48
+mutationFn @ index-DNLevMuO.js:607
+fn @ index-DNLevMuO.js:48
+j @ index-DNLevMuO.js:48
+start @ index-DNLevMuO.js:48
+execute @ index-DNLevMuO.js:48
+await in execute
+mutate @ index-DNLevMuO.js:48
+(anonymous) @ index-DNLevMuO.js:48
+onClick @ index-DNLevMuO.js:607
+JE @ index-DNLevMuO.js:37
+t4 @ index-DNLevMuO.js:37
+n4 @ index-DNLevMuO.js:37
+vv @ index-DNLevMuO.js:37
+ej @ index-DNLevMuO.js:37
+(anonymous) @ index-DNLevMuO.js:37
+rx @ index-DNLevMuO.js:40
+Sw @ index-DNLevMuO.js:37
+Mp @ index-DNLevMuO.js:37
+Th @ index-DNLevMuO.js:37
+v4 @ index-DNLevMuO.js:37
