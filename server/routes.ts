@@ -823,9 +823,12 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
       });
 
       res.json({ checkoutUrl: session.url });
-    } catch (error) {
-      console.error("Error creating checkout session:", error);
-      res.status(500).json({ message: "Failed to create payment session" });
+    } catch (error: any) {
+      console.error("Error creating checkout session:", error?.message || error);
+      if (error?.stack) {
+        console.error("Stack:", error.stack);
+      }
+      res.status(500).json({ message: "Failed to create payment session", error: error?.message });
     }
   });
 
