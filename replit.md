@@ -81,3 +81,23 @@ Preferred communication style: Simple, everyday language.
 - **Document Progress** - Visual progress bar showing completion percentage
 - **Returns Summary** - List of personal/business returns with their current status
 - **Quick Stats Grid** - Compact 4-column grid (Documents, Unread Messages, To Sign, Businesses)
+
+### Admin Module Pages - Large Dataset Handling Pattern
+All admin data listing pages follow a consistent pattern for handling large datasets:
+
+**Common Features Across All Admin Pages**:
+1. **Stats Summary Cards** - Clickable cards showing counts by status/type that filter the table when clicked
+2. **Sortable Data Table** - Column headers with sort icons (ArrowUpDown/ArrowUp/ArrowDown) for ascending/descending
+3. **Search Bar** - Full-text search with clear button
+4. **Dropdown Filters** - Status, type, or client filters as applicable
+5. **Pagination Controls** - Configurable items per page (10/25/50/100) with first/prev/next/last navigation
+6. **Page State Management** - Reset to page 1 on filter changes, clamp page with useEffect when totalPages changes
+7. **useMemo Optimization** - Filtered and sorted data computed with useMemo for performance
+
+**Implemented Pages**:
+- **clients.tsx** - Sortable by name, status, documents, messages, invoices; pagination
+- **invoices.tsx** - Stats (total, draft, sent, paid, overdue); sortable by invoice, client, status, amount, due date
+- **signatures.tsx** - Stats (total, engagement letters, form 8879); sortable by client, document type, tax year, signed date
+- **refunds.tsx** - Stats (total, completed, in progress, total refunds); sortable by client, federal/state status/amount, updated date
+- **return-statuses.tsx** - Stats (total, not started, in progress, filed); sortable by client, status; inline status update
+- **documents.tsx** - Stats (total, pending, processing, verified, rejected, archived); bulk actions; advanced filters
