@@ -93,7 +93,15 @@ Core data entities:
 - **Replit Plugins**: cartographer, dev-banner, runtime-error-modal for Replit integration
 - **esbuild**: Production server bundling with dependency allowlist optimization
 
-## Recent Changes (January 2026)
+## Recent Changes (February 2026)
+
+### Security: User Data Isolation Fix
+- **Cache Clearing on Auth**: All login, logout, and registration flows now clear the entire React Query cache to prevent data leakage between users
+- **Impersonation Cleanup**: Admin impersonation start/end now clears cache completely
+- **Session Sanitization**: Server-side login and registration now delete any stale impersonation flags (isImpersonating, originalAdminId) from sessions
+- **Impact**: Prevents users from seeing other users' cached data when switching accounts or when admin impersonates clients
+
+## Changes (January 2026)
 
 ### Affiliate Portal (NEW)
 - **Separate Authentication**: Affiliates have their own login/register system at `/affiliate/*`
