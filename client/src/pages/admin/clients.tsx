@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Select,
   SelectContent,
@@ -34,13 +34,18 @@ import {
   Clock,
   AlertCircle,
   ChevronRight,
+  ChevronLeft,
   Plus,
   UserPlus,
   Search,
   X,
   Archive,
   Phone,
-  Mail
+  Mail,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  Users
 } from "lucide-react";
 import {
   Table,
@@ -50,6 +55,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+
+type SortField = "name" | "status" | "documents" | "messages" | "invoices";
+type SortDirection = "asc" | "desc";
 
 const RETURN_PREP_STATUSES = [
   { value: "all", label: "All Statuses" },
@@ -64,12 +72,18 @@ const RETURN_PREP_STATUSES = [
   { value: "filed", label: "Filed" },
 ];
 
+const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
+
 export default function AdminClients() {
   const [, navigate] = useLocation();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [showArchived, setShowArchived] = useState(false);
+  const [sortField, setSortField] = useState<SortField>("name");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   const [newClient, setNewClient] = useState({
     email: "",
     password: "",
@@ -85,20 +99,78 @@ export default function AdminClients() {
     queryKey: ["/api/admin/clients"],
   });
 
-  const filteredClients = clients?.filter((client) => {
-    const matchesArchived = showArchived ? client.isArchived : !client.isArchived;
-    
-    const matchesSearch = searchQuery === "" || 
-      (client.firstName?.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (client.lastName?.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (client.email?.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (`${client.firstName || ""} ${client.lastName || ""}`.toLowerCase().includes(searchQuery.toLowerCase()));
-    
-    const clientStatus = client.stats?.returnPrepStatus || "not_started";
-    const matchesStatus = statusFilter === "all" || clientStatus === statusFilter;
-    
-    return matchesArchived && matchesSearch && matchesStatus;
-  }) || [];
+  const filteredAndSortedClients = useMemo(() => {
+    let result = clients?.filter((client) => {
+      const matchesArchived = showArchived ? client.isArchived : !client.isArchived;
+      
+      const matchesSearch = searchQuery === "" || 
+        (client.firstName?.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (client.lastName?.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (client.email?.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (`${client.firstName || ""} ${client.lastName || ""}`.toLowerCase().includes(searchQuery.toLowerCase()));
+      
+      const clientStatus = client.stats?.returnPrepStatus || "not_started";
+      const matchesStatus = statusFilter === "all" || clientStatus === statusFilter;
+      
+      return matchesArchived && matchesSearch && matchesStatus;
+    }) || [];
+
+    result.sort((a, b) => {
+      let comparison = 0;
+      switch (sortField) {
+        case "name":
+          const nameA = `${a.firstName || ""} ${a.lastName || ""}`.toLowerCase();
+          const nameB = `${b.firstName || ""} ${b.lastName || ""}`.toLowerCase();
+          comparison = nameA.localeCompare(nameB);
+          break;
+        case "status":
+          const statusA = a.stats?.returnPrepStatus || "not_started";
+          const statusB = b.stats?.returnPrepStatus || "not_started";
+          comparison = statusA.localeCompare(statusB);
+          break;
+        case "documents":
+          comparison = (a.stats?.documentsCount || 0) - (b.stats?.documentsCount || 0);
+          break;
+        case "messages":
+          comparison = (a.stats?.unreadMessages || 0) - (b.stats?.unreadMessages || 0);
+          break;
+        case "invoices":
+          comparison = (a.stats?.pendingInvoices || 0) - (b.stats?.pendingInvoices || 0);
+          break;
+      }
+      return sortDirection === "asc" ? comparison : -comparison;
+    });
+
+    return result;
+  }, [clients, showArchived, searchQuery, statusFilter, sortField, sortDirection]);
+
+  const totalPages = Math.ceil(filteredAndSortedClients.length / pageSize);
+  const paginatedClients = filteredAndSortedClients.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
+
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(totalPages);
+    }
+  }, [totalPages, currentPage]);
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDirection("asc");
+    }
+  };
+
+  const getSortIcon = (field: SortField) => {
+    if (sortField !== field) return <ArrowUpDown className="w-4 h-4 ml-1" />;
+    return sortDirection === "asc" 
+      ? <ArrowUp className="w-4 h-4 ml-1" /> 
+      : <ArrowDown className="w-4 h-4 ml-1" />;
+  };
 
   const archivedCount = clients?.filter(c => c.isArchived).length || 0;
   const activeCount = clients?.filter(c => !c.isArchived).length || 0;
@@ -276,19 +348,19 @@ export default function AdminClients() {
           <Input
             placeholder="Search by name or email..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
             className="pl-10 pr-10"
           />
           {searchQuery && (
             <button
-              onClick={() => setSearchQuery("")}
+              onClick={() => { setSearchQuery(""); setCurrentPage(1); }}
               className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
             >
               <X className="w-4 h-4" />
             </button>
           )}
         </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
+        <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setCurrentPage(1); }}>
           <SelectTrigger className="w-full sm:w-[180px]">
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
@@ -302,7 +374,7 @@ export default function AdminClients() {
         </Select>
         <Button
           variant={showArchived ? "default" : "outline"}
-          onClick={() => setShowArchived(!showArchived)}
+          onClick={() => { setShowArchived(!showArchived); setCurrentPage(1); }}
           className="gap-2"
         >
           <Archive className="w-4 h-4" />
@@ -310,7 +382,7 @@ export default function AdminClients() {
         </Button>
       </div>
 
-      {filteredClients.length === 0 && clients && clients.length > 0 && (
+      {filteredAndSortedClients.length === 0 && clients && clients.length > 0 && (
         <Card>
           <CardContent className="p-12 text-center">
             <p className="text-muted-foreground">
@@ -320,7 +392,7 @@ export default function AdminClients() {
             </p>
             <Button 
               variant="ghost" 
-              onClick={() => { setSearchQuery(""); setStatusFilter("all"); }}
+              onClick={() => { setSearchQuery(""); setStatusFilter("all"); setCurrentPage(1); }}
               className="mt-2"
             >
               Clear filters
@@ -335,24 +407,59 @@ export default function AdminClients() {
             <p className="text-muted-foreground">No clients yet. Click "Add Client" to create one.</p>
           </CardContent>
         </Card>
-      ) : filteredClients.length > 0 ? (
+      ) : paginatedClients.length > 0 ? (
         <Card>
           <CardContent className="p-0">
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/50">
-                  <TableHead className="w-[280px]">Client</TableHead>
-                  <TableHead className="w-[130px]">Status</TableHead>
-                  <TableHead className="text-center w-[80px]">Docs</TableHead>
+                  <TableHead className="w-[280px]">
+                    <button 
+                      className="flex items-center font-medium hover:text-foreground"
+                      onClick={() => handleSort("name")}
+                    >
+                      Client {getSortIcon("name")}
+                    </button>
+                  </TableHead>
+                  <TableHead className="w-[130px]">
+                    <button 
+                      className="flex items-center font-medium hover:text-foreground"
+                      onClick={() => handleSort("status")}
+                    >
+                      Status {getSortIcon("status")}
+                    </button>
+                  </TableHead>
+                  <TableHead className="text-center w-[80px]">
+                    <button 
+                      className="flex items-center justify-center w-full font-medium hover:text-foreground"
+                      onClick={() => handleSort("documents")}
+                    >
+                      Docs {getSortIcon("documents")}
+                    </button>
+                  </TableHead>
                   <TableHead className="text-center w-[80px]">Signed</TableHead>
-                  <TableHead className="text-center w-[100px]">Messages</TableHead>
-                  <TableHead className="text-center w-[90px]">Invoices</TableHead>
+                  <TableHead className="text-center w-[100px]">
+                    <button 
+                      className="flex items-center justify-center w-full font-medium hover:text-foreground"
+                      onClick={() => handleSort("messages")}
+                    >
+                      Messages {getSortIcon("messages")}
+                    </button>
+                  </TableHead>
+                  <TableHead className="text-center w-[90px]">
+                    <button 
+                      className="flex items-center justify-center w-full font-medium hover:text-foreground"
+                      onClick={() => handleSort("invoices")}
+                    >
+                      Invoices {getSortIcon("invoices")}
+                    </button>
+                  </TableHead>
                   <TableHead className="w-[140px]">Phone</TableHead>
                   <TableHead className="w-[40px]" aria-hidden="true"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredClients.map((client) => (
+                {paginatedClients.map((client) => (
                   <TableRow 
                     key={client.id} 
                     className="cursor-pointer hover:bg-muted/50"
@@ -455,6 +562,70 @@ export default function AdminClients() {
           </CardContent>
         </Card>
       ) : null}
+
+      {filteredAndSortedClients.length > 0 && (
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">
+              Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, filteredAndSortedClients.length)} of {filteredAndSortedClients.length} clients
+            </span>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Per page:</span>
+              <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setCurrentPage(1); }}>
+                <SelectTrigger className="w-[70px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PAGE_SIZE_OPTIONS.map((size) => (
+                    <SelectItem key={size} value={String(size)}>{size}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setCurrentPage(1)}
+                disabled={currentPage === 1}
+              >
+                <ChevronLeft className="w-4 h-4" />
+                <ChevronLeft className="w-4 h-4 -ml-3" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setCurrentPage(currentPage - 1)}
+                disabled={currentPage === 1}
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              <span className="px-3 text-sm">
+                Page {currentPage} of {totalPages || 1}
+              </span>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setCurrentPage(currentPage + 1)}
+                disabled={currentPage >= totalPages}
+              >
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setCurrentPage(totalPages)}
+                disabled={currentPage >= totalPages}
+              >
+                <ChevronRight className="w-4 h-4" />
+                <ChevronRight className="w-4 h-4 -ml-3" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
