@@ -96,7 +96,7 @@ All admin data listing pages follow a consistent pattern for handling large data
 
 **Implemented Pages**:
 - **clients.tsx** - Sortable by name, status, documents, messages, invoices; pagination
-- **invoices.tsx** - Stats (total, draft, sent, paid, overdue); sortable by invoice, client, status, amount, due date
+- **invoices.tsx** - Stats (total, draft, sent, paid, overdue); sortable by invoice, client, status, amount, due date; Create Invoice dialog with custom line items (description, rate, quantity)
 - **signatures.tsx** - Stats (total, engagement letters, form 8879); sortable by client, document type, tax year, signed date
 - **refunds.tsx** - Stats (total, completed, in progress, total refunds); sortable by client, federal/state status/amount, updated date
 - **return-statuses.tsx** - Stats (total, not started, in progress, filed); sortable by client, status; inline status update
