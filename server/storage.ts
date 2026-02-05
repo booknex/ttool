@@ -495,34 +495,7 @@ export class DatabaseStorage implements IStorage {
       taxYear: 2025,
     });
 
-    // Create sample invoice
-    const invoice = await this.createInvoice({
-      userId,
-      invoiceNumber: "INV-2024-001",
-      status: "sent",
-      subtotal: "350.00",
-      tax: "0",
-      total: "350.00",
-      dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
-      taxYear: 2025,
-    });
-
-    // Add invoice items
-    await this.createInvoiceItem({
-      invoiceId: invoice.id,
-      description: "Federal Tax Return Preparation",
-      quantity: 1,
-      rate: "250.00",
-      amount: "250.00",
-    });
-
-    await this.createInvoiceItem({
-      invoiceId: invoice.id,
-      description: "State Tax Return Preparation",
-      quantity: 1,
-      rate: "100.00",
-      amount: "100.00",
-    });
+    // Note: Invoices are now created manually by admin via the Invoice Creator
 
     // Create welcome message
     await this.createMessage({
