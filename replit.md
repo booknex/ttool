@@ -62,3 +62,22 @@ Preferred communication style: Simple, everyday language.
 - **Vite**: Development server.
 - **Replit Plugins**: cartographer, dev-banner, runtime-error-modal.
 - **esbuild**: Production server bundling.
+
+## Recent Changes (February 2026)
+
+### Admin Documents Page Redesign
+- **Stats Summary Cards** - Clickable cards showing total, pending, processing, verified, rejected, and archived document counts (clicking filters the table)
+- **Data Table Interface** - Replaced card list with sortable table columns (client, document, type, status, upload date, file size)
+- **Search Bar** - Full-text search by client name or filename
+- **Advanced Filters** - Dropdown filters for status, document type, and specific client
+- **Bulk Actions** - Select multiple documents and batch-update status (verify, processing, reject)
+- **Pagination** - Configurable items per page (10/25/50/100) with page navigation controls
+- **Document Actions** - View/download documents and quick status changes via dropdown menu
+
+### Client Homepage Redesign
+- **Personalized Greeting** - Shows "Hi [FirstName]!" with user's actual name
+- **Current Status Banner** - Prominent card showing current tax prep stage with description
+- **Next Action Card** - Dynamically prioritizes what user should do next (pay invoice > sign docs > upload documents > read messages)
+- **Document Progress** - Visual progress bar showing completion percentage
+- **Returns Summary** - List of personal/business returns with their current status
+- **Quick Stats Grid** - Compact 4-column grid (Documents, Unread Messages, To Sign, Businesses)
