@@ -64,7 +64,9 @@ async function getCredentials() {
   const directPublishableKey = process.env.STRIPE_PUBLISHABLE_KEY;
   
   if (directSecretKey) {
-    console.log('Stripe: Using keys from environment secrets (live mode)');
+    const keyType = directSecretKey.startsWith('sk_live_') ? 'LIVE' : 
+                    directSecretKey.startsWith('sk_test_') ? 'TEST' : 'UNKNOWN';
+    console.log(`Stripe: Using ${keyType} key from environment secrets`);
     cachedCredentials = {
       publishableKey: directPublishableKey || '',
       secretKey: directSecretKey,
