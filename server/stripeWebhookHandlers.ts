@@ -12,23 +12,22 @@ export class StripeWebhookHandlers {
       );
     }
     
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+    if (!webhookSecret) {
+      throw new Error('STRIPE_WEBHOOK_SECRET environment variable is required for webhook verification');
+    }
+    
     const stripe = await getUncachableStripeClient();
     
     let event;
     try {
-      const webhooks = await stripe.webhookEndpoints.list({ limit: 1 });
-      const webhookSecret = webhooks.data[0]?.secret;
-      if (webhookSecret) {
-        event = stripe.webhooks.constructEvent(payload, signature, webhookSecret);
-      } else {
-        const payloadStr = payload.toString();
-        event = JSON.parse(payloadStr);
-      }
+      event = stripe.webhooks.constructEvent(payload, signature, webhookSecret);
     } catch (err: any) {
-      console.log('Processing webhook without signature verification');
-      const payloadStr = payload.toString();
-      event = JSON.parse(payloadStr);
+      console.error('Webhook signature verification failed:', err.message);
+      throw new Error(`Webhook signature verification failed: ${err.message}`);
     }
+
+    console.log(`Processing Stripe webhook: ${event.type}`);
 
     switch (event.type) {
       case 'checkout.session.completed':
