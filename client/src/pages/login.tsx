@@ -21,6 +21,7 @@ export default function Login() {
       return response.json();
     },
     onSuccess: () => {
+      queryClient.clear();
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       setLocation("/");
     },

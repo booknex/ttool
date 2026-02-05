@@ -20,8 +20,7 @@ export function ImpersonationBanner() {
       return apiRequest("POST", "/api/admin/return");
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/impersonation-status"] });
+      queryClient.clear();
       setLocation("/admin");
     },
   });

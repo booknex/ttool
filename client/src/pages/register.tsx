@@ -33,6 +33,7 @@ export default function Register() {
       return response.json();
     },
     onSuccess: () => {
+      queryClient.clear();
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       setLocation("/");
     },

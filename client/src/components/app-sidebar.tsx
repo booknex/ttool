@@ -60,7 +60,7 @@ export function AppSidebar({ user }: AppSidebarProps) {
     try {
       localStorage.removeItem("adminViewMode");
       await apiRequest("POST", "/api/auth/logout");
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      queryClient.clear();
       setLocation("/");
     } catch (error) {
       console.error("Logout failed:", error);

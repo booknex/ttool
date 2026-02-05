@@ -165,6 +165,8 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
       }
       
       (req.session as any).userId = user.id;
+      delete (req.session as any).isImpersonating;
+      delete (req.session as any).originalAdminId;
       await storage.seedUserData(user.id);
       
       res.json({ id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName, isAdmin: user.isAdmin });
@@ -193,6 +195,8 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
       }
 
       (req.session as any).userId = user.id;
+      delete (req.session as any).isImpersonating;
+      delete (req.session as any).originalAdminId;
       
       res.json({ id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName, isAdmin: user.isAdmin });
     } catch (error) {
