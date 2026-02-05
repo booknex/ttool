@@ -789,18 +789,43 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
         return res.status(404).json({ message: "Invoice not found" });
       }
 
-      // In production, integrate with Stripe here
-      // For now, simulate payment success
-      const updated = await storage.updateInvoice(req.params.id, {
-        status: "paid",
-        paidAt: new Date(),
-        paymentMethod: req.body.paymentMethod || "card",
+      if (invoice.status === "paid") {
+        return res.status(400).json({ message: "Invoice already paid" });
+      }
+
+      const { getUncachableStripeClient } = await import("./stripeClient");
+      const stripe = await getUncachableStripeClient();
+      
+      const items = await storage.getInvoiceItems(req.params.id);
+      const lineItems = items.map((item: any) => ({
+        price_data: {
+          currency: 'usd',
+          product_data: {
+            name: item.description,
+          },
+          unit_amount: Math.round(Number(item.rate) * 100),
+        },
+        quantity: item.quantity || 1,
+      }));
+
+      const baseUrl = `https://${process.env.REPLIT_DOMAINS?.split(',')[0]}`;
+      
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: lineItems,
+        mode: 'payment',
+        success_url: `${baseUrl}/invoices?paid=${invoice.id}`,
+        cancel_url: `${baseUrl}/invoices?cancelled=${invoice.id}`,
+        metadata: {
+          invoiceId: invoice.id,
+          userId: userId,
+        },
       });
 
-      res.json(updated);
+      res.json({ checkoutUrl: session.url });
     } catch (error) {
-      console.error("Error processing payment:", error);
-      res.status(500).json({ message: "Failed to process payment" });
+      console.error("Error creating checkout session:", error);
+      res.status(500).json({ message: "Failed to create payment session" });
     }
   });
 

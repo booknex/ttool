@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -74,12 +75,35 @@ const getStatusBadge = (status: string | null) => {
 
 export default function Invoices() {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [selectedInvoice, setSelectedInvoice] = useState<string | null>(null);
   const [payingInvoice, setPayingInvoice] = useState<string | null>(null);
 
   const { data: invoices, isLoading } = useQuery<Invoice[]>({
     queryKey: ["/api/invoices"],
   });
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const paidInvoiceId = urlParams.get('paid');
+    const cancelledInvoiceId = urlParams.get('cancelled');
+
+    if (paidInvoiceId) {
+      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+      toast({
+        title: "Payment Successful!",
+        description: "Thank you for your payment. Your invoice has been marked as paid.",
+      });
+      setLocation('/invoices');
+    } else if (cancelledInvoiceId) {
+      toast({
+        title: "Payment Cancelled",
+        description: "Your payment was cancelled. You can try again anytime.",
+        variant: "destructive",
+      });
+      setLocation('/invoices');
+    }
+  }, [toast, setLocation]);
 
   const { data: invoiceItems } = useQuery<InvoiceItem[]>({
     queryKey: ["/api/invoices", selectedInvoice, "items"],
@@ -88,20 +112,25 @@ export default function Invoices() {
 
   const payMutation = useMutation({
     mutationFn: async (invoiceId: string) => {
-      await apiRequest("POST", `/api/invoices/${invoiceId}/pay`, { paymentMethod: "card" });
+      const response = await apiRequest("POST", `/api/invoices/${invoiceId}/pay`, {});
+      return await response.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
-      setPayingInvoice(null);
-      toast({
-        title: "Payment Successful",
-        description: "Your payment has been processed. Thank you!",
-      });
+    onSuccess: (data) => {
+      if (data.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
+      } else {
+        queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+        setPayingInvoice(null);
+        toast({
+          title: "Payment Successful",
+          description: "Your payment has been processed. Thank you!",
+        });
+      }
     },
     onError: () => {
       toast({
         title: "Payment Failed",
-        description: "Could not process your payment. Please try again.",
+        description: "Could not create payment session. Please try again.",
         variant: "destructive",
       });
     },
@@ -373,7 +402,7 @@ export default function Invoices() {
           <DialogHeader>
             <DialogTitle>Complete Payment</DialogTitle>
             <DialogDescription>
-              Choose your preferred payment method
+              You'll be redirected to our secure payment page
             </DialogDescription>
           </DialogHeader>
 
@@ -387,54 +416,24 @@ export default function Invoices() {
               </p>
             </div>
 
-            <div className="space-y-3">
-              <Button
-                variant="outline"
-                className="w-full justify-start gap-3 h-14"
-                onClick={() => payMutation.mutate(payingInvoice!)}
-                disabled={payMutation.isPending}
-              >
-                <CreditCard className="w-5 h-5" />
-                <div className="flex-1 text-left">
-                  <p className="font-medium">Credit / Debit Card</p>
-                  <p className="text-xs text-muted-foreground">Visa, Mastercard, Amex</p>
-                </div>
-                <div className="flex gap-1">
-                  <SiVisa className="w-8 h-5 text-blue-600" />
-                  <SiMastercard className="w-8 h-5 text-orange-500" />
-                </div>
-              </Button>
-
-              <Button
-                variant="outline"
-                className="w-full justify-start gap-3 h-14"
-                onClick={() => payMutation.mutate(payingInvoice!)}
-                disabled={payMutation.isPending}
-              >
-                <Building2 className="w-5 h-5" />
-                <div className="flex-1 text-left">
-                  <p className="font-medium">Bank Transfer (ACH)</p>
-                  <p className="text-xs text-muted-foreground">Direct from your bank</p>
-                </div>
-              </Button>
-
-              <Button
-                variant="outline"
-                className="w-full justify-start gap-3 h-14"
-                onClick={() => payMutation.mutate(payingInvoice!)}
-                disabled={payMutation.isPending}
-              >
-                <SiApplepay className="w-5 h-5" />
-                <div className="flex-1 text-left">
-                  <p className="font-medium">Apple Pay</p>
-                  <p className="text-xs text-muted-foreground">Fast and secure</p>
-                </div>
-              </Button>
-            </div>
+            <Button
+              className="w-full h-14"
+              onClick={() => payMutation.mutate(payingInvoice!)}
+              disabled={payMutation.isPending}
+            >
+              <CreditCard className="w-5 h-5 mr-2" />
+              {payMutation.isPending ? "Redirecting to payment..." : "Proceed to Payment"}
+            </Button>
 
             <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
               <Shield className="w-3 h-3" />
-              Payments secured with bank-level encryption
+              Payments secured by Stripe
+            </div>
+
+            <div className="flex justify-center gap-2 pt-2">
+              <SiVisa className="w-10 h-6 text-blue-600" />
+              <SiMastercard className="w-10 h-6 text-orange-500" />
+              <SiApplepay className="w-10 h-6" />
             </div>
           </div>
         </DialogContent>
