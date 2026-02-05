@@ -59,6 +59,20 @@ async function getCredentials() {
     return cachedCredentials;
   }
 
+  // Priority 1: Check for direct secret key in environment (from Replit Secrets)
+  const directSecretKey = process.env.STRIPE_SECRET_KEY;
+  const directPublishableKey = process.env.STRIPE_PUBLISHABLE_KEY;
+  
+  if (directSecretKey) {
+    console.log('Stripe: Using keys from environment secrets (live mode)');
+    cachedCredentials = {
+      publishableKey: directPublishableKey || '',
+      secretKey: directSecretKey,
+    };
+    return cachedCredentials;
+  }
+
+  // Priority 2: Try Replit connector API
   const isProduction = process.env.REPLIT_DEPLOYMENT === '1';
   
   // Try production first if in production mode
@@ -78,7 +92,7 @@ async function getCredentials() {
     return devCreds;
   }
 
-  throw new Error('Stripe credentials not configured. Please set up the Stripe integration in your Replit project.');
+  throw new Error('Stripe credentials not configured. Please add STRIPE_SECRET_KEY to Secrets or set up the Stripe integration.');
 }
 
 export async function getUncachableStripeClient() {
