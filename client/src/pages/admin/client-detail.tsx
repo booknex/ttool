@@ -118,8 +118,7 @@ export default function AdminClientDetail() {
     },
     onSuccess: () => {
       toast({ title: "Now viewing as client", description: "You are now logged in as this client" });
-      queryClient.clear();
-      setLocation("/");
+      window.location.href = "/";
     },
     onError: (error: any) => {
       toast({ 
