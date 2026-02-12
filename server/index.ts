@@ -26,12 +26,31 @@ app.use((req, res, next) => {
 });
 
 app.get("/api/download-build", (req, res) => {
-  const buildPath = path.resolve(__dirname, "../dist/index.cjs");
+  const buildPath = path.resolve(process.cwd(), "dist/index.cjs");
+  console.log("Download build requested, looking at:", buildPath, "exists:", fs.existsSync(buildPath));
   if (fs.existsSync(buildPath)) {
     res.setHeader("Content-Type", "application/javascript");
+    res.setHeader("Content-Disposition", "attachment; filename=index.cjs");
     res.sendFile(buildPath);
   } else {
-    res.status(404).json({ error: "Build file not found" });
+    res.status(404).json({ error: "Build file not found", path: buildPath });
+  }
+});
+
+app.get("/api/download-public", (req, res) => {
+  const { execSync } = require("child_process");
+  const publicPath = path.resolve(process.cwd(), "dist/public");
+  const zipPath = path.resolve(process.cwd(), "dist/public.zip");
+  if (!fs.existsSync(publicPath)) {
+    return res.status(404).json({ error: "Public folder not found" });
+  }
+  try {
+    execSync(`cd ${path.resolve(process.cwd(), "dist")} && zip -r public.zip public/`);
+    res.setHeader("Content-Type", "application/zip");
+    res.setHeader("Content-Disposition", "attachment; filename=public.zip");
+    res.sendFile(zipPath);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to create zip" });
   }
 });
 
