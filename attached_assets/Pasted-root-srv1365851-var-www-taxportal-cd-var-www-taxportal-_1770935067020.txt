@@ -1,0 +1,260 @@
+root@srv1365851:/var/www/taxportal# cd /var/www/taxportal/dist
+rm index.cjs
+curl -o index.cjs https://client-hub-pro.replit.app/api/download-build
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100  2566  100  2566    0     0  18487      0 --:--:-- --:--:-- --:--:-- 18594
+root@srv1365851:/var/www/taxportal/dist# curl -o public.zip https://client-hub-pro.replit.app/api/download-public
+unzip -o public.zip
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100  2566  100  2566    0     0   5614      0 --:--:-- --:--:-- --:--:--  5614
+Archive:  public.zip
+  End-of-central-directory signature not found.  Either this file is not
+  a zipfile, or it constitutes one disk of a multi-part archive.  In the
+  latter case the central directory and zipfile comment will be found on
+  the last disk(s) of this archive.
+unzip:  cannot find zipfile directory in one of public.zip or
+        public.zip.zip, and cannot find public.zip.ZIP, period.
+root@srv1365851:/var/www/taxportal/dist# cd /var/www/taxportal
+pm2 restart taxportal
+pm2 logs taxportal
+Use --update-env to update environment variables
+[PM2] Applying action restartProcessId on app [taxportal](ids: [ 4 ])
+[PM2] [taxportal](4) ✓
+┌────┬─────────────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name                    │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼─────────────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 3  │ client-queue-manager    │ default     │ 1.0.0   │ fork    │ 29839    │ 3h     │ 7    │ online    │ 0%       │ 149.4mb  │ root     │ disabled │
+│ 0  │ meetingroadmap          │ default     │ N/A     │ fork    │ 21024    │ 16h    │ 16   │ online    │ 0%       │ 73.6mb   │ root     │ disabled │
+│ 4  │ taxportal               │ default     │ N/A     │ fork    │ 31966    │ 0s     │ 15   │ online    │ 0%       │ 13.0mb   │ root     │ disabled │
+└────┴─────────────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+[TAILING] Tailing last 15 lines for [taxportal] process (change the value with --lines option)
+/root/.pm2/logs/taxportal-out.log last 15 lines:
+/root/.pm2/logs/taxportal-error.log last 15 lines:
+4|taxporta | /var/www/taxportal/dist/index.cjs:1
+4|taxporta | <!DOCTYPE html>
+4|taxporta | ^
+4|taxporta | 
+4|taxporta | SyntaxError: Unexpected token '<'
+4|taxporta |     at wrapSafe (node:internal/modules/cjs/loader:1735:18)
+4|taxporta |     at Module._compile (node:internal/modules/cjs/loader:1778:20)
+4|taxporta |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+4|taxporta |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+4|taxporta |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+4|taxporta |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23)
+4|taxporta |     at Module._compile (node:internal/modules/cjs/loader:1804:14)
+4|taxporta |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+4|taxporta |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+4|taxporta |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+
+4|taxportal  | /var/www/taxportal/dist/index.cjs:1
+4|taxportal  | <!DOCTYPE html>
+4|taxportal  | ^
+4|taxportal  | SyntaxError: Unexpected token '<'
+4|taxportal  |     at wrapSafe (node:internal/modules/cjs/loader:1735:18)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1778:20)
+4|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+4|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+4|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+4|taxportal  |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14)
+4|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+4|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+4|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+4|taxportal  | /var/www/taxportal/dist/index.cjs:1
+4|taxportal  | <!DOCTYPE html>
+4|taxportal  | ^
+4|taxportal  | SyntaxError: Unexpected token '<'
+4|taxportal  |     at wrapSafe (node:internal/modules/cjs/loader:1735:18)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1778:20)
+4|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+4|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+4|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+4|taxportal  |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14)
+4|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+4|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+4|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+4|taxportal  | /var/www/taxportal/dist/index.cjs:1
+4|taxportal  | <!DOCTYPE html>
+4|taxportal  | ^
+4|taxportal  | SyntaxError: Unexpected token '<'
+4|taxportal  |     at wrapSafe (node:internal/modules/cjs/loader:1735:18)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1778:20)
+4|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+4|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+4|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+4|taxportal  |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14)
+4|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+4|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+4|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+4|taxportal  | /var/www/taxportal/dist/index.cjs:1
+4|taxportal  | <!DOCTYPE html>
+4|taxportal  | ^
+4|taxportal  | SyntaxError: Unexpected token '<'
+4|taxportal  |     at wrapSafe (node:internal/modules/cjs/loader:1735:18)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1778:20)
+4|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+4|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+4|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+4|taxportal  |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14)
+4|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+4|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+4|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+4|taxportal  | /var/www/taxportal/dist/index.cjs:1
+4|taxportal  | <!DOCTYPE html>
+4|taxportal  | ^
+4|taxportal  | SyntaxError: Unexpected token '<'
+4|taxportal  |     at wrapSafe (node:internal/modules/cjs/loader:1735:18)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1778:20)
+4|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+4|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+4|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+4|taxportal  |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14)
+4|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+4|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+4|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+4|taxportal  | /var/www/taxportal/dist/index.cjs:1
+4|taxportal  | <!DOCTYPE html>
+4|taxportal  | ^
+4|taxportal  | SyntaxError: Unexpected token '<'
+4|taxportal  |     at wrapSafe (node:internal/modules/cjs/loader:1735:18)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1778:20)
+4|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+4|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+4|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+4|taxportal  |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14)
+4|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+4|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+4|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+4|taxportal  | /var/www/taxportal/dist/index.cjs:1
+4|taxportal  | <!DOCTYPE html>
+4|taxportal  | ^
+4|taxportal  | SyntaxError: Unexpected token '<'
+4|taxportal  |     at wrapSafe (node:internal/modules/cjs/loader:1735:18)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1778:20)
+4|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+4|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+4|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+4|taxportal  |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14)
+4|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+4|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+4|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+4|taxportal  | /var/www/taxportal/dist/index.cjs:1
+4|taxportal  | <!DOCTYPE html>
+4|taxportal  | ^
+4|taxportal  | SyntaxError: Unexpected token '<'
+4|taxportal  |     at wrapSafe (node:internal/modules/cjs/loader:1735:18)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1778:20)
+4|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+4|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+4|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+4|taxportal  |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14)
+4|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+4|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+4|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+4|taxportal  | /var/www/taxportal/dist/index.cjs:1
+4|taxportal  | <!DOCTYPE html>
+4|taxportal  | ^
+4|taxportal  | SyntaxError: Unexpected token '<'
+4|taxportal  |     at wrapSafe (node:internal/modules/cjs/loader:1735:18)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1778:20)
+4|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+4|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+4|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+4|taxportal  |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14)
+4|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+4|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+4|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+4|taxportal  | /var/www/taxportal/dist/index.cjs:1
+4|taxportal  | <!DOCTYPE html>
+4|taxportal  | ^
+4|taxportal  | SyntaxError: Unexpected token '<'
+4|taxportal  |     at wrapSafe (node:internal/modules/cjs/loader:1735:18)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1778:20)
+4|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+4|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+4|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+4|taxportal  |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14)
+4|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+4|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+4|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+4|taxportal  | /var/www/taxportal/dist/index.cjs:1
+4|taxportal  | <!DOCTYPE html>
+4|taxportal  | ^
+4|taxportal  | SyntaxError: Unexpected token '<'
+4|taxportal  |     at wrapSafe (node:internal/modules/cjs/loader:1735:18)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1778:20)
+4|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+4|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+4|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+4|taxportal  |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14)
+4|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+4|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+4|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+4|taxportal  | /var/www/taxportal/dist/index.cjs:1
+4|taxportal  | <!DOCTYPE html>
+4|taxportal  | ^
+4|taxportal  | SyntaxError: Unexpected token '<'
+4|taxportal  |     at wrapSafe (node:internal/modules/cjs/loader:1735:18)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1778:20)
+4|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+4|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+4|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+4|taxportal  |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14)
+4|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+4|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+4|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+4|taxportal  | /var/www/taxportal/dist/index.cjs:1
+4|taxportal  | <!DOCTYPE html>
+4|taxportal  | ^
+4|taxportal  | SyntaxError: Unexpected token '<'
+4|taxportal  |     at wrapSafe (node:internal/modules/cjs/loader:1735:18)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1778:20)
+4|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+4|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+4|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+4|taxportal  |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14)
+4|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+4|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+4|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+4|taxportal  | /var/www/taxportal/dist/index.cjs:1
+4|taxportal  | <!DOCTYPE html>
+4|taxportal  | ^
+4|taxportal  | SyntaxError: Unexpected token '<'
+4|taxportal  |     at wrapSafe (node:internal/modules/cjs/loader:1735:18)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1778:20)
+4|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+4|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+4|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+4|taxportal  |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14)
+4|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+4|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+4|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+4|taxportal  | /var/www/taxportal/dist/index.cjs:1
+4|taxportal  | <!DOCTYPE html>
+4|taxportal  | ^
+4|taxportal  | SyntaxError: Unexpected token '<'
+4|taxportal  |     at wrapSafe (node:internal/modules/cjs/loader:1735:18)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1778:20)
+4|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+4|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+4|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+4|taxportal  |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14)
+4|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+4|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+4|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
