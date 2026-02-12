@@ -3,6 +3,8 @@ import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
 import { StripeWebhookHandlers } from './stripeWebhookHandlers';
+import path from "path";
+import fs from "fs";
 
 const app = express();
 const httpServer = createServer(app);
@@ -12,6 +14,26 @@ declare module "http" {
     rawBody: unknown;
   }
 }
+
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET, PUT, POST, DELETE, OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.removeHeader("X-Frame-Options");
+  res.header("Content-Security-Policy", "frame-ancestors *");
+  if (req.method === "OPTIONS") return res.sendStatus(200);
+  next();
+});
+
+app.get("/api/download-build", (req, res) => {
+  const buildPath = path.resolve(__dirname, "../dist/index.cjs");
+  if (fs.existsSync(buildPath)) {
+    res.setHeader("Content-Type", "application/javascript");
+    res.sendFile(buildPath);
+  } else {
+    res.status(404).json({ error: "Build file not found" });
+  }
+});
 
 console.log('Stripe integration enabled for invoice payments');
 
