@@ -28,6 +28,7 @@ const allowlist = [
   "uuid",
   "ws",
   "xlsx",
+  "bcryptjs",
   "zod",
   "zod-validation-error",
 ];
