@@ -1,0 +1,33 @@
+^C
+root@srv1365851:/var/www/taxportal# cd /var/www/taxportal
+echo 'SESSION_SECRET=your-secret-key-change-this-to-something-random' >> .env
+root@srv1365851:/var/www/taxportal# echo 'SESSION_SECRET=your-secret-key-change-this-to-something-random' >> .env
+root@srv1365851:/var/www/taxportal# 
+root@srv1365851:/var/www/taxportal# cd /var/www/taxportal
+rm -rf dist
+mkdir dist
+tar -xzf taxportal-deploy.tar.gz -C dist/
+cp ecosystem.config.cjs .
+pm2 stop taxportal 2>/dev/null; pm2 delete taxportal 2>/dev/null
+pm2 start ecosystem.config.cjs
+pm2 logs taxportal
+cp: cannot stat 'ecosystem.config.cjs': No such file or directory
+[PM2] Applying action stopProcessId on app [taxportal](ids: [ 5 ])
+[PM2] [taxportal](5) ✓
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 3  │ client-queue-mana… │ fork     │ 7    │ online    │ 0%       │ 149.4mb  │
+│ 0  │ meetingroadmap     │ fork     │ 16   │ online    │ 0%       │ 75.8mb   │
+│ 5  │ taxportal          │ fork     │ 15   │ stopped   │ 0%       │ 0b       │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+[PM2] Applying action deleteProcessId on app [taxportal](ids: [ 5 ])
+[PM2] [taxportal](5) ✓
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 3  │ client-queue-mana… │ fork     │ 7    │ online    │ 0%       │ 149.4mb  │
+│ 0  │ meetingroadmap     │ fork     │ 16   │ online    │ 0%       │ 75.8mb   │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+[PM2][ERROR] File ecosystem.config.cjs not found
+[TAILING] Tailing last 15 lines for [taxportal] process (change the value with --lines option)
