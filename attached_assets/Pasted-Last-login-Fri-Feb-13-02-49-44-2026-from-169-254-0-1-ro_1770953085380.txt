@@ -1,0 +1,293 @@
+Last login: Fri Feb 13 02:49:44 2026 from 169.254.0.1
+root@srv1365851:~# cd /var/www/taxportal
+rm -rf dist
+mkdir dist
+tar -xzf taxportal-deploy.tar.gz -C dist/
+head -c 100 dist/index.cjs
+"use strict";var H5=Object.create;var Au=Object.defineProperty;var Q5=Object.getOwnPropertyDescriptoroot@srv1365851:/var/www/taxportal# cat /var/www/taxportal/.env
+DATABASE_URL=postgresql://postgres:calc@localhost:5432/taxportal
+STRIPE_SECRET_KEY=sk_live_your_stripe_key
+STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
+NODE_ENV=production
+PORT=5000
+root@srv1365851:/var/www/taxportal# cd /var/www/taxportal
+pm2 start dist/index.cjs --name taxportal --update-env
+pm2 logs taxportal
+[PM2] Applying action restartProcessId on app [taxportal](ids: [ 4 ])
+[PM2] [taxportal](4) ✓
+[PM2] Process successfully started
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 3  │ client-queue-mana… │ fork     │ 7    │ online    │ 0%       │ 149.4mb  │
+│ 0  │ meetingroadmap     │ fork     │ 16   │ online    │ 0%       │ 75.7mb   │
+│ 4  │ taxportal          │ fork     │ 30   │ online    │ 0%       │ 9.0mb    │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+[TAILING] Tailing last 15 lines for [taxportal] process (change the value with --lines option)
+/root/.pm2/logs/taxportal-out.log last 15 lines:
+/root/.pm2/logs/taxportal-error.log last 15 lines:
+4|taxporta | /var/www/taxportal/dist/index.cjs:1
+4|taxporta | <!DOCTYPE html>
+4|taxporta | ^
+4|taxporta | 
+4|taxporta | SyntaxError: Unexpected token '<'
+4|taxporta |     at wrapSafe (node:internal/modules/cjs/loader:1735:18)
+4|taxporta |     at Module._compile (node:internal/modules/cjs/loader:1778:20)
+4|taxporta |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+4|taxporta |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+4|taxporta |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+4|taxporta |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23)
+4|taxporta |     at Module._compile (node:internal/modules/cjs/loader:1804:14)
+4|taxporta |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+4|taxporta |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+4|taxporta |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+
+4|taxportal  | Error: Cannot find module '@neondatabase/serverless'
+4|taxportal  | Require stack:
+4|taxportal  | - /var/www/taxportal/dist/index.cjs
+4|taxportal  |     at Module._resolveFilename (node:internal/modules/cjs/loader:1448:15)
+4|taxportal  |     at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:81:25)
+4|taxportal  |     at require (node:internal/modules/helpers:152:16)
+4|taxportal  |     at Object.<anonymous> (/var/www/taxportal/dist/index.cjs:96:105349)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14)
+4|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+4|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+4|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+4|taxportal  |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14) {
+4|taxportal  |   code: 'MODULE_NOT_FOUND',
+4|taxportal  |   requireStack: [ '/var/www/taxportal/dist/index.cjs' ]
+4|taxportal  | }
+4|taxportal  | Error: Cannot find module '@neondatabase/serverless'
+4|taxportal  | Require stack:
+4|taxportal  | - /var/www/taxportal/dist/index.cjs
+4|taxportal  |     at Module._resolveFilename (node:internal/modules/cjs/loader:1448:15)
+4|taxportal  |     at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:81:25)
+4|taxportal  |     at require (node:internal/modules/helpers:152:16)
+4|taxportal  |     at Object.<anonymous> (/var/www/taxportal/dist/index.cjs:96:105349)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14)
+4|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+4|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+4|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+4|taxportal  |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14) {
+4|taxportal  |   code: 'MODULE_NOT_FOUND',
+4|taxportal  |   requireStack: [ '/var/www/taxportal/dist/index.cjs' ]
+4|taxportal  | }
+4|taxportal  | Error: Cannot find module '@neondatabase/serverless'
+4|taxportal  | Require stack:
+4|taxportal  | - /var/www/taxportal/dist/index.cjs
+4|taxportal  |     at Module._resolveFilename (node:internal/modules/cjs/loader:1448:15)
+4|taxportal  |     at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:81:25)
+4|taxportal  |     at require (node:internal/modules/helpers:152:16)
+4|taxportal  |     at Object.<anonymous> (/var/www/taxportal/dist/index.cjs:96:105349)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14)
+4|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+4|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+4|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+4|taxportal  |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14) {
+4|taxportal  |   code: 'MODULE_NOT_FOUND',
+4|taxportal  |   requireStack: [ '/var/www/taxportal/dist/index.cjs' ]
+4|taxportal  | }
+4|taxportal  | Error: Cannot find module '@neondatabase/serverless'
+4|taxportal  | Require stack:
+4|taxportal  | - /var/www/taxportal/dist/index.cjs
+4|taxportal  |     at Module._resolveFilename (node:internal/modules/cjs/loader:1448:15)
+4|taxportal  |     at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:81:25)
+4|taxportal  |     at require (node:internal/modules/helpers:152:16)
+4|taxportal  |     at Object.<anonymous> (/var/www/taxportal/dist/index.cjs:96:105349)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14)
+4|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+4|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+4|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+4|taxportal  |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14) {
+4|taxportal  |   code: 'MODULE_NOT_FOUND',
+4|taxportal  |   requireStack: [ '/var/www/taxportal/dist/index.cjs' ]
+4|taxportal  | }
+4|taxportal  | Error: Cannot find module '@neondatabase/serverless'
+4|taxportal  | Require stack:
+4|taxportal  | - /var/www/taxportal/dist/index.cjs
+4|taxportal  |     at Module._resolveFilename (node:internal/modules/cjs/loader:1448:15)
+4|taxportal  |     at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:81:25)
+4|taxportal  |     at require (node:internal/modules/helpers:152:16)
+4|taxportal  |     at Object.<anonymous> (/var/www/taxportal/dist/index.cjs:96:105349)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14)
+4|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+4|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+4|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+4|taxportal  |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14) {
+4|taxportal  |   code: 'MODULE_NOT_FOUND',
+4|taxportal  |   requireStack: [ '/var/www/taxportal/dist/index.cjs' ]
+4|taxportal  | }
+4|taxportal  | Error: Cannot find module '@neondatabase/serverless'
+4|taxportal  | Require stack:
+4|taxportal  | - /var/www/taxportal/dist/index.cjs
+4|taxportal  |     at Module._resolveFilename (node:internal/modules/cjs/loader:1448:15)
+4|taxportal  |     at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:81:25)
+4|taxportal  |     at require (node:internal/modules/helpers:152:16)
+4|taxportal  |     at Object.<anonymous> (/var/www/taxportal/dist/index.cjs:96:105349)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14)
+4|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+4|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+4|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+4|taxportal  |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14) {
+4|taxportal  |   code: 'MODULE_NOT_FOUND',
+4|taxportal  |   requireStack: [ '/var/www/taxportal/dist/index.cjs' ]
+4|taxportal  | }
+4|taxportal  | Error: Cannot find module '@neondatabase/serverless'
+4|taxportal  | Require stack:
+4|taxportal  | - /var/www/taxportal/dist/index.cjs
+4|taxportal  |     at Module._resolveFilename (node:internal/modules/cjs/loader:1448:15)
+4|taxportal  |     at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:81:25)
+4|taxportal  |     at require (node:internal/modules/helpers:152:16)
+4|taxportal  |     at Object.<anonymous> (/var/www/taxportal/dist/index.cjs:96:105349)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14)
+4|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+4|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+4|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+4|taxportal  |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14) {
+4|taxportal  |   code: 'MODULE_NOT_FOUND',
+4|taxportal  |   requireStack: [ '/var/www/taxportal/dist/index.cjs' ]
+4|taxportal  | }
+4|taxportal  | Error: Cannot find module '@neondatabase/serverless'
+4|taxportal  | Require stack:
+4|taxportal  | - /var/www/taxportal/dist/index.cjs
+4|taxportal  |     at Module._resolveFilename (node:internal/modules/cjs/loader:1448:15)
+4|taxportal  |     at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:81:25)
+4|taxportal  |     at require (node:internal/modules/helpers:152:16)
+4|taxportal  |     at Object.<anonymous> (/var/www/taxportal/dist/index.cjs:96:105349)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14)
+4|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+4|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+4|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+4|taxportal  |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14) {
+4|taxportal  |   code: 'MODULE_NOT_FOUND',
+4|taxportal  |   requireStack: [ '/var/www/taxportal/dist/index.cjs' ]
+4|taxportal  | }
+4|taxportal  | Error: Cannot find module '@neondatabase/serverless'
+4|taxportal  | Require stack:
+4|taxportal  | - /var/www/taxportal/dist/index.cjs
+4|taxportal  |     at Module._resolveFilename (node:internal/modules/cjs/loader:1448:15)
+4|taxportal  |     at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:81:25)
+4|taxportal  |     at require (node:internal/modules/helpers:152:16)
+4|taxportal  |     at Object.<anonymous> (/var/www/taxportal/dist/index.cjs:96:105349)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14)
+4|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+4|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+4|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+4|taxportal  |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14) {
+4|taxportal  |   code: 'MODULE_NOT_FOUND',
+4|taxportal  |   requireStack: [ '/var/www/taxportal/dist/index.cjs' ]
+4|taxportal  | }
+4|taxportal  | Error: Cannot find module '@neondatabase/serverless'
+4|taxportal  | Require stack:
+4|taxportal  | - /var/www/taxportal/dist/index.cjs
+4|taxportal  |     at Module._resolveFilename (node:internal/modules/cjs/loader:1448:15)
+4|taxportal  |     at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:81:25)
+4|taxportal  |     at require (node:internal/modules/helpers:152:16)
+4|taxportal  |     at Object.<anonymous> (/var/www/taxportal/dist/index.cjs:96:105349)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14)
+4|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+4|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+4|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+4|taxportal  |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14) {
+4|taxportal  |   code: 'MODULE_NOT_FOUND',
+4|taxportal  |   requireStack: [ '/var/www/taxportal/dist/index.cjs' ]
+4|taxportal  | }
+4|taxportal  | Error: Cannot find module '@neondatabase/serverless'
+4|taxportal  | Require stack:
+4|taxportal  | - /var/www/taxportal/dist/index.cjs
+4|taxportal  |     at Module._resolveFilename (node:internal/modules/cjs/loader:1448:15)
+4|taxportal  |     at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:81:25)
+4|taxportal  |     at require (node:internal/modules/helpers:152:16)
+4|taxportal  |     at Object.<anonymous> (/var/www/taxportal/dist/index.cjs:96:105349)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14)
+4|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+4|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+4|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+4|taxportal  |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14) {
+4|taxportal  |   code: 'MODULE_NOT_FOUND',
+4|taxportal  |   requireStack: [ '/var/www/taxportal/dist/index.cjs' ]
+4|taxportal  | }
+4|taxportal  | Error: Cannot find module '@neondatabase/serverless'
+4|taxportal  | Require stack:
+4|taxportal  | - /var/www/taxportal/dist/index.cjs
+4|taxportal  |     at Module._resolveFilename (node:internal/modules/cjs/loader:1448:15)
+4|taxportal  |     at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:81:25)
+4|taxportal  |     at require (node:internal/modules/helpers:152:16)
+4|taxportal  |     at Object.<anonymous> (/var/www/taxportal/dist/index.cjs:96:105349)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14)
+4|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+4|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+4|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+4|taxportal  |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14) {
+4|taxportal  |   code: 'MODULE_NOT_FOUND',
+4|taxportal  |   requireStack: [ '/var/www/taxportal/dist/index.cjs' ]
+4|taxportal  | }
+4|taxportal  | Error: Cannot find module '@neondatabase/serverless'
+4|taxportal  | Require stack:
+4|taxportal  | - /var/www/taxportal/dist/index.cjs
+4|taxportal  |     at Module._resolveFilename (node:internal/modules/cjs/loader:1448:15)
+4|taxportal  |     at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:81:25)
+4|taxportal  |     at require (node:internal/modules/helpers:152:16)
+4|taxportal  |     at Object.<anonymous> (/var/www/taxportal/dist/index.cjs:96:105349)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14)
+4|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+4|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+4|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+4|taxportal  |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14) {
+4|taxportal  |   code: 'MODULE_NOT_FOUND',
+4|taxportal  |   requireStack: [ '/var/www/taxportal/dist/index.cjs' ]
+4|taxportal  | }
+4|taxportal  | Error: Cannot find module '@neondatabase/serverless'
+4|taxportal  | Require stack:
+4|taxportal  | - /var/www/taxportal/dist/index.cjs
+4|taxportal  |     at Module._resolveFilename (node:internal/modules/cjs/loader:1448:15)
+4|taxportal  |     at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:81:25)
+4|taxportal  |     at require (node:internal/modules/helpers:152:16)
+4|taxportal  |     at Object.<anonymous> (/var/www/taxportal/dist/index.cjs:96:105349)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14)
+4|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+4|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+4|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+4|taxportal  |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14) {
+4|taxportal  |   code: 'MODULE_NOT_FOUND',
+4|taxportal  |   requireStack: [ '/var/www/taxportal/dist/index.cjs' ]
+4|taxportal  | }
+4|taxportal  | Error: Cannot find module '@neondatabase/serverless'
+4|taxportal  | Require stack:
+4|taxportal  | - /var/www/taxportal/dist/index.cjs
+4|taxportal  |     at Module._resolveFilename (node:internal/modules/cjs/loader:1448:15)
+4|taxportal  |     at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:81:25)
+4|taxportal  |     at require (node:internal/modules/helpers:152:16)
+4|taxportal  |     at Object.<anonymous> (/var/www/taxportal/dist/index.cjs:96:105349)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14)
+4|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+4|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+4|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+4|taxportal  |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14) {
+4|taxportal  |   code: 'MODULE_NOT_FOUND',
+4|taxportal  |   requireStack: [ '/var/www/taxportal/dist/index.cjs' ]
+4|taxportal  | }
+4|taxportal  | Error: Cannot find module '@neondatabase/serverless'
+4|taxportal  | Require stack:
+4|taxportal  | - /var/www/taxportal/dist/index.cjs
+4|taxportal  |     at Module._resolveFilename (node:internal/modules/cjs/loader:1448:15)
+4|taxportal  |     at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:81:25)
+4|taxportal  |     at require (node:internal/modules/helpers:152:16)
+4|taxportal  |     at Object.<anonymous> (/var/www/taxportal/dist/index.cjs:96:105349)
+4|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14)
+4|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
