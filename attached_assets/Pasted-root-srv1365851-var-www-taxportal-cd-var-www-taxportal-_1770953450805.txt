@@ -1,0 +1,288 @@
+root@srv1365851:/var/www/taxportal# cd /var/www/taxportal
+source .env && export DATABASE_URL STRIPE_SECRET_KEY STRIPE_WEBHOOK_SECRET NODE_ENV PORT
+pm2 start dist/index.cjs --name taxportal
+pm2 logs taxportal
+[PM2] Starting /var/www/taxportal/dist/index.cjs in fork_mode (1 instance)
+[PM2] Done.
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 3  │ client-queue-mana… │ fork     │ 7    │ online    │ 0%       │ 149.4mb  │
+│ 0  │ meetingroadmap     │ fork     │ 16   │ online    │ 0%       │ 75.7mb   │
+│ 5  │ taxportal          │ fork     │ 0    │ online    │ 0%       │ 9.0mb    │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+[TAILING] Tailing last 15 lines for [taxportal] process (change the value with --lines option)
+/root/.pm2/logs/taxportal-out.log last 15 lines:
+/root/.pm2/logs/taxportal-error.log last 15 lines:
+5|taxporta |     at Module._compile (node:internal/modules/cjs/loader:1804:14)
+5|taxporta |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+5|taxporta |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+5|taxporta |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+5|taxporta | Error: DATABASE_URL must be set. Did you forget to provision a database?
+5|taxporta |     at Object.<anonymous> (/var/www/taxportal/dist/index.cjs:88:109530)
+5|taxporta |     at Module._compile (node:internal/modules/cjs/loader:1804:14)
+5|taxporta |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+5|taxporta |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+5|taxporta |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+5|taxporta |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23)
+5|taxporta |     at Module._compile (node:internal/modules/cjs/loader:1804:14)
+5|taxporta |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+5|taxporta |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+5|taxporta |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+
+5|taxportal  | Error: Cannot find module 'bcrypt'
+5|taxportal  | Require stack:
+5|taxportal  | - /var/www/taxportal/dist/index.cjs
+5|taxportal  |     at Module._resolveFilename (node:internal/modules/cjs/loader:1448:15)
+5|taxportal  |     at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:81:25)
+5|taxportal  |     at require (node:internal/modules/helpers:152:16)
+5|taxportal  |     at Object.<anonymous> (/var/www/taxportal/dist/index.cjs:88:120065)
+5|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14)
+5|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+5|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+5|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+5|taxportal  |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23)
+5|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14) {
+5|taxportal  |   code: 'MODULE_NOT_FOUND',
+5|taxportal  |   requireStack: [ '/var/www/taxportal/dist/index.cjs' ]
+5|taxportal  | }
+5|taxportal  | Error: Cannot find module 'bcrypt'
+5|taxportal  | Require stack:
+5|taxportal  | - /var/www/taxportal/dist/index.cjs
+5|taxportal  |     at Module._resolveFilename (node:internal/modules/cjs/loader:1448:15)
+5|taxportal  |     at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:81:25)
+5|taxportal  |     at require (node:internal/modules/helpers:152:16)
+5|taxportal  |     at Object.<anonymous> (/var/www/taxportal/dist/index.cjs:88:120065)
+5|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14)
+5|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+5|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+5|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+5|taxportal  |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23)
+5|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14) {
+5|taxportal  |   code: 'MODULE_NOT_FOUND',
+5|taxportal  |   requireStack: [ '/var/www/taxportal/dist/index.cjs' ]
+5|taxportal  | }
+5|taxportal  | Error: Cannot find module 'bcrypt'
+5|taxportal  | Require stack:
+5|taxportal  | - /var/www/taxportal/dist/index.cjs
+5|taxportal  |     at Module._resolveFilename (node:internal/modules/cjs/loader:1448:15)
+5|taxportal  |     at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:81:25)
+5|taxportal  |     at require (node:internal/modules/helpers:152:16)
+5|taxportal  |     at Object.<anonymous> (/var/www/taxportal/dist/index.cjs:88:120065)
+5|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14)
+5|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+5|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+5|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+5|taxportal  |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23)
+5|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14) {
+5|taxportal  |   code: 'MODULE_NOT_FOUND',
+5|taxportal  |   requireStack: [ '/var/www/taxportal/dist/index.cjs' ]
+5|taxportal  | }
+5|taxportal  | Error: Cannot find module 'bcrypt'
+5|taxportal  | Require stack:
+5|taxportal  | - /var/www/taxportal/dist/index.cjs
+5|taxportal  |     at Module._resolveFilename (node:internal/modules/cjs/loader:1448:15)
+5|taxportal  |     at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:81:25)
+5|taxportal  |     at require (node:internal/modules/helpers:152:16)
+5|taxportal  |     at Object.<anonymous> (/var/www/taxportal/dist/index.cjs:88:120065)
+5|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14)
+5|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+5|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+5|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+5|taxportal  |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23)
+5|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14) {
+5|taxportal  |   code: 'MODULE_NOT_FOUND',
+5|taxportal  |   requireStack: [ '/var/www/taxportal/dist/index.cjs' ]
+5|taxportal  | }
+5|taxportal  | Error: Cannot find module 'bcrypt'
+5|taxportal  | Require stack:
+5|taxportal  | - /var/www/taxportal/dist/index.cjs
+5|taxportal  |     at Module._resolveFilename (node:internal/modules/cjs/loader:1448:15)
+5|taxportal  |     at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:81:25)
+5|taxportal  |     at require (node:internal/modules/helpers:152:16)
+5|taxportal  |     at Object.<anonymous> (/var/www/taxportal/dist/index.cjs:88:120065)
+5|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14)
+5|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+5|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+5|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+5|taxportal  |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23)
+5|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14) {
+5|taxportal  |   code: 'MODULE_NOT_FOUND',
+5|taxportal  |   requireStack: [ '/var/www/taxportal/dist/index.cjs' ]
+5|taxportal  | }
+5|taxportal  | Error: Cannot find module 'bcrypt'
+5|taxportal  | Require stack:
+5|taxportal  | - /var/www/taxportal/dist/index.cjs
+5|taxportal  |     at Module._resolveFilename (node:internal/modules/cjs/loader:1448:15)
+5|taxportal  |     at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:81:25)
+5|taxportal  |     at require (node:internal/modules/helpers:152:16)
+5|taxportal  |     at Object.<anonymous> (/var/www/taxportal/dist/index.cjs:88:120065)
+5|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14)
+5|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+5|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+5|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+5|taxportal  |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23)
+5|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14) {
+5|taxportal  |   code: 'MODULE_NOT_FOUND',
+5|taxportal  |   requireStack: [ '/var/www/taxportal/dist/index.cjs' ]
+5|taxportal  | }
+5|taxportal  | Error: Cannot find module 'bcrypt'
+5|taxportal  | Require stack:
+5|taxportal  | - /var/www/taxportal/dist/index.cjs
+5|taxportal  |     at Module._resolveFilename (node:internal/modules/cjs/loader:1448:15)
+5|taxportal  |     at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:81:25)
+5|taxportal  |     at require (node:internal/modules/helpers:152:16)
+5|taxportal  |     at Object.<anonymous> (/var/www/taxportal/dist/index.cjs:88:120065)
+5|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14)
+5|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+5|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+5|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+5|taxportal  |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23)
+5|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14) {
+5|taxportal  |   code: 'MODULE_NOT_FOUND',
+5|taxportal  |   requireStack: [ '/var/www/taxportal/dist/index.cjs' ]
+5|taxportal  | }
+5|taxportal  | Error: Cannot find module 'bcrypt'
+5|taxportal  | Require stack:
+5|taxportal  | - /var/www/taxportal/dist/index.cjs
+5|taxportal  |     at Module._resolveFilename (node:internal/modules/cjs/loader:1448:15)
+5|taxportal  |     at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:81:25)
+5|taxportal  |     at require (node:internal/modules/helpers:152:16)
+5|taxportal  |     at Object.<anonymous> (/var/www/taxportal/dist/index.cjs:88:120065)
+5|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14)
+5|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+5|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+5|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+5|taxportal  |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23)
+5|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14) {
+5|taxportal  |   code: 'MODULE_NOT_FOUND',
+5|taxportal  |   requireStack: [ '/var/www/taxportal/dist/index.cjs' ]
+5|taxportal  | }
+5|taxportal  | Error: Cannot find module 'bcrypt'
+5|taxportal  | Require stack:
+5|taxportal  | - /var/www/taxportal/dist/index.cjs
+5|taxportal  |     at Module._resolveFilename (node:internal/modules/cjs/loader:1448:15)
+5|taxportal  |     at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:81:25)
+5|taxportal  |     at require (node:internal/modules/helpers:152:16)
+5|taxportal  |     at Object.<anonymous> (/var/www/taxportal/dist/index.cjs:88:120065)
+5|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14)
+5|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+5|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+5|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+5|taxportal  |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23)
+5|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14) {
+5|taxportal  |   code: 'MODULE_NOT_FOUND',
+5|taxportal  |   requireStack: [ '/var/www/taxportal/dist/index.cjs' ]
+5|taxportal  | }
+5|taxportal  | Error: Cannot find module 'bcrypt'
+5|taxportal  | Require stack:
+5|taxportal  | - /var/www/taxportal/dist/index.cjs
+5|taxportal  |     at Module._resolveFilename (node:internal/modules/cjs/loader:1448:15)
+5|taxportal  |     at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:81:25)
+5|taxportal  |     at require (node:internal/modules/helpers:152:16)
+5|taxportal  |     at Object.<anonymous> (/var/www/taxportal/dist/index.cjs:88:120065)
+5|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14)
+5|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+5|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+5|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+5|taxportal  |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23)
+5|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14) {
+5|taxportal  |   code: 'MODULE_NOT_FOUND',
+5|taxportal  |   requireStack: [ '/var/www/taxportal/dist/index.cjs' ]
+5|taxportal  | }
+5|taxportal  | Error: Cannot find module 'bcrypt'
+5|taxportal  | Require stack:
+5|taxportal  | - /var/www/taxportal/dist/index.cjs
+5|taxportal  |     at Module._resolveFilename (node:internal/modules/cjs/loader:1448:15)
+5|taxportal  |     at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:81:25)
+5|taxportal  |     at require (node:internal/modules/helpers:152:16)
+5|taxportal  |     at Object.<anonymous> (/var/www/taxportal/dist/index.cjs:88:120065)
+5|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14)
+5|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+5|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+5|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+5|taxportal  |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23)
+5|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14) {
+5|taxportal  |   code: 'MODULE_NOT_FOUND',
+5|taxportal  |   requireStack: [ '/var/www/taxportal/dist/index.cjs' ]
+5|taxportal  | }
+5|taxportal  | Error: Cannot find module 'bcrypt'
+5|taxportal  | Require stack:
+5|taxportal  | - /var/www/taxportal/dist/index.cjs
+5|taxportal  |     at Module._resolveFilename (node:internal/modules/cjs/loader:1448:15)
+5|taxportal  |     at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:81:25)
+5|taxportal  |     at require (node:internal/modules/helpers:152:16)
+5|taxportal  |     at Object.<anonymous> (/var/www/taxportal/dist/index.cjs:88:120065)
+5|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14)
+5|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+5|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+5|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+5|taxportal  |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23)
+5|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14) {
+5|taxportal  |   code: 'MODULE_NOT_FOUND',
+5|taxportal  |   requireStack: [ '/var/www/taxportal/dist/index.cjs' ]
+5|taxportal  | }
+5|taxportal  | Error: Cannot find module 'bcrypt'
+5|taxportal  | Require stack:
+5|taxportal  | - /var/www/taxportal/dist/index.cjs
+5|taxportal  |     at Module._resolveFilename (node:internal/modules/cjs/loader:1448:15)
+5|taxportal  |     at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:81:25)
+5|taxportal  |     at require (node:internal/modules/helpers:152:16)
+5|taxportal  |     at Object.<anonymous> (/var/www/taxportal/dist/index.cjs:88:120065)
+5|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14)
+5|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+5|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+5|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+5|taxportal  |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23)
+5|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14) {
+5|taxportal  |   code: 'MODULE_NOT_FOUND',
+5|taxportal  |   requireStack: [ '/var/www/taxportal/dist/index.cjs' ]
+5|taxportal  | }
+5|taxportal  | Error: Cannot find module 'bcrypt'
+5|taxportal  | Require stack:
+5|taxportal  | - /var/www/taxportal/dist/index.cjs
+5|taxportal  |     at Module._resolveFilename (node:internal/modules/cjs/loader:1448:15)
+5|taxportal  |     at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:81:25)
+5|taxportal  |     at require (node:internal/modules/helpers:152:16)
+5|taxportal  |     at Object.<anonymous> (/var/www/taxportal/dist/index.cjs:88:120065)
+5|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14)
+5|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+5|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+5|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+5|taxportal  |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23)
+5|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14) {
+5|taxportal  |   code: 'MODULE_NOT_FOUND',
+5|taxportal  |   requireStack: [ '/var/www/taxportal/dist/index.cjs' ]
+5|taxportal  | }
+5|taxportal  | Error: Cannot find module 'bcrypt'
+5|taxportal  | Require stack:
+5|taxportal  | - /var/www/taxportal/dist/index.cjs
+5|taxportal  |     at Module._resolveFilename (node:internal/modules/cjs/loader:1448:15)
+5|taxportal  |     at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:81:25)
+5|taxportal  |     at require (node:internal/modules/helpers:152:16)
+5|taxportal  |     at Object.<anonymous> (/var/www/taxportal/dist/index.cjs:88:120065)
+5|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14)
+5|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+5|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+5|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+5|taxportal  |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23)
+5|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14) {
+5|taxportal  |   code: 'MODULE_NOT_FOUND',
+5|taxportal  |   requireStack: [ '/var/www/taxportal/dist/index.cjs' ]
+5|taxportal  | }
+5|taxportal  | Error: Cannot find module 'bcrypt'
+5|taxportal  | Require stack:
+5|taxportal  | - /var/www/taxportal/dist/index.cjs
+5|taxportal  |     at Module._resolveFilename (node:internal/modules/cjs/loader:1448:15)
+5|taxportal  |     at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:81:25)
+5|taxportal  |     at require (node:internal/modules/helpers:152:16)
+5|taxportal  |     at Object.<anonymous> (/var/www/taxportal/dist/index.cjs:88:120065)
+5|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14)
+5|taxportal  |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+5|taxportal  |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+5|taxportal  |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+5|taxportal  |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23)
+5|taxportal  |     at Module._compile (node:internal/modules/cjs/loader:1804:14) {
+5|taxportal  |   code: 'MODULE_NOT_FOUND',
+5|taxportal  |   requireStack: [ '/var/www/taxportal/dist/index.cjs' ]
+5|taxportal  | }
