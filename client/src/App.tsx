@@ -20,6 +20,7 @@ import Refund from "@/pages/refund";
 import Signatures from "@/pages/signatures";
 import Invoices from "@/pages/invoices";
 import ReturnStatus from "@/pages/return-status";
+import ServiceStatus from "@/pages/service-status";
 import Businesses from "@/pages/businesses";
 
 import AdminDashboard from "@/pages/admin/dashboard";
@@ -199,8 +200,10 @@ function Router() {
   return (
     <ClientLayout user={user}>
       <Switch>
-        <Route path="/" component={ReturnStatus} />
+        <Route path="/" component={Dashboard} />
         <Route path="/summary" component={Dashboard} />
+        <Route path="/return-status/:returnId" component={ReturnStatus} />
+        <Route path="/service-status/:clientProductId" component={ServiceStatus} />
         <Route path="/documents" component={Documents} />
         <Route path="/messages" component={Messages} />
         <Route path="/questionnaire" component={Questionnaire} />

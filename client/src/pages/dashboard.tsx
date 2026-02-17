@@ -244,7 +244,7 @@ export default function Dashboard() {
               </div>
             </div>
             <Button variant="outline" size="sm" asChild className="shrink-0">
-              <Link href="/">
+              <Link href="/return-status/personal">
                 View Details
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
@@ -343,7 +343,7 @@ export default function Dashboard() {
                 Your Returns
               </CardTitle>
               <Button variant="ghost" size="sm" asChild>
-                <Link href="/">
+                <Link href="/return-status/personal">
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </Button>
