@@ -1,12 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -15,6 +16,13 @@ import {
   DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useState, useEffect, useMemo } from "react";
@@ -30,22 +38,28 @@ import {
   MessageSquare, 
   PenTool, 
   DollarSign,
-  CheckCircle,
-  Clock,
-  AlertCircle,
   ChevronRight,
   ChevronLeft,
-  Plus,
   UserPlus,
   Search,
   X,
   Archive,
+  ArchiveRestore,
   Phone,
   Mail,
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
-  Users
+  AlertTriangle,
+  CheckCircle2,
+  Clock,
+  Sparkles,
+  MoreHorizontal,
+  LogIn,
+  Trash2,
+  ExternalLink,
+  Package,
+  Activity,
 } from "lucide-react";
 import {
   Table,
@@ -55,35 +69,149 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { format, formatDistanceToNow } from "date-fns";
 
-type SortField = "name" | "status" | "documents" | "messages" | "invoices";
+type SortField = "name" | "services" | "progress" | "actionNeeded" | "lastActivity";
 type SortDirection = "asc" | "desc";
+type SummaryFilter = "all" | "needsAttention" | "missingDocs" | "readyToFile" | "newThisWeek";
 
-const RETURN_PREP_STATUSES = [
-  { value: "all", label: "All Statuses" },
-  { value: "not_started", label: "Not Started" },
-  { value: "documents_gathering", label: "Gathering Docs" },
-  { value: "information_review", label: "Info Review" },
-  { value: "return_preparation", label: "Prep" },
-  { value: "quality_review", label: "QA Review" },
-  { value: "client_review", label: "Client Review" },
-  { value: "signature_required", label: "Signatures" },
-  { value: "filing", label: "Filing" },
-  { value: "filed", label: "Filed" },
-];
+interface ClientStats {
+  documentsCount: number;
+  documentsUploaded: number;
+  documentsRequired: number;
+  signaturesCount: number;
+  unsignedSignatures: number;
+  unreadMessages: number;
+  pendingInvoices: number;
+  questionnaireProgress: number;
+  questionnaireCompleted: boolean;
+  refundStatus: string;
+  returnPrepStatus: string;
+  services: { type: string; status: string }[];
+  actionNeeded: number;
+  lastActivity: string | null;
+}
+
+interface ClientData {
+  id: string;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+  phone: string | null;
+  profileImageUrl: string | null;
+  isArchived: boolean;
+  createdAt: string;
+  stats: ClientStats;
+}
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
+
+function SummaryCard({ 
+  label, count, icon: Icon, color, active, onClick, description 
+}: { 
+  label: string; count: number; icon: any; color: string; active: boolean; onClick: () => void; description: string;
+}) {
+  const colorMap: Record<string, string> = {
+    red: active ? 'bg-red-50 border-red-300 ring-2 ring-red-200' : 'bg-white border-gray-200 hover:border-red-200 hover:bg-red-50/50',
+    amber: active ? 'bg-amber-50 border-amber-300 ring-2 ring-amber-200' : 'bg-white border-gray-200 hover:border-amber-200 hover:bg-amber-50/50',
+    green: active ? 'bg-green-50 border-green-300 ring-2 ring-green-200' : 'bg-white border-gray-200 hover:border-green-200 hover:bg-green-50/50',
+    blue: active ? 'bg-blue-50 border-blue-300 ring-2 ring-blue-200' : 'bg-white border-gray-200 hover:border-blue-200 hover:bg-blue-50/50',
+  };
+  const iconColorMap: Record<string, string> = {
+    red: 'text-red-600 bg-red-100',
+    amber: 'text-amber-600 bg-amber-100',
+    green: 'text-green-600 bg-green-100',
+    blue: 'text-blue-600 bg-blue-100',
+  };
+
+  return (
+    <button
+      onClick={onClick}
+      className={`flex-1 min-w-[160px] rounded-xl border p-4 text-left transition-all cursor-pointer ${colorMap[color]}`}
+    >
+      <div className="flex items-start justify-between">
+        <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${iconColorMap[color]}`}>
+          <Icon className="h-4.5 w-4.5" />
+        </div>
+        <span className="text-2xl font-bold">{count}</span>
+      </div>
+      <p className="mt-2 font-semibold text-sm">{label}</p>
+      <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
+    </button>
+  );
+}
+
+function ProgressBar({ uploaded, required }: { uploaded: number; required: number }) {
+  if (required === 0) return <span className="text-xs text-muted-foreground">No docs required</span>;
+  const pct = Math.round((uploaded / required) * 100);
+  const barColor = pct === 100 ? 'bg-green-500' : pct >= 50 ? 'bg-blue-500' : 'bg-amber-500';
+  return (
+    <div className="flex items-center gap-2 min-w-[100px]">
+      <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+        <div className={`h-full rounded-full transition-all ${barColor}`} style={{ width: `${pct}%` }} />
+      </div>
+      <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">{uploaded}/{required}</span>
+    </div>
+  );
+}
+
+function ActionBadges({ stats }: { stats: ClientStats }) {
+  if (!stats) return <span className="text-xs text-muted-foreground">-</span>;
+  const items: { icon: any; label: string; color: string; count: number }[] = [];
+  if ((stats.unreadMessages || 0) > 0) items.push({ icon: MessageSquare, label: 'msg', color: 'text-orange-600 bg-orange-50 border-orange-200', count: stats.unreadMessages });
+  if ((stats.pendingInvoices || 0) > 0) items.push({ icon: DollarSign, label: 'inv', color: 'text-red-600 bg-red-50 border-red-200', count: stats.pendingInvoices });
+  if ((stats.unsignedSignatures || 0) > 0) items.push({ icon: PenTool, label: 'sig', color: 'text-purple-600 bg-purple-50 border-purple-200', count: stats.unsignedSignatures });
+  if ((stats.documentsRequired || 0) > 0 && (stats.documentsUploaded || 0) < stats.documentsRequired) {
+    items.push({ icon: FileText, label: 'docs', color: 'text-amber-600 bg-amber-50 border-amber-200', count: stats.documentsRequired - (stats.documentsUploaded || 0) });
+  }
+
+  if (items.length === 0) {
+    return <span className="text-xs text-green-600 flex items-center gap-1"><CheckCircle2 className="h-3.5 w-3.5" /> All good</span>;
+  }
+
+  return (
+    <div className="flex flex-wrap gap-1">
+      {items.map((item, i) => {
+        const Icon = item.icon;
+        return (
+          <span key={i} className={`inline-flex items-center gap-0.5 text-xs font-medium px-1.5 py-0.5 rounded border ${item.color}`}>
+            <Icon className="h-3 w-3" />{item.count}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
+function ServiceBadges({ services }: { services: ClientStats['services'] }) {
+  if (!services || services.length === 0) {
+    return <span className="text-xs text-muted-foreground">No services</span>;
+  }
+  return (
+    <div className="flex flex-wrap gap-1">
+      {services.slice(0, 3).map((s, i) => (
+        <span key={i} className="inline-flex items-center text-xs px-1.5 py-0.5 rounded bg-gray-100 text-gray-700 border border-gray-200 truncate max-w-[120px]">
+          {s.type}
+        </span>
+      ))}
+      {services.length > 3 && (
+        <span className="text-xs text-muted-foreground">+{services.length - 3}</span>
+      )}
+    </div>
+  );
+}
 
 export default function AdminClients() {
   const [, navigate] = useLocation();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [summaryFilter, setSummaryFilter] = useState<SummaryFilter>("all");
   const [showArchived, setShowArchived] = useState(false);
-  const [sortField, setSortField] = useState<SortField>("name");
-  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+  const [sortField, setSortField] = useState<SortField>("actionNeeded");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
+  const [selectedClients, setSelectedClients] = useState<Set<string>>(new Set());
   const [newClient, setNewClient] = useState({
     email: "",
     password: "",
@@ -91,58 +219,104 @@ export default function AdminClients() {
     lastName: "",
     phone: ""
   });
+  const [dialogStep, setDialogStep] = useState<'form' | 'assign'>('form');
+  const [createdClientId, setCreatedClientId] = useState<string | null>(null);
+  const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  const { data: clients, isLoading } = useQuery<any[]>({
+  const { data: clients, isLoading } = useQuery<ClientData[]>({
     queryKey: ["/api/admin/clients"],
   });
 
+  const { data: products } = useQuery<any[]>({
+    queryKey: ["/api/admin/products"],
+    enabled: isAddDialogOpen,
+  });
+
+  const sevenDaysAgo = useMemo(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 7);
+    return d;
+  }, []);
+
+  const activeClients = useMemo(() => clients?.filter(c => !c.isArchived) || [], [clients]);
+  const archivedCount = useMemo(() => clients?.filter(c => c.isArchived).length || 0, [clients]);
+
+  const summaryStats = useMemo(() => {
+    const active = activeClients;
+    return {
+      needsAttention: active.filter(c => (c.stats?.actionNeeded || 0) > 0).length,
+      missingDocs: active.filter(c => (c.stats?.documentsRequired || 0) > 0 && (c.stats?.documentsUploaded || 0) < (c.stats?.documentsRequired || 0)).length,
+      readyToFile: active.filter(c => (c.stats?.actionNeeded || 0) === 0 && (c.stats?.services?.length || 0) > 0).length,
+      newThisWeek: active.filter(c => new Date(c.createdAt) >= sevenDaysAgo).length,
+    };
+  }, [activeClients, sevenDaysAgo]);
+
   const filteredAndSortedClients = useMemo(() => {
-    let result = clients?.filter((client) => {
-      const matchesArchived = showArchived ? client.isArchived : !client.isArchived;
-      
-      const matchesSearch = searchQuery === "" || 
-        (client.firstName?.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        (client.lastName?.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        (client.email?.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        (`${client.firstName || ""} ${client.lastName || ""}`.toLowerCase().includes(searchQuery.toLowerCase()));
-      
-      const clientStatus = client.stats?.returnPrepStatus || "not_started";
-      const matchesStatus = statusFilter === "all" || clientStatus === statusFilter;
-      
-      return matchesArchived && matchesSearch && matchesStatus;
-    }) || [];
+    let result = (showArchived ? clients?.filter(c => c.isArchived) : activeClients) || [];
+
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(c =>
+        c.firstName?.toLowerCase().includes(q) ||
+        c.lastName?.toLowerCase().includes(q) ||
+        c.email?.toLowerCase().includes(q) ||
+        `${c.firstName || ""} ${c.lastName || ""}`.toLowerCase().includes(q)
+      );
+    }
+
+    if (!showArchived && summaryFilter !== "all") {
+      switch (summaryFilter) {
+        case "needsAttention":
+          result = result.filter(c => (c.stats?.actionNeeded || 0) > 0);
+          break;
+        case "missingDocs":
+          result = result.filter(c => (c.stats?.documentsRequired || 0) > 0 && (c.stats?.documentsUploaded || 0) < (c.stats?.documentsRequired || 0));
+          break;
+        case "readyToFile":
+          result = result.filter(c => (c.stats?.actionNeeded || 0) === 0 && (c.stats?.services?.length || 0) > 0);
+          break;
+        case "newThisWeek":
+          result = result.filter(c => new Date(c.createdAt) >= sevenDaysAgo);
+          break;
+      }
+    }
 
     result.sort((a, b) => {
       let comparison = 0;
       switch (sortField) {
-        case "name":
+        case "name": {
           const nameA = `${a.firstName || ""} ${a.lastName || ""}`.toLowerCase();
           const nameB = `${b.firstName || ""} ${b.lastName || ""}`.toLowerCase();
           comparison = nameA.localeCompare(nameB);
           break;
-        case "status":
-          const statusA = a.stats?.returnPrepStatus || "not_started";
-          const statusB = b.stats?.returnPrepStatus || "not_started";
-          comparison = statusA.localeCompare(statusB);
+        }
+        case "services":
+          comparison = (a.stats?.services?.length || 0) - (b.stats?.services?.length || 0);
           break;
-        case "documents":
-          comparison = (a.stats?.documentsCount || 0) - (b.stats?.documentsCount || 0);
+        case "progress": {
+          const pctA = (a.stats?.documentsRequired || 0) > 0 ? (a.stats?.documentsUploaded || 0) / a.stats.documentsRequired : 0;
+          const pctB = (b.stats?.documentsRequired || 0) > 0 ? (b.stats?.documentsUploaded || 0) / b.stats.documentsRequired : 0;
+          comparison = pctA - pctB;
           break;
-        case "messages":
-          comparison = (a.stats?.unreadMessages || 0) - (b.stats?.unreadMessages || 0);
+        }
+        case "actionNeeded":
+          comparison = (a.stats?.actionNeeded || 0) - (b.stats?.actionNeeded || 0);
           break;
-        case "invoices":
-          comparison = (a.stats?.pendingInvoices || 0) - (b.stats?.pendingInvoices || 0);
+        case "lastActivity": {
+          const timeA = a.stats?.lastActivity ? new Date(a.stats.lastActivity).getTime() : 0;
+          const timeB = b.stats?.lastActivity ? new Date(b.stats.lastActivity).getTime() : 0;
+          comparison = timeA - timeB;
           break;
+        }
       }
       return sortDirection === "asc" ? comparison : -comparison;
     });
 
     return result;
-  }, [clients, showArchived, searchQuery, statusFilter, sortField, sortDirection]);
+  }, [clients, activeClients, showArchived, searchQuery, summaryFilter, sevenDaysAgo, sortField, sortDirection]);
 
   const totalPages = Math.ceil(filteredAndSortedClients.length / pageSize);
   const paginatedClients = filteredAndSortedClients.slice(
@@ -161,29 +335,49 @@ export default function AdminClients() {
       setSortDirection(sortDirection === "asc" ? "desc" : "asc");
     } else {
       setSortField(field);
-      setSortDirection("asc");
+      setSortDirection(field === "name" ? "asc" : "desc");
     }
   };
 
   const getSortIcon = (field: SortField) => {
-    if (sortField !== field) return <ArrowUpDown className="w-4 h-4 ml-1" />;
+    if (sortField !== field) return <ArrowUpDown className="w-3.5 h-3.5 ml-1 opacity-40" />;
     return sortDirection === "asc" 
-      ? <ArrowUp className="w-4 h-4 ml-1" /> 
-      : <ArrowDown className="w-4 h-4 ml-1" />;
+      ? <ArrowUp className="w-3.5 h-3.5 ml-1" /> 
+      : <ArrowDown className="w-3.5 h-3.5 ml-1" />;
   };
 
-  const archivedCount = clients?.filter(c => c.isArchived).length || 0;
-  const activeCount = clients?.filter(c => !c.isArchived).length || 0;
+  const toggleSelectClient = (id: string) => {
+    const next = new Set(selectedClients);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    setSelectedClients(next);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedClients.size === paginatedClients.length) {
+      setSelectedClients(new Set());
+    } else {
+      setSelectedClients(new Set(paginatedClients.map(c => c.id)));
+    }
+  };
 
   const createClientMutation = useMutation({
     mutationFn: async (data: typeof newClient) => {
-      return apiRequest("POST", "/api/admin/clients", data);
+      const res = await apiRequest("POST", "/api/admin/clients", data);
+      return res;
     },
-    onSuccess: () => {
+    onSuccess: async (res: any) => {
+      const data = typeof res.json === 'function' ? await res.json() : res;
+      const clientId = data?.id;
       toast({ title: "Client created successfully" });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/clients"] });
-      setIsAddDialogOpen(false);
-      setNewClient({ email: "", password: "", firstName: "", lastName: "", phone: "" });
+      
+      const activeProducts = products?.filter((p: any) => p.isActive) || [];
+      if (clientId && activeProducts.length > 0) {
+        setCreatedClientId(clientId);
+        setDialogStep('assign');
+      } else {
+        closeAddDialog();
+      }
     },
     onError: (error: any) => {
       toast({ 
@@ -194,156 +388,282 @@ export default function AdminClients() {
     },
   });
 
+  const assignProductsMutation = useMutation({
+    mutationFn: async ({ clientId, productIds }: { clientId: string; productIds: string[] }) => {
+      await Promise.all(productIds.map(productId =>
+        apiRequest("POST", `/api/admin/clients/${clientId}/assign-product`, { productId })
+      ));
+    },
+    onSuccess: () => {
+      toast({ title: "Services assigned successfully" });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/clients"] });
+      closeAddDialog();
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to assign services", description: error.message, variant: "destructive" });
+      closeAddDialog();
+    },
+  });
+
+  const closeAddDialog = () => {
+    setIsAddDialogOpen(false);
+    setNewClient({ email: "", password: "", firstName: "", lastName: "", phone: "" });
+    setDialogStep('form');
+    setCreatedClientId(null);
+    setSelectedProducts(new Set());
+  };
+
+  const archiveMutation = useMutation({
+    mutationFn: async ({ id, action }: { id: string; action: 'archive' | 'unarchive' }) => {
+      return apiRequest("POST", `/api/admin/clients/${id}/${action}`);
+    },
+    onSuccess: () => {
+      toast({ title: "Client updated" });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/clients"] });
+      setSelectedClients(new Set());
+    },
+    onError: (error: any) => {
+      toast({ title: "Action failed", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const impersonateMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return apiRequest("POST", `/api/admin/clients/${id}/impersonate`);
+    },
+    onSuccess: () => {
+      window.location.href = "/";
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to impersonate", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const bulkArchiveMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+      await Promise.all(ids.map(id => apiRequest("POST", `/api/admin/clients/${id}/archive`)));
+    },
+    onSuccess: () => {
+      toast({ title: `${selectedClients.size} client(s) archived` });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/clients"] });
+      setSelectedClients(new Set());
+    },
+    onError: (error: any) => {
+      toast({ title: "Bulk action failed", description: error.message, variant: "destructive" });
+    },
+  });
+
   const handleCreateClient = (e: React.FormEvent) => {
     e.preventDefault();
     createClientMutation.mutate(newClient);
   };
 
-  const getReturnPrepStatusBadge = (status: string | undefined) => {
-    const statusConfig: Record<string, { label: string; className: string }> = {
-      not_started: { label: "Not Started", className: "bg-gray-100 text-gray-800" },
-      documents_gathering: { label: "Gathering Docs", className: "bg-yellow-100 text-yellow-800" },
-      information_review: { label: "Info Review", className: "bg-blue-100 text-blue-800" },
-      return_preparation: { label: "Prep", className: "bg-purple-100 text-purple-800" },
-      quality_review: { label: "QA Review", className: "bg-indigo-100 text-indigo-800" },
-      client_review: { label: "Client Review", className: "bg-orange-100 text-orange-800" },
-      signature_required: { label: "Signatures", className: "bg-pink-100 text-pink-800" },
-      filing: { label: "Filing", className: "bg-cyan-100 text-cyan-800" },
-      filed: { label: "Filed", className: "bg-green-100 text-green-800" },
-    };
-    const config = statusConfig[status || "not_started"] || statusConfig.not_started;
-    return <Badge variant="outline" className={config.className}>{config.label}</Badge>;
-  };
-
   if (isLoading) {
     return (
       <div className="p-6 space-y-6">
-        <h1 className="text-2xl font-semibold">Clients</h1>
-        <Card>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[250px]">Client</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-center">Docs</TableHead>
-                  <TableHead className="text-center">Signed</TableHead>
-                  <TableHead className="text-center">Messages</TableHead>
-                  <TableHead className="text-center">Invoices</TableHead>
-                  <TableHead>Phone</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {[...Array(6)].map((_, i) => (
-                  <TableRow key={i}>
-                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                    <TableCell><Skeleton className="h-5 w-20" /></TableCell>
-                    <TableCell className="text-center"><Skeleton className="h-4 w-8 mx-auto" /></TableCell>
-                    <TableCell className="text-center"><Skeleton className="h-4 w-8 mx-auto" /></TableCell>
-                    <TableCell className="text-center"><Skeleton className="h-4 w-8 mx-auto" /></TableCell>
-                    <TableCell className="text-center"><Skeleton className="h-4 w-8 mx-auto" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+        <Skeleton className="h-8 w-40" />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-[100px] rounded-xl" />)}
+        </div>
+        <Skeleton className="h-[400px] rounded-lg" />
       </div>
     );
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-5">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold" data-testid="text-admin-clients-title">
-          Clients
-        </h1>
-        <div className="flex items-center gap-3">
-          <Badge variant="outline">{clients?.length || 0} Total</Badge>
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <UserPlus className="w-4 h-4 mr-2" />
-                Add Client
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add New Client</DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleCreateClient}>
-                <div className="space-y-4 py-4">
-                  <div className="grid grid-cols-2 gap-4">
+        <div>
+          <h1 className="text-2xl font-bold">Clients</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {activeClients.length} active client{activeClients.length !== 1 ? 's' : ''}
+            {archivedCount > 0 && ` · ${archivedCount} archived`}
+          </p>
+        </div>
+        <Dialog open={isAddDialogOpen} onOpenChange={(open) => { if (!open) closeAddDialog(); else setIsAddDialogOpen(true); }}>
+          <DialogTrigger asChild>
+            <Button>
+              <UserPlus className="w-4 h-4 mr-2" />
+              Add Client
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            {dialogStep === 'form' ? (
+              <>
+                <DialogHeader>
+                  <DialogTitle>Add New Client</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleCreateClient}>
+                  <div className="space-y-4 py-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="firstName">First Name</Label>
+                        <Input
+                          id="firstName"
+                          value={newClient.firstName}
+                          onChange={(e) => setNewClient({ ...newClient, firstName: e.target.value })}
+                          placeholder="John"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="lastName">Last Name</Label>
+                        <Input
+                          id="lastName"
+                          value={newClient.lastName}
+                          onChange={(e) => setNewClient({ ...newClient, lastName: e.target.value })}
+                          placeholder="Doe"
+                        />
+                      </div>
+                    </div>
                     <div className="space-y-2">
-                      <Label htmlFor="firstName">First Name</Label>
+                      <Label htmlFor="email">Email *</Label>
                       <Input
-                        id="firstName"
-                        value={newClient.firstName}
-                        onChange={(e) => setNewClient({ ...newClient, firstName: e.target.value })}
-                        placeholder="John"
+                        id="email"
+                        type="email"
+                        required
+                        value={newClient.email}
+                        onChange={(e) => setNewClient({ ...newClient, email: e.target.value })}
+                        placeholder="john@example.com"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="lastName">Last Name</Label>
+                      <Label htmlFor="password">Password *</Label>
                       <Input
-                        id="lastName"
-                        value={newClient.lastName}
-                        onChange={(e) => setNewClient({ ...newClient, lastName: e.target.value })}
-                        placeholder="Doe"
+                        id="password"
+                        type="password"
+                        required
+                        minLength={6}
+                        value={newClient.password}
+                        onChange={(e) => setNewClient({ ...newClient, password: e.target.value })}
+                        placeholder="At least 6 characters"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="phone">Phone (optional)</Label>
+                      <Input
+                        id="phone"
+                        type="tel"
+                        value={newClient.phone}
+                        onChange={(e) => setNewClient({ ...newClient, phone: e.target.value })}
+                        placeholder="(555) 123-4567"
                       />
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email *</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      required
-                      value={newClient.email}
-                      onChange={(e) => setNewClient({ ...newClient, email: e.target.value })}
-                      placeholder="john@example.com"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="password">Password *</Label>
-                    <Input
-                      id="password"
-                      type="password"
-                      required
-                      minLength={6}
-                      value={newClient.password}
-                      onChange={(e) => setNewClient({ ...newClient, password: e.target.value })}
-                      placeholder="At least 6 characters"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Phone (optional)</Label>
-                    <Input
-                      id="phone"
-                      type="tel"
-                      value={newClient.phone}
-                      onChange={(e) => setNewClient({ ...newClient, phone: e.target.value })}
-                      placeholder="(555) 123-4567"
-                    />
+                  <DialogFooter>
+                    <Button type="button" variant="outline" onClick={closeAddDialog}>
+                      Cancel
+                    </Button>
+                    <Button type="submit" disabled={createClientMutation.isPending}>
+                      {createClientMutation.isPending ? "Creating..." : "Create Client"}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </>
+            ) : (
+              <>
+                <DialogHeader>
+                  <DialogTitle>Assign Services (Optional)</DialogTitle>
+                </DialogHeader>
+                <div className="py-4">
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Select services to assign to the new client. You can also do this later.
+                  </p>
+                  <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                    {products?.filter((p: any) => p.isActive).map((product: any) => (
+                      <label
+                        key={product.id}
+                        className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                          selectedProducts.has(product.id) ? 'bg-blue-50 border-blue-300' : 'hover:bg-gray-50 border-gray-200'
+                        }`}
+                      >
+                        <Checkbox
+                          checked={selectedProducts.has(product.id)}
+                          onCheckedChange={() => {
+                            const next = new Set(selectedProducts);
+                            if (next.has(product.id)) next.delete(product.id); else next.add(product.id);
+                            setSelectedProducts(next);
+                          }}
+                        />
+                        <div className="flex items-center gap-2 flex-1">
+                          <Package className="h-4 w-4 text-muted-foreground" />
+                          <div>
+                            <p className="text-sm font-medium">{product.name}</p>
+                            {product.description && (
+                              <p className="text-xs text-muted-foreground truncate max-w-[250px]">{product.description}</p>
+                            )}
+                          </div>
+                        </div>
+                      </label>
+                    ))}
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                    Cancel
+                  <Button type="button" variant="outline" onClick={closeAddDialog}>
+                    Skip
                   </Button>
-                  <Button type="submit" disabled={createClientMutation.isPending}>
-                    {createClientMutation.isPending ? "Creating..." : "Create Client"}
+                  <Button
+                    disabled={selectedProducts.size === 0 || assignProductsMutation.isPending}
+                    onClick={() => {
+                      if (createdClientId) {
+                        assignProductsMutation.mutate({
+                          clientId: createdClientId,
+                          productIds: Array.from(selectedProducts),
+                        });
+                      }
+                    }}
+                  >
+                    {assignProductsMutation.isPending ? "Assigning..." : `Assign ${selectedProducts.size} Service${selectedProducts.size !== 1 ? 's' : ''}`}
                   </Button>
                 </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
-        </div>
+              </>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
+      {!showArchived && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <SummaryCard
+            label="Needs Attention"
+            count={summaryStats.needsAttention}
+            icon={AlertTriangle}
+            color="red"
+            active={summaryFilter === "needsAttention"}
+            onClick={() => { setSummaryFilter(summaryFilter === "needsAttention" ? "all" : "needsAttention"); setCurrentPage(1); }}
+            description="Unread messages, unpaid invoices, or missing signatures"
+          />
+          <SummaryCard
+            label="Missing Documents"
+            count={summaryStats.missingDocs}
+            icon={FileText}
+            color="amber"
+            active={summaryFilter === "missingDocs"}
+            onClick={() => { setSummaryFilter(summaryFilter === "missingDocs" ? "all" : "missingDocs"); setCurrentPage(1); }}
+            description="Still need to upload required documents"
+          />
+          <SummaryCard
+            label="Ready to File"
+            count={summaryStats.readyToFile}
+            icon={CheckCircle2}
+            color="green"
+            active={summaryFilter === "readyToFile"}
+            onClick={() => { setSummaryFilter(summaryFilter === "readyToFile" ? "all" : "readyToFile"); setCurrentPage(1); }}
+            description="All items complete, no actions pending"
+          />
+          <SummaryCard
+            label="New This Week"
+            count={summaryStats.newThisWeek}
+            icon={Sparkles}
+            color="blue"
+            active={summaryFilter === "newThisWeek"}
+            onClick={() => { setSummaryFilter(summaryFilter === "newThisWeek" ? "all" : "newThisWeek"); setCurrentPage(1); }}
+            description="Signed up in the last 7 days"
+          />
+        </div>
+      )}
+
+      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+        <div className="relative flex-1 w-full">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             placeholder="Search by name or email..."
@@ -360,200 +680,211 @@ export default function AdminClients() {
             </button>
           )}
         </div>
-        <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setCurrentPage(1); }}>
-          <SelectTrigger className="w-full sm:w-[180px]">
-            <SelectValue placeholder="Filter by status" />
-          </SelectTrigger>
-          <SelectContent>
-            {RETURN_PREP_STATUSES.map((status) => (
-              <SelectItem key={status.value} value={status.value}>
-                {status.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Button
-          variant={showArchived ? "default" : "outline"}
-          onClick={() => { setShowArchived(!showArchived); setCurrentPage(1); }}
-          className="gap-2"
-        >
-          <Archive className="w-4 h-4" />
-          {showArchived ? `Archived (${archivedCount})` : `Show Archived (${archivedCount})`}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant={showArchived ? "default" : "outline"}
+            size="sm"
+            onClick={() => { setShowArchived(!showArchived); setSummaryFilter("all"); setCurrentPage(1); setSelectedClients(new Set()); }}
+            className="gap-1.5"
+          >
+            <Archive className="w-3.5 h-3.5" />
+            {showArchived ? `Archived (${archivedCount})` : `Archived (${archivedCount})`}
+          </Button>
+          {summaryFilter !== "all" && !showArchived && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => { setSummaryFilter("all"); setCurrentPage(1); }}
+              className="gap-1 text-muted-foreground"
+            >
+              <X className="w-3.5 h-3.5" />
+              Clear filter
+            </Button>
+          )}
+        </div>
       </div>
 
-      {filteredAndSortedClients.length === 0 && clients && clients.length > 0 && (
+      {selectedClients.size > 0 && (
+        <div className="flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-lg px-4 py-2.5">
+          <span className="text-sm font-medium text-blue-800">{selectedClients.size} selected</span>
+          <div className="flex-1" />
+          {!showArchived && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => bulkArchiveMutation.mutate(Array.from(selectedClients))}
+              disabled={bulkArchiveMutation.isPending}
+              className="gap-1.5"
+            >
+              <Archive className="w-3.5 h-3.5" />
+              Archive Selected
+            </Button>
+          )}
+          <Button variant="ghost" size="sm" onClick={() => setSelectedClients(new Set())} className="text-muted-foreground">
+            Cancel
+          </Button>
+        </div>
+      )}
+
+      {filteredAndSortedClients.length === 0 && clients && clients.length > 0 ? (
         <Card>
           <CardContent className="p-12 text-center">
             <p className="text-muted-foreground">
-              {showArchived 
-                ? "No archived clients match your search criteria." 
-                : "No active clients match your search criteria."}
+              {showArchived ? "No archived clients found." : "No clients match your current filters."}
             </p>
             <Button 
               variant="ghost" 
-              onClick={() => { setSearchQuery(""); setStatusFilter("all"); setCurrentPage(1); }}
+              onClick={() => { setSearchQuery(""); setSummaryFilter("all"); setCurrentPage(1); }}
               className="mt-2"
             >
               Clear filters
             </Button>
           </CardContent>
         </Card>
-      )}
-
-      {clients?.length === 0 ? (
+      ) : clients?.length === 0 ? (
         <Card>
           <CardContent className="p-12 text-center">
-            <p className="text-muted-foreground">No clients yet. Click "Add Client" to create one.</p>
+            <UserPlus className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+            <p className="text-muted-foreground">No clients yet. Click "Add Client" to get started.</p>
           </CardContent>
         </Card>
       ) : paginatedClients.length > 0 ? (
-        <Card>
+        <Card className="overflow-hidden">
           <CardContent className="p-0">
             <Table>
               <TableHeader>
-                <TableRow className="bg-muted/50">
-                  <TableHead className="w-[280px]">
+                <TableRow className="bg-muted/30">
+                  <TableHead className="w-[40px] px-3">
+                    <Checkbox
+                      checked={selectedClients.size === paginatedClients.length && paginatedClients.length > 0}
+                      onCheckedChange={toggleSelectAll}
+                    />
+                  </TableHead>
+                  <TableHead className="w-[240px]">
                     <button 
-                      className="flex items-center font-medium hover:text-foreground"
+                      className="flex items-center text-xs font-semibold uppercase tracking-wider hover:text-foreground"
                       onClick={() => handleSort("name")}
                     >
                       Client {getSortIcon("name")}
                     </button>
                   </TableHead>
+                  <TableHead className="w-[180px]">
+                    <button 
+                      className="flex items-center text-xs font-semibold uppercase tracking-wider hover:text-foreground"
+                      onClick={() => handleSort("services")}
+                    >
+                      Services {getSortIcon("services")}
+                    </button>
+                  </TableHead>
+                  <TableHead className="w-[140px]">
+                    <button 
+                      className="flex items-center text-xs font-semibold uppercase tracking-wider hover:text-foreground"
+                      onClick={() => handleSort("progress")}
+                    >
+                      Doc Progress {getSortIcon("progress")}
+                    </button>
+                  </TableHead>
+                  <TableHead className="w-[180px]">
+                    <button 
+                      className="flex items-center text-xs font-semibold uppercase tracking-wider hover:text-foreground"
+                      onClick={() => handleSort("actionNeeded")}
+                    >
+                      Action Needed {getSortIcon("actionNeeded")}
+                    </button>
+                  </TableHead>
                   <TableHead className="w-[130px]">
                     <button 
-                      className="flex items-center font-medium hover:text-foreground"
-                      onClick={() => handleSort("status")}
+                      className="flex items-center text-xs font-semibold uppercase tracking-wider hover:text-foreground"
+                      onClick={() => handleSort("lastActivity")}
                     >
-                      Status {getSortIcon("status")}
+                      Last Active {getSortIcon("lastActivity")}
                     </button>
                   </TableHead>
-                  <TableHead className="text-center w-[80px]">
-                    <button 
-                      className="flex items-center justify-center w-full font-medium hover:text-foreground"
-                      onClick={() => handleSort("documents")}
-                    >
-                      Docs {getSortIcon("documents")}
-                    </button>
-                  </TableHead>
-                  <TableHead className="text-center w-[80px]">Signed</TableHead>
-                  <TableHead className="text-center w-[100px]">
-                    <button 
-                      className="flex items-center justify-center w-full font-medium hover:text-foreground"
-                      onClick={() => handleSort("messages")}
-                    >
-                      Messages {getSortIcon("messages")}
-                    </button>
-                  </TableHead>
-                  <TableHead className="text-center w-[90px]">
-                    <button 
-                      className="flex items-center justify-center w-full font-medium hover:text-foreground"
-                      onClick={() => handleSort("invoices")}
-                    >
-                      Invoices {getSortIcon("invoices")}
-                    </button>
-                  </TableHead>
-                  <TableHead className="w-[140px]">Phone</TableHead>
-                  <TableHead className="w-[40px]" aria-hidden="true"></TableHead>
+                  <TableHead className="w-[50px]" />
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {paginatedClients.map((client) => (
                   <TableRow 
                     key={client.id} 
-                    className="cursor-pointer hover:bg-muted/50"
+                    className="cursor-pointer hover:bg-muted/40 group"
                     onClick={() => navigate(`/admin/clients/${client.id}`)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        navigate(`/admin/clients/${client.id}`);
-                      }
-                    }}
-                    tabIndex={0}
-                    role="link"
-                    data-testid={`row-client-${client.id}`}
                   >
+                    <TableCell className="px-3" onClick={(e) => e.stopPropagation()}>
+                      <Checkbox
+                        checked={selectedClients.has(client.id)}
+                        onCheckedChange={() => toggleSelectClient(client.id)}
+                      />
+                    </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-3">
-                        <Avatar className="h-9 w-9">
-                          <AvatarImage src={client.profileImageUrl} />
-                          <AvatarFallback className="text-sm">
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src={client.profileImageUrl || undefined} />
+                          <AvatarFallback className="text-xs bg-gray-100">
                             {client.firstName?.[0] || client.email?.[0]?.toUpperCase() || "C"}
                             {client.lastName?.[0] || ""}
                           </AvatarFallback>
                         </Avatar>
                         <div className="min-w-0">
-                          <div className="font-medium truncate flex items-center gap-2">
+                          <div className="font-medium text-sm truncate flex items-center gap-1.5">
                             {client.firstName && client.lastName 
                               ? `${client.firstName} ${client.lastName}`
-                              : client.email || "Unknown Client"
+                              : client.email || "Unknown"
                             }
                             {client.isArchived && (
-                              <Badge variant="outline" className="bg-gray-100 text-gray-600 text-xs">
-                                <Archive className="w-3 h-3 mr-1" />
-                                Archived
-                              </Badge>
+                              <Badge variant="outline" className="bg-gray-100 text-gray-500 text-[10px] px-1 py-0">Archived</Badge>
                             )}
                           </div>
-                          <div className="text-sm text-muted-foreground truncate flex items-center gap-1">
-                            <Mail className="w-3 h-3" />
-                            {client.email}
-                          </div>
+                          <div className="text-xs text-muted-foreground truncate">{client.email}</div>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
-                      {getReturnPrepStatusBadge(client.stats?.returnPrepStatus)}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <div className="flex items-center justify-center gap-1">
-                        <FileText className="w-4 h-4 text-muted-foreground" />
-                        <span>{client.stats?.documentsCount || 0}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <div className="flex items-center justify-center gap-1">
-                        <PenTool className="w-4 h-4 text-muted-foreground" />
-                        <span>{client.stats?.signaturesCount || 0}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <div className={`flex items-center justify-center gap-1 ${client.stats?.unreadMessages > 0 ? 'text-orange-600 font-medium' : ''}`}>
-                        <MessageSquare className={`w-4 h-4 ${client.stats?.unreadMessages > 0 ? 'text-orange-500' : 'text-muted-foreground'}`} />
-                        <span>
-                          {client.stats?.unreadMessages > 0 
-                            ? client.stats.unreadMessages
-                            : 0
-                          }
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <div className={`flex items-center justify-center gap-1 ${client.stats?.pendingInvoices > 0 ? 'text-red-600 font-medium' : ''}`}>
-                        <DollarSign className={`w-4 h-4 ${client.stats?.pendingInvoices > 0 ? 'text-red-500' : 'text-muted-foreground'}`} />
-                        <span>
-                          {client.stats?.pendingInvoices > 0 
-                            ? client.stats.pendingInvoices
-                            : 0
-                          }
-                        </span>
-                      </div>
+                      <ServiceBadges services={client.stats?.services} />
                     </TableCell>
                     <TableCell>
-                      <div className="text-sm text-muted-foreground flex items-center gap-1">
-                        {client.phone ? (
-                          <>
-                            <Phone className="w-3 h-3" />
-                            {client.phone}
-                          </>
-                        ) : (
-                          <span className="text-gray-400">-</span>
-                        )}
-                      </div>
+                      <ProgressBar uploaded={client.stats?.documentsUploaded || 0} required={client.stats?.documentsRequired || 0} />
                     </TableCell>
-                    <TableCell aria-hidden="true">
-                      <ChevronRight className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
+                    <TableCell>
+                      <ActionBadges stats={client.stats} />
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-xs text-muted-foreground">
+                        {client.stats?.lastActivity 
+                          ? formatDistanceToNow(new Date(client.stats.lastActivity), { addSuffix: true })
+                          : "No activity"
+                        }
+                      </span>
+                    </TableCell>
+                    <TableCell className="pr-3" onClick={(e) => e.stopPropagation()}>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-44">
+                          <DropdownMenuItem onClick={() => navigate(`/admin/clients/${client.id}`)}>
+                            <ExternalLink className="h-3.5 w-3.5 mr-2" />View Profile
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => navigate(`/admin/messages?client=${client.id}`)}>
+                            <MessageSquare className="h-3.5 w-3.5 mr-2" />Message
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => impersonateMutation.mutate(client.id)}>
+                            <LogIn className="h-3.5 w-3.5 mr-2" />Log in as Client
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          {client.isArchived ? (
+                            <DropdownMenuItem onClick={() => archiveMutation.mutate({ id: client.id, action: 'unarchive' })}>
+                              <ArchiveRestore className="h-3.5 w-3.5 mr-2" />Unarchive
+                            </DropdownMenuItem>
+                          ) : (
+                            <DropdownMenuItem onClick={() => archiveMutation.mutate({ id: client.id, action: 'archive' })} className="text-red-600">
+                              <Archive className="h-3.5 w-3.5 mr-2" />Archive
+                            </DropdownMenuItem>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -565,16 +896,14 @@ export default function AdminClients() {
 
       {filteredAndSortedClients.length > 0 && (
         <div className="flex items-center justify-between flex-wrap gap-4">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">
-              Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, filteredAndSortedClients.length)} of {filteredAndSortedClients.length} clients
-            </span>
-          </div>
+          <span className="text-sm text-muted-foreground">
+            Showing {((currentPage - 1) * pageSize) + 1}–{Math.min(currentPage * pageSize, filteredAndSortedClients.length)} of {filteredAndSortedClients.length}
+          </span>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Per page:</span>
+              <span className="text-xs text-muted-foreground">Per page:</span>
               <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setCurrentPage(1); }}>
-                <SelectTrigger className="w-[70px]">
+                <SelectTrigger className="w-[65px] h-8 text-xs">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -585,42 +914,20 @@ export default function AdminClients() {
               </Select>
             </div>
             <div className="flex items-center gap-1">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setCurrentPage(1)}
-                disabled={currentPage === 1}
-              >
-                <ChevronLeft className="w-4 h-4" />
-                <ChevronLeft className="w-4 h-4 -ml-3" />
+              <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>
+                <ChevronLeft className="w-3.5 h-3.5" /><ChevronLeft className="w-3.5 h-3.5 -ml-2.5" />
               </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setCurrentPage(currentPage - 1)}
-                disabled={currentPage === 1}
-              >
-                <ChevronLeft className="w-4 h-4" />
+              <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setCurrentPage(currentPage - 1)} disabled={currentPage === 1}>
+                <ChevronLeft className="w-3.5 h-3.5" />
               </Button>
-              <span className="px-3 text-sm">
-                Page {currentPage} of {totalPages || 1}
+              <span className="px-3 text-xs font-medium">
+                {currentPage} / {totalPages || 1}
               </span>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setCurrentPage(currentPage + 1)}
-                disabled={currentPage >= totalPages}
-              >
-                <ChevronRight className="w-4 h-4" />
+              <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setCurrentPage(currentPage + 1)} disabled={currentPage >= totalPages}>
+                <ChevronRight className="w-3.5 h-3.5" />
               </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setCurrentPage(totalPages)}
-                disabled={currentPage >= totalPages}
-              >
-                <ChevronRight className="w-4 h-4" />
-                <ChevronRight className="w-4 h-4 -ml-3" />
+              <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setCurrentPage(totalPages)} disabled={currentPage >= totalPages}>
+                <ChevronRight className="w-3.5 h-3.5" /><ChevronRight className="w-3.5 h-3.5 -ml-2.5" />
               </Button>
             </div>
           </div>

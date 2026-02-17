@@ -1175,8 +1175,9 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
   app.get("/api/admin/clients", isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       const clients = await storage.getAllClients();
+      const allProducts = await storage.getProducts();
+      const productMap = new Map(allProducts.map(p => [p.id, p]));
       
-      // Get additional info for each client
       const clientsWithInfo = await Promise.all(
         clients.map(async (client) => {
           const docs = await storage.getDocuments(client.id);
@@ -1185,20 +1186,55 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
           const invoices = await storage.getInvoices(client.id);
           const refund = await storage.getRefundTracking(client.id);
           const questionnaire = await storage.getQuestionnaireResponses(client.id);
+          const clientReturns = await storage.getReturns(client.id);
+          const clientProds = await storage.getClientProducts(client.id);
+          const reqDocs = await storage.getRequiredDocuments(client.id);
           
           const unreadMessages = messages.filter(m => m.isFromClient && !m.isRead).length;
           const pendingInvoices = invoices.filter(i => i.status === 'sent' || i.status === 'overdue').length;
-          
+          const unsignedSignatures = signatures.filter(s => !s.signedAt).length;
+
+          const totalRequired = reqDocs.filter(rd => rd.isRequired && !rd.markedNotApplicable).length;
+          const uploadedRequired = reqDocs.filter(rd => rd.isRequired && !rd.markedNotApplicable && rd.isUploaded).length;
+
+          const services = [
+            ...clientReturns.filter(r => !r.completedAt).map(r => ({
+              type: r.returnType === 'personal' ? 'Personal Return' : r.name || 'Business Return',
+              status: r.status,
+            })),
+            ...clientProds.filter(cp => !cp.completedAt).map(cp => ({
+              type: productMap.get(cp.productId)?.name || cp.name || 'Service',
+              status: cp.currentStageId ? 'in_progress' : 'not_started',
+            })),
+          ];
+
+          const actionNeeded = unreadMessages + pendingInvoices + unsignedSignatures +
+            (totalRequired > 0 && uploadedRequired < totalRequired ? 1 : 0);
+
+          const allTimestamps = [
+            ...docs.map(d => d.uploadedAt),
+            ...messages.filter(m => m.isFromClient).map(m => m.createdAt),
+            ...signatures.filter(s => s.signedAt).map(s => s.signedAt),
+          ].filter(Boolean).map(t => new Date(t!).getTime());
+          const lastActivity = allTimestamps.length > 0 ? new Date(Math.max(...allTimestamps)).toISOString() : null;
+
           return {
             ...client,
             stats: {
               documentsCount: docs.length,
+              documentsUploaded: uploadedRequired,
+              documentsRequired: totalRequired,
               signaturesCount: signatures.length,
+              unsignedSignatures,
               unreadMessages,
               pendingInvoices,
               questionnaireProgress: questionnaire.length,
+              questionnaireCompleted: client.hasCompletedQuestionnaire,
               refundStatus: refund?.federalStatus || 'not_filed',
               returnPrepStatus: (refund as any)?.returnPrepStatus || 'not_started',
+              services,
+              actionNeeded,
+              lastActivity,
             },
           };
         })
@@ -1412,6 +1448,42 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
     } catch (error) {
       console.error("Error deleting client:", error);
       res.status(500).json({ message: "Failed to delete client" });
+    }
+  });
+
+  app.post("/api/admin/clients/:id/assign-product", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const clientId = req.params.id;
+      const { productId } = req.body;
+      
+      if (!productId) {
+        return res.status(400).json({ message: "Product ID is required" });
+      }
+      
+      const client = await storage.getUser(clientId);
+      if (!client) {
+        return res.status(404).json({ message: "Client not found" });
+      }
+      
+      const product = await storage.getProduct(productId);
+      if (!product) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+
+      const stages = await storage.getProductStages(productId);
+      const firstStage = stages.length > 0 ? stages[0] : null;
+      
+      const cp = await storage.createClientProduct({
+        userId: clientId,
+        productId: productId,
+        currentStageId: firstStage?.id || null,
+        name: product.name,
+      });
+      
+      res.json(cp);
+    } catch (error) {
+      console.error("Error assigning product:", error);
+      res.status(500).json({ message: "Failed to assign product" });
     }
   });
 

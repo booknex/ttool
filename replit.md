@@ -95,7 +95,7 @@ All admin data listing pages follow a consistent pattern for handling large data
 7. **useMemo Optimization** - Filtered and sorted data computed with useMemo for performance
 
 **Implemented Pages**:
-- **clients.tsx** - Sortable by name, status, documents, messages, invoices; pagination
+- **clients.tsx** - Action-first redesign: summary cards (Needs Attention, Missing Docs, Ready to File, New This Week) with clickable filtering; enriched table columns (Client, Services badges, Doc Progress bar, Action Needed indicators, Last Active timestamp); inline quick actions per row (View Profile, Message, Log in as Client, Archive/Unarchive); bulk select with batch archive; 2-step Add Client dialog with optional service/product assignment after creation; `/api/admin/clients/:id/assign-product` endpoint for admin product assignment
 - **invoices.tsx** - Stats (total, draft, sent, paid, overdue); sortable by invoice, client, status, amount, due date; Create Invoice dialog with custom line items (description, rate, quantity)
 - **signatures.tsx** - Stats (total, engagement letters, form 8879); sortable by client, document type, tax year, signed date
 - **refunds.tsx** - Stats (total, completed, in progress, total refunds); sortable by client, federal/state status/amount, updated date
