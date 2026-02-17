@@ -2338,9 +2338,9 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
     }
   });
 
-  app.get("/api/client-products", isAuthenticated, async (req: any, res) => {
+  app.get("/api/client-products", isAuthenticated, resolveDbUser, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.dbUser.id;
       const cps = await storage.getClientProducts(userId);
       const enriched = await Promise.all(
         cps.map(async (cp) => {
@@ -2356,9 +2356,9 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
     }
   });
 
-  app.post("/api/client-products", isAuthenticated, async (req: any, res) => {
+  app.post("/api/client-products", isAuthenticated, resolveDbUser, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.dbUser.id;
       const { productId, name } = req.body;
       if (!productId) {
         return res.status(400).json({ message: "Product ID is required" });
