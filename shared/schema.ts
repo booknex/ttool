@@ -276,6 +276,7 @@ export const returns = pgTable("returns", {
   stateStatus: refundStatusEnum("state_status").default('not_filed'),
   stateAmount: decimal("state_amount", { precision: 10, scale: 2 }),
   stateName: varchar("state_name"),
+  completedAt: timestamp("completed_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

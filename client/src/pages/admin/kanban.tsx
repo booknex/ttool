@@ -41,6 +41,7 @@ interface Return {
   clientName: string;
   clientEmail: string;
   createdAt: string;
+  completedAt: string | null;
 }
 
 interface ProductStage {
@@ -79,6 +80,8 @@ interface KanbanAllData {
     columns: Record<string, Return[]>;
     statuses: string[];
     totalClients: number;
+    completedReturns: Return[];
+    completedCount: number;
   };
   productRows: ProductRow[];
 }
@@ -107,7 +110,7 @@ const statusColors: Record<string, string> = {
   filed: "bg-green-50 border-green-300",
 };
 
-function ReturnCard({ ret, isDragging }: { ret: Return; isDragging?: boolean }) {
+function ReturnCard({ ret, isDragging, onComplete, showMenu = false }: { ret: Return; isDragging?: boolean; onComplete?: (id: string) => void; showMenu?: boolean }) {
   return (
     <div className={`bg-white rounded border shadow-sm px-2 py-1.5 ${isDragging ? "shadow-lg ring-2 ring-primary" : ""}`}>
       <div className="flex items-start gap-1.5">
@@ -126,6 +129,21 @@ function ReturnCard({ ret, isDragging }: { ret: Return; isDragging?: boolean }) 
             {ret.returnType === 'personal' ? 'Personal' : ret.name}
           </p>
         </div>
+        {showMenu && onComplete && !isDragging && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+              <button className="p-0.5 rounded hover:bg-gray-100 flex-shrink-0">
+                <MoreVertical className="h-3.5 w-3.5 text-gray-400" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-40">
+              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onComplete(ret.id); }}>
+                <CheckCircle2 className="h-3.5 w-3.5 mr-2 text-green-600" />
+                Mark Complete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
     </div>
   );
@@ -164,7 +182,7 @@ function ProductCard({ cp, isDragging, onComplete, showMenu = false }: { cp: Cli
   );
 }
 
-function SortableReturnCard({ ret }: { ret: Return }) {
+function SortableReturnCard({ ret, onComplete }: { ret: Return; onComplete?: (id: string) => void }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: ret.id, data: { ret } });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
 
@@ -173,7 +191,7 @@ function SortableReturnCard({ ret }: { ret: Return }) {
       <div className="flex items-center gap-0.5">
         <GripVertical className="h-3 w-3 text-gray-400 flex-shrink-0" />
         <div className="flex-1">
-          <ReturnCard ret={ret} isDragging={isDragging} />
+          <ReturnCard ret={ret} isDragging={isDragging} onComplete={onComplete} showMenu />
         </div>
       </div>
     </div>
@@ -196,7 +214,7 @@ function SortableProductCard({ cp, onComplete }: { cp: ClientProductEnriched; on
   );
 }
 
-function KanbanColumn({ status, label, colorClass, returns }: { status: string; label: string; colorClass: string; returns: Return[] }) {
+function KanbanColumn({ status, label, colorClass, returns, onComplete }: { status: string; label: string; colorClass: string; returns: Return[]; onComplete?: (id: string) => void }) {
   const { setNodeRef, isOver } = useDroppable({ id: status });
 
   return (
@@ -209,7 +227,7 @@ function KanbanColumn({ status, label, colorClass, returns }: { status: string; 
         <SortableContext items={returns.map(r => r.id)} strategy={verticalListSortingStrategy}>
           <div className="space-y-1">
             {returns.map((ret) => (
-              <SortableReturnCard key={ret.id} ret={ret} />
+              <SortableReturnCard key={ret.id} ret={ret} onComplete={onComplete} />
             ))}
             {returns.length === 0 && (
               <div className="h-12 flex items-center justify-center text-xs text-gray-400 border-2 border-dashed border-gray-200 rounded">
@@ -266,26 +284,55 @@ function ReturnsRow({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [collapsed, setCollapsed] = useState(false);
+  const [showCompleted, setShowCompleted] = useState(false);
   const [activeReturn, setActiveReturn] = useState<Return | null>(null);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
+
+  const invalidateKanban = () => {
+    queryClient.invalidateQueries({ predicate: (query) =>
+      typeof query.queryKey[0] === 'string' && query.queryKey[0].startsWith('/api/admin/kanban')
+    });
+  };
 
   const updateReturnStatusMutation = useMutation({
     mutationFn: async ({ returnId, status }: { returnId: string; status: string }) => {
       return apiRequest("PATCH", `/api/admin/kanban/${returnId}`, { status });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ predicate: (query) =>
-        typeof query.queryKey[0] === 'string' && query.queryKey[0].startsWith('/api/admin/kanban')
-      });
-    },
+    onSuccess: invalidateKanban,
     onError: (error: any) => {
       toast({ title: "Failed to update", description: error.message || "Could not update status", variant: "destructive" });
-      queryClient.invalidateQueries({ predicate: (query) =>
-        typeof query.queryKey[0] === 'string' && query.queryKey[0].startsWith('/api/admin/kanban')
-      });
+      invalidateKanban();
     },
   });
+
+  const completeReturnMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return apiRequest("PATCH", `/api/admin/returns/${id}/complete`);
+    },
+    onSuccess: () => {
+      toast({ title: "Marked as complete" });
+      invalidateKanban();
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to complete", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const reopenReturnMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return apiRequest("PATCH", `/api/admin/returns/${id}/reopen`);
+    },
+    onSuccess: () => {
+      toast({ title: "Reopened" });
+      invalidateKanban();
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to reopen", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const handleComplete = (id: string) => completeReturnMutation.mutate(id);
 
   const handleDragStart = (event: DragStartEvent) => {
     const ret = event.active.data.current?.ret as Return;
@@ -351,6 +398,12 @@ function ReturnsRow({
           </div>
         </div>
         <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+          {data.completedCount > 0 && (
+            <Badge variant="outline" className="text-xs text-green-700 border-green-300 bg-green-50">
+              <CheckCircle2 className="h-3 w-3 mr-1" />
+              {data.completedCount} completed
+            </Badge>
+          )}
           <div className="flex rounded-lg border overflow-hidden">
             <Button variant={typeFilter === 'all' ? 'default' : 'ghost'} size="sm" className="rounded-none h-7 text-xs px-2" onClick={() => setTypeFilter('all')}>All</Button>
             <Button variant={typeFilter === 'personal' ? 'default' : 'ghost'} size="sm" className="rounded-none border-x h-7 text-xs px-2" onClick={() => setTypeFilter('personal')}>
@@ -373,6 +426,7 @@ function ReturnsRow({
                   label={statusLabels[status] || status}
                   colorClass={statusColors[status] || 'bg-gray-100 border-gray-300'}
                   returns={data.columns[status] || []}
+                  onComplete={handleComplete}
                 />
               ))}
             </div>
@@ -380,6 +434,41 @@ function ReturnsRow({
               {activeReturn && <ReturnCard ret={activeReturn} isDragging />}
             </DragOverlay>
           </DndContext>
+
+          {data.completedCount > 0 && (
+            <div className="mt-3 border-t pt-3">
+              <button
+                onClick={() => setShowCompleted(!showCompleted)}
+                className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {showCompleted ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+                <CheckCircle2 className="h-3 w-3 text-green-600" />
+                {data.completedCount} completed return{data.completedCount !== 1 ? 's' : ''}
+              </button>
+              {showCompleted && (
+                <div className="mt-2 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+                  {data.completedReturns.map((ret) => (
+                    <div key={ret.id} className="flex items-center gap-2 bg-green-50 rounded border border-green-200 px-2 py-1.5">
+                      <CheckCircle2 className="h-3.5 w-3.5 text-green-600 flex-shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-xs truncate">{ret.clientName}</p>
+                        <p className="text-[10px] text-muted-foreground truncate">
+                          {ret.returnType === 'personal' ? 'Personal' : ret.name}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => reopenReturnMutation.mutate(ret.id)}
+                        className="p-0.5 rounded hover:bg-green-100 flex-shrink-0"
+                        title="Reopen"
+                      >
+                        <RotateCcw className="h-3 w-3 text-green-700" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -605,10 +694,12 @@ export default function AdminKanban() {
     );
   }
 
-  const hasReturns = data && data.returns.totalClients > 0;
+  const hasReturns = data && (data.returns.totalClients > 0 || data.returns.completedCount > 0);
   const activeProductRows = data?.productRows.filter(row => row.clientProducts.length > 0) ?? [];
   const completedOnlyRows = data?.productRows.filter(row => row.clientProducts.length === 0 && row.completedCount > 0) ?? [];
-  const totalCompleted = data?.productRows.reduce((sum, row) => sum + row.completedCount, 0) ?? 0;
+  const totalCompletedProducts = data?.productRows.reduce((sum, row) => sum + row.completedCount, 0) ?? 0;
+  const totalCompletedReturns = data?.returns.completedCount ?? 0;
+  const totalCompleted = totalCompletedProducts + totalCompletedReturns;
   const hasProducts = activeProductRows.length > 0;
 
   return (

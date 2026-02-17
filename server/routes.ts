@@ -2344,13 +2344,14 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
       const allUsers = await storage.getAllUsers();
       const userMap = new Map(allUsers.map(u => [u.id, u]));
 
-      const allReturns: any[] = [];
+      const activeReturns: any[] = [];
+      const completedReturns: any[] = [];
       for (const user of allUsers) {
         if (user.isArchived || user.isAdmin) continue;
         const userReturns = await storage.getReturns(user.id);
         for (const ret of userReturns) {
           if (type && type !== 'all' && ret.returnType !== type) continue;
-          allReturns.push({
+          const enriched = {
             id: ret.id,
             returnType: ret.returnType,
             name: ret.name,
@@ -2360,8 +2361,15 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
             clientId: user.id,
             clientName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email,
             clientEmail: user.email,
+            clientIsArchived: user.isArchived || false,
             createdAt: ret.createdAt,
-          });
+            completedAt: (ret as any).completedAt || null,
+          };
+          if (enriched.completedAt) {
+            completedReturns.push(enriched);
+          } else {
+            activeReturns.push(enriched);
+          }
         }
       }
 
@@ -2372,7 +2380,7 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
       ];
       const returnColumns: Record<string, any[]> = {};
       statuses.forEach(status => {
-        returnColumns[status] = allReturns.filter(r => r.status === status);
+        returnColumns[status] = activeReturns.filter(r => r.status === status);
       });
 
       const allProducts = await storage.getProducts();
@@ -2426,7 +2434,13 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
       }
 
       res.json({
-        returns: { columns: returnColumns, statuses, totalClients: allReturns.length },
+        returns: {
+          columns: returnColumns,
+          statuses,
+          totalClients: activeReturns.length,
+          completedReturns,
+          completedCount: completedReturns.length,
+        },
         productRows,
       });
     } catch (error) {
@@ -2696,6 +2710,34 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
     } catch (error) {
       console.error("Error updating client product:", error);
       res.status(500).json({ message: "Failed to update client product" });
+    }
+  });
+
+  app.patch("/api/admin/returns/:id/complete", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const updated = await storage.updateReturn(id, { completedAt: new Date() } as any);
+      if (!updated) {
+        return res.status(404).json({ message: "Return not found" });
+      }
+      res.json(updated);
+    } catch (error) {
+      console.error("Error completing return:", error);
+      res.status(500).json({ message: "Failed to complete return" });
+    }
+  });
+
+  app.patch("/api/admin/returns/:id/reopen", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const updated = await storage.updateReturn(id, { completedAt: null } as any);
+      if (!updated) {
+        return res.status(404).json({ message: "Return not found" });
+      }
+      res.json(updated);
+    } catch (error) {
+      console.error("Error reopening return:", error);
+      res.status(500).json({ message: "Failed to reopen return" });
     }
   });
 
