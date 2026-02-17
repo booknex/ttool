@@ -836,29 +836,29 @@ export default function AdminClientDetail() {
 
         <div className="lg:col-span-2">
           <Tabs defaultValue="documents" className="space-y-4">
-            <TabsList className="flex-wrap">
-              <TabsTrigger value="documents" data-testid="tab-documents">
-                Documents ({documents?.length || 0})
+            <TabsList className="w-full justify-start overflow-x-auto overflow-y-hidden h-auto p-1 flex-nowrap">
+              <TabsTrigger value="documents" data-testid="tab-documents" className="text-xs px-2.5 py-1.5 whitespace-nowrap">
+                Docs ({documents?.length || 0})
               </TabsTrigger>
-              <TabsTrigger value="questionnaire" data-testid="tab-questionnaire">
+              <TabsTrigger value="questionnaire" data-testid="tab-questionnaire" className="text-xs px-2.5 py-1.5 whitespace-nowrap">
                 Questionnaire ({questionnaire?.length || 0})
               </TabsTrigger>
-              <TabsTrigger value="messages" data-testid="tab-messages">
+              <TabsTrigger value="messages" data-testid="tab-messages" className="text-xs px-2.5 py-1.5 whitespace-nowrap">
                 Messages ({messages?.length || 0})
               </TabsTrigger>
-              <TabsTrigger value="signatures" data-testid="tab-signatures">
-                Signatures ({signatures?.length || 0})
+              <TabsTrigger value="signatures" data-testid="tab-signatures" className="text-xs px-2.5 py-1.5 whitespace-nowrap">
+                Sigs ({signatures?.length || 0})
               </TabsTrigger>
-              <TabsTrigger value="invoices" data-testid="tab-invoices">
+              <TabsTrigger value="invoices" data-testid="tab-invoices" className="text-xs px-2.5 py-1.5 whitespace-nowrap">
                 Invoices ({invoices?.length || 0})
               </TabsTrigger>
-              <TabsTrigger value="businesses" data-testid="tab-businesses">
-                Businesses ({businesses?.length || 0})
+              <TabsTrigger value="businesses" data-testid="tab-businesses" className="text-xs px-2.5 py-1.5 whitespace-nowrap">
+                Business ({businesses?.length || 0})
               </TabsTrigger>
-              <TabsTrigger value="returns" data-testid="tab-returns">
+              <TabsTrigger value="returns" data-testid="tab-returns" className="text-xs px-2.5 py-1.5 whitespace-nowrap">
                 Returns ({returns?.length || 0})
               </TabsTrigger>
-              <TabsTrigger value="dependents" data-testid="tab-dependents">
+              <TabsTrigger value="dependents" data-testid="tab-dependents" className="text-xs px-2.5 py-1.5 whitespace-nowrap">
                 Dependents ({dependents?.length || 0})
               </TabsTrigger>
             </TabsList>
