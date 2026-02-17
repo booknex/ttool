@@ -352,6 +352,7 @@ export const productStages = pgTable("product_stages", {
   slug: varchar("slug").notNull(),
   color: varchar("color").default('#6b7280'),
   sortOrder: integer("sort_order").default(0),
+  showUploadButton: boolean("show_upload_button").default(false),
 });
 
 // Product document requirements (documents needed per product)

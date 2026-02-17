@@ -2433,6 +2433,7 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
             slug: stages[i].slug || stages[i].name.toLowerCase().replace(/\s+/g, '_'),
             color: stages[i].color || '#6b7280',
             sortOrder: i,
+            showUploadButton: stages[i].showUploadButton || false,
           });
         }
       }
@@ -2480,6 +2481,7 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
             slug: stages[i].slug || stages[i].name.toLowerCase().replace(/\s+/g, '_'),
             color: stages[i].color || '#6b7280',
             sortOrder: i,
+            showUploadButton: stages[i].showUploadButton || false,
           });
         }
       }

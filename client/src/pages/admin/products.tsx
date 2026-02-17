@@ -99,6 +99,7 @@ interface StageInput {
   name: string;
   slug: string;
   color: string;
+  showUploadButton: boolean;
 }
 
 interface DocumentRequirementInput {
@@ -211,6 +212,7 @@ export default function AdminProducts() {
         name: s.name,
         slug: s.slug,
         color: s.color || "#6b7280",
+        showUploadButton: s.showUploadButton || false,
       })),
       documentRequirements: (product.documentRequirements || []).map((d: any) => ({
         name: d.name,
@@ -237,14 +239,14 @@ export default function AdminProducts() {
   const addStage = () => {
     setFormData({
       ...formData,
-      stages: [...formData.stages, { name: "", slug: "", color: "#6b7280" }],
+      stages: [...formData.stages, { name: "", slug: "", color: "#6b7280", showUploadButton: false }],
     });
   };
 
-  const updateStage = (index: number, field: keyof StageInput, value: string) => {
+  const updateStage = (index: number, field: keyof StageInput, value: string | boolean) => {
     const newStages = [...formData.stages];
     newStages[index] = { ...newStages[index], [field]: value };
-    if (field === "name") {
+    if (field === "name" && typeof value === "string") {
       newStages[index].slug = slugify(value);
     }
     setFormData({ ...formData, stages: newStages });
@@ -510,6 +512,13 @@ export default function AdminProducts() {
                       value={stage.color}
                       onChange={(e) => updateStage(index, "color", e.target.value)}
                       className="h-9 p-1 cursor-pointer"
+                    />
+                  </div>
+                  <div className="flex flex-col items-center gap-1">
+                    <Label className="text-xs whitespace-nowrap">Upload</Label>
+                    <Switch
+                      checked={stage.showUploadButton}
+                      onCheckedChange={(checked) => updateStage(index, "showUploadButton", checked)}
                     />
                   </div>
                   <Button

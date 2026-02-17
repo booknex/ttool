@@ -31,6 +31,7 @@ import {
   PenTool,
   User,
   ClipboardCheck,
+  Upload,
 } from "lucide-react";
 
 interface ProductWithStages {
@@ -41,7 +42,7 @@ interface ProductWithStages {
   displayLocation: string | null;
   isActive: boolean | null;
   sortOrder: number | null;
-  stages: { id: string; name: string; slug: string; color: string | null; sortOrder: number | null }[];
+  stages: { id: string; name: string; slug: string; color: string | null; sortOrder: number | null; showUploadButton: boolean | null }[];
 }
 
 interface ClientProductEnriched {
@@ -189,20 +190,30 @@ export default function ServiceStatus() {
 
                   <Card className={`flex-1 ${isCurrent ? "ring-2 ring-purple-200" : ""}`}>
                     <CardContent className="p-4">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className={`font-semibold ${isCompleted ? "text-green-700" : isCurrent ? "text-purple-700" : "text-muted-foreground"}`}>
-                          {stage.name}
-                        </h3>
-                        {isCompleted && (
-                          <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
-                            Complete
-                          </Badge>
-                        )}
-                        {isCurrent && (
-                          <Badge className="text-xs text-white" style={{ backgroundColor: stageColor }}>
-                            <Clock className="w-3 h-3 mr-1" />
-                            In Progress
-                          </Badge>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className={`font-semibold ${isCompleted ? "text-green-700" : isCurrent ? "text-purple-700" : "text-muted-foreground"}`}>
+                            {stage.name}
+                          </h3>
+                          {isCompleted && (
+                            <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+                              Complete
+                            </Badge>
+                          )}
+                          {isCurrent && (
+                            <Badge className="text-xs text-white" style={{ backgroundColor: stageColor }}>
+                              <Clock className="w-3 h-3 mr-1" />
+                              In Progress
+                            </Badge>
+                          )}
+                        </div>
+                        {isCurrent && stage.showUploadButton && (
+                          <Button asChild size="sm" variant="outline">
+                            <Link href="/documents">
+                              <Upload className="w-4 h-4 mr-1" />
+                              Upload Documents
+                            </Link>
+                          </Button>
                         )}
                       </div>
                     </CardContent>
