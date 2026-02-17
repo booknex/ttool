@@ -2050,7 +2050,8 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
   // Admin dashboard stats
   app.get("/api/admin/stats", isAuthenticated, isAdmin, async (req: any, res) => {
     try {
-      const clients = await storage.getAllClients();
+      const allUsers = await storage.getAllUsers();
+      const clients = allUsers.filter(u => !u.isAdmin && !u.isArchived);
       const documents = await storage.getAllDocuments();
       const messages = await storage.getAllMessages();
       const invoices = await storage.getAllInvoices();
@@ -2062,6 +2063,93 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
       const totalOutstanding = unpaidInvoices.reduce((sum, i) => sum + Number(i.total), 0);
       const paidInvoices = invoices.filter(i => i.status === 'paid');
       const totalRevenue = paidInvoices.reduce((sum, i) => sum + Number(i.total), 0);
+      const pendingSignatures = signatures.filter(s => !s.signedAt).length;
+
+      const allReturns: any[] = [];
+      for (const user of clients) {
+        const userReturns = await storage.getReturns(user.id);
+        for (const ret of userReturns) {
+          allReturns.push({ ...ret, clientId: user.id, clientName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email });
+        }
+      }
+
+      const pipelineStatuses = [
+        'not_started', 'documents_gathering', 'information_review',
+        'return_preparation', 'quality_review', 'client_review',
+        'signature_required', 'filing', 'filed'
+      ];
+      const pipeline: Record<string, number> = {};
+      pipelineStatuses.forEach(s => { pipeline[s] = allReturns.filter(r => (r.status || 'not_started') === s).length; });
+
+      const clientMap = new Map(clients.map(c => [c.id, c]));
+      const needsAttention: any[] = [];
+      for (const client of clients) {
+        const items: string[] = [];
+        const clientMsgs = messages.filter(m => m.isFromClient && !m.isRead && String(m.userId) === String(client.id));
+        if (clientMsgs.length > 0) items.push(`${clientMsgs.length} unread message${clientMsgs.length > 1 ? 's' : ''}`);
+        const clientPendingDocs = documents.filter(d => String(d.userId) === String(client.id) && (d.status === 'pending' || d.status === 'processing'));
+        if (clientPendingDocs.length > 0) items.push(`${clientPendingDocs.length} document${clientPendingDocs.length > 1 ? 's' : ''} to review`);
+        const clientUnsigned = signatures.filter(s => String(s.userId) === String(client.id) && !s.signedAt);
+        if (clientUnsigned.length > 0) items.push(`${clientUnsigned.length} unsigned signature${clientUnsigned.length > 1 ? 's' : ''}`);
+        const clientUnpaid = invoices.filter(i => String(i.userId) === String(client.id) && (i.status === 'sent' || i.status === 'overdue'));
+        if (clientUnpaid.length > 0) items.push(`${clientUnpaid.length} unpaid invoice${clientUnpaid.length > 1 ? 's' : ''}`);
+        if (items.length > 0) {
+          needsAttention.push({
+            id: client.id,
+            name: `${client.firstName || ''} ${client.lastName || ''}`.trim() || client.email,
+            email: client.email,
+            items,
+          });
+        }
+      }
+      needsAttention.sort((a, b) => b.items.length - a.items.length);
+
+      const activityFeed: any[] = [];
+      documents.forEach(d => {
+        const c = clientMap.get(String(d.userId));
+        if (c && d.uploadedAt) {
+          activityFeed.push({
+            type: 'document',
+            message: `${c.firstName || c.email} uploaded ${d.originalName || d.fileName}`,
+            timestamp: d.uploadedAt,
+            clientId: c.id,
+          });
+        }
+      });
+      messages.filter(m => m.isFromClient).forEach(m => {
+        const c = clientMap.get(String(m.userId));
+        if (c && m.createdAt) {
+          activityFeed.push({
+            type: 'message',
+            message: `${c.firstName || c.email} sent a message`,
+            timestamp: m.createdAt,
+            clientId: c.id,
+          });
+        }
+      });
+      signatures.filter(s => s.signedAt).forEach(s => {
+        const c = clientMap.get(String(s.userId));
+        if (c) {
+          activityFeed.push({
+            type: 'signature',
+            message: `${c.firstName || c.email} signed ${s.documentType || 'a document'}`,
+            timestamp: s.signedAt,
+            clientId: c.id,
+          });
+        }
+      });
+      invoices.filter(i => i.status === 'paid' && i.paidAt).forEach(i => {
+        const c = clientMap.get(String(i.userId));
+        if (c) {
+          activityFeed.push({
+            type: 'payment',
+            message: `${c.firstName || c.email} paid invoice #${i.invoiceNumber} ($${Number(i.total).toLocaleString()})`,
+            timestamp: i.paidAt,
+            clientId: c.id,
+          });
+        }
+      });
+      activityFeed.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
       
       res.json({
         totalClients: clients.length,
@@ -2073,6 +2161,18 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
         totalOutstanding,
         totalRevenue,
         totalSignatures: signatures.length,
+        pendingSignatures,
+        totalReturns: allReturns.length,
+        filedReturns: allReturns.filter(r => r.status === 'filed').length,
+        pipeline,
+        needsAttention: needsAttention.slice(0, 10),
+        recentActivity: activityFeed.slice(0, 15),
+        documentStats: {
+          pending: documents.filter(d => d.status === 'pending').length,
+          processing: documents.filter(d => d.status === 'processing').length,
+          verified: documents.filter(d => d.status === 'verified').length,
+          rejected: documents.filter(d => d.status === 'rejected').length,
+        },
       });
     } catch (error) {
       console.error("Error fetching admin stats:", error);

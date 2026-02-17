@@ -65,6 +65,16 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (February 2026)
 
+### Admin Dashboard Redesign (February 2026)
+- **Command Center Layout** - Redesigned from basic stat cards to an action-oriented command center
+- **Clickable Stat Cards** - 7 cards (Clients, Documents, Messages, Signatures, Revenue, Outstanding, Returns) with colored icons, alert dots for items needing attention, each linking to its admin page
+- **Quick Action Buttons** - Row of buttons: Add Client, Create Invoice, Kanban Board, View Documents
+- **Needs Attention Section** - Top 10 clients with pending items (unread messages, docs to review, unsigned signatures, unpaid invoices) with click-through to client detail
+- **Recent Activity Feed** - Timeline of latest 15 activities (document uploads, messages, signatures, payments) with color-coded icons and relative timestamps
+- **Return Pipeline** - Stacked progress bar + per-stage count badges showing all 9 Kanban stages, with link to full Kanban board
+- **Revenue Overview** - Collected vs Outstanding cards, collection rate progress bar, invoice summary (total/paid/unpaid)
+- **Expanded Stats API** - `/api/admin/stats` now returns pipeline counts, needsAttention array, recentActivity feed, pendingSignatures, documentStats breakdown, totalReturns/filedReturns
+
 ### Admin Client Detail Page Redesign (February 2026)
 - **Header** - Avatar + client name + Active/Archived badge + "Login as Client" button + three-dots DropdownMenu (Edit Info, Archive/Restore, Delete Permanently)
 - **Summary Stat Cards** - 6 cards across top: Documents (progress bar), Messages (unread badge), Signatures (signed/total), Invoices (paid/total), Returns (status badge), Services
