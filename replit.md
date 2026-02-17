@@ -77,13 +77,14 @@ Preferred communication style: Simple, everyday language.
 - **Returns Tab** - Cards with prep/filing status dropdowns and federal/state amount fields
 - **Dependents Tab** - Table-style layout with relationship badges
 
-### Admin Documents Page Redesign
-- **Stats Summary Cards** - Clickable cards showing total, pending, processing, verified, rejected, and archived document counts (clicking filters the table)
-- **Data Table Interface** - Replaced card list with sortable table columns (client, document, type, status, upload date, file size)
-- **Search Bar** - Full-text search by client name or filename
-- **Advanced Filters** - Dropdown filters for status, document type, and specific client
+### Admin Documents Page - File Explorer Redesign (February 2026)
+- **File Explorer Layout** - Two-level navigation: client folders at top level, documents inside each folder
+- **Folder View** - Grid or list view of client folders with avatar, doc count, verification progress bar, and status breakdown (pending/processing/rejected counts)
+- **Grid/List Toggle** - Switch between card grid and table list view for client folders
+- **Breadcrumb Navigation** - "All Clients > Client Name (X files)" breadcrumb when viewing a client's documents
+- **Client Document View** - Inside a folder: search, status/type filters, sortable table with file-type icons (PDF red, image purple, spreadsheet green), bulk actions, pagination
+- **Stats Summary Cards** - Global document stats always visible at top: Total, Pending, Processing, Verified, Rejected, Archived
 - **Bulk Actions** - Select multiple documents and batch-update status (verify, processing, reject)
-- **Pagination** - Configurable items per page (10/25/50/100) with page navigation controls
 - **Document Actions** - View/download documents and quick status changes via dropdown menu
 
 ### Client Homepage Redesign
