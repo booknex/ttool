@@ -111,9 +111,17 @@ All admin data listing pages follow a consistent pattern for handling large data
 - **Client sidebar** - "My Services" section shows returns + products with status dots; "+" button shows available products (filters out already-assigned and inactive products)
 - **Kanban Board** - Dropdown selector switches between Tax Returns pipeline and any product pipeline; each product uses its own custom stages as columns
 
+### Individual Service Status Pages (February 2026)
+- **Routing**: Each return and product has its own dedicated page
+  - `/return-status/personal` — Personal return status with 9-stage stepper
+  - `/return-status/:returnId` — Business return status (by return ID)
+  - `/service-status/:clientProductId` — Product/service status with custom pipeline stages
+- **Dashboard** (`/`) — Overview page with links to individual service pages
+- **Sidebar** — Each service links directly to its dedicated status page with active state highlighting
+
 ### Client Sidebar Redesign (February 2026)
 - Compact logo + greeting header
 - "My Services" section with returns and products as clean rows with status dots
 - Icon-grid tools bar with notification badges (unread messages, pending signatures, unpaid invoices)
-- Product tool links removed (no product detail page exists yet); products currently informational in sidebar only
+- Sidebar links point to individual service status pages
 - Simple sign-out link at bottom
