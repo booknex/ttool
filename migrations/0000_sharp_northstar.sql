@@ -1,4 +1,3 @@
--- Safe migration export for VPS deployment
 CREATE TYPE "public"."affiliate_status" AS ENUM('pending', 'active', 'suspended', 'inactive');--> statement-breakpoint
 CREATE TYPE "public"."commission_status" AS ENUM('pending', 'approved', 'paid', 'cancelled');--> statement-breakpoint
 CREATE TYPE "public"."dependent_relationship" AS ENUM('child', 'stepchild', 'foster_child', 'grandchild', 'sibling', 'parent', 'grandparent', 'other_relative', 'other');--> statement-breakpoint
@@ -12,7 +11,7 @@ CREATE TYPE "public"."referral_status" AS ENUM('lead', 'registered', 'engaged', 
 CREATE TYPE "public"."refund_status" AS ENUM('not_filed', 'submitted', 'accepted', 'processing', 'approved', 'refund_sent', 'completed');--> statement-breakpoint
 CREATE TYPE "public"."return_prep_status" AS ENUM('not_started', 'documents_gathering', 'information_review', 'return_preparation', 'quality_review', 'client_review', 'signature_required', 'filing', 'filed');--> statement-breakpoint
 CREATE TYPE "public"."return_type" AS ENUM('personal', 'business');--> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "affiliate_referrals" (
+CREATE TABLE "affiliate_referrals" (
 	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"affiliate_id" varchar NOT NULL,
 	"client_user_id" varchar,
@@ -27,13 +26,13 @@ CREATE TABLE IF NOT EXISTS "affiliate_referrals" (
 	"updated_at" timestamp DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "affiliate_sessions" (
+CREATE TABLE "affiliate_sessions" (
 	"sid" varchar PRIMARY KEY NOT NULL,
 	"sess" jsonb NOT NULL,
 	"expire" timestamp NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "affiliates" (
+CREATE TABLE "affiliates" (
 	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"email" varchar NOT NULL,
 	"password_hash" varchar NOT NULL,
@@ -53,7 +52,7 @@ CREATE TABLE IF NOT EXISTS "affiliates" (
 	CONSTRAINT "affiliates_referral_code_unique" UNIQUE("referral_code")
 );
 --> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "business_expenses" (
+CREATE TABLE "business_expenses" (
 	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"business_id" varchar NOT NULL,
 	"category" varchar NOT NULL,
@@ -63,7 +62,7 @@ CREATE TABLE IF NOT EXISTS "business_expenses" (
 	"created_at" timestamp DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "business_owners" (
+CREATE TABLE "business_owners" (
 	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"business_id" varchar NOT NULL,
 	"name" varchar NOT NULL,
@@ -74,7 +73,7 @@ CREATE TABLE IF NOT EXISTS "business_owners" (
 	"created_at" timestamp DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "businesses" (
+CREATE TABLE "businesses" (
 	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"user_id" varchar NOT NULL,
 	"name" varchar NOT NULL,
@@ -89,7 +88,7 @@ CREATE TABLE IF NOT EXISTS "businesses" (
 	"updated_at" timestamp DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "client_products" (
+CREATE TABLE "client_products" (
 	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"user_id" varchar NOT NULL,
 	"product_id" varchar NOT NULL,
@@ -101,7 +100,7 @@ CREATE TABLE IF NOT EXISTS "client_products" (
 	"updated_at" timestamp DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "dependents" (
+CREATE TABLE "dependents" (
 	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"user_id" varchar NOT NULL,
 	"first_name" varchar NOT NULL,
@@ -115,7 +114,7 @@ CREATE TABLE IF NOT EXISTS "dependents" (
 	"updated_at" timestamp DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "documents" (
+CREATE TABLE "documents" (
 	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"user_id" varchar NOT NULL,
 	"business_id" varchar,
@@ -131,7 +130,7 @@ CREATE TABLE IF NOT EXISTS "documents" (
 	"uploaded_at" timestamp DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "invoice_items" (
+CREATE TABLE "invoice_items" (
 	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"invoice_id" varchar NOT NULL,
 	"description" text NOT NULL,
@@ -140,7 +139,7 @@ CREATE TABLE IF NOT EXISTS "invoice_items" (
 	"amount" numeric(10, 2) NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "invoices" (
+CREATE TABLE "invoices" (
 	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"user_id" varchar NOT NULL,
 	"invoice_number" varchar NOT NULL,
@@ -156,7 +155,7 @@ CREATE TABLE IF NOT EXISTS "invoices" (
 	"created_at" timestamp DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "messages" (
+CREATE TABLE "messages" (
 	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"user_id" varchar NOT NULL,
 	"content" text NOT NULL,
@@ -168,7 +167,7 @@ CREATE TABLE IF NOT EXISTS "messages" (
 	"created_at" timestamp DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "product_document_requirements" (
+CREATE TABLE "product_document_requirements" (
 	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"product_id" varchar NOT NULL,
 	"name" varchar NOT NULL,
@@ -177,7 +176,7 @@ CREATE TABLE IF NOT EXISTS "product_document_requirements" (
 	"sort_order" integer DEFAULT 0
 );
 --> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "product_stages" (
+CREATE TABLE "product_stages" (
 	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"product_id" varchar NOT NULL,
 	"name" varchar NOT NULL,
@@ -187,7 +186,7 @@ CREATE TABLE IF NOT EXISTS "product_stages" (
 	"show_upload_button" boolean DEFAULT false
 );
 --> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "products" (
+CREATE TABLE "products" (
 	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"name" varchar NOT NULL,
 	"description" text,
@@ -199,7 +198,7 @@ CREATE TABLE IF NOT EXISTS "products" (
 	"updated_at" timestamp DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "questionnaire_responses" (
+CREATE TABLE "questionnaire_responses" (
 	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"user_id" varchar NOT NULL,
 	"question_id" varchar NOT NULL,
@@ -208,7 +207,7 @@ CREATE TABLE IF NOT EXISTS "questionnaire_responses" (
 	"updated_at" timestamp DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "refund_tracking" (
+CREATE TABLE "refund_tracking" (
 	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"user_id" varchar NOT NULL,
 	"return_prep_status" "return_prep_status" DEFAULT 'not_started',
@@ -224,7 +223,7 @@ CREATE TABLE IF NOT EXISTS "refund_tracking" (
 	"updated_at" timestamp DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "required_documents" (
+CREATE TABLE "required_documents" (
 	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"user_id" varchar NOT NULL,
 	"return_id" varchar,
@@ -237,7 +236,7 @@ CREATE TABLE IF NOT EXISTS "required_documents" (
 	"tax_year" integer DEFAULT 2025
 );
 --> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "returns" (
+CREATE TABLE "returns" (
 	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"user_id" varchar NOT NULL,
 	"business_id" varchar,
@@ -255,13 +254,13 @@ CREATE TABLE IF NOT EXISTS "returns" (
 	"updated_at" timestamp DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "sessions" (
+CREATE TABLE "sessions" (
 	"sid" varchar PRIMARY KEY NOT NULL,
 	"sess" jsonb NOT NULL,
 	"expire" timestamp NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "signatures" (
+CREATE TABLE "signatures" (
 	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"user_id" varchar NOT NULL,
 	"document_type" varchar NOT NULL,
@@ -271,7 +270,7 @@ CREATE TABLE IF NOT EXISTS "signatures" (
 	"tax_year" integer DEFAULT 2025
 );
 --> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "users" (
+CREATE TABLE "users" (
 	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"email" varchar NOT NULL,
 	"password_hash" varchar,
