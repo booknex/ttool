@@ -65,6 +65,18 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (February 2026)
 
+### Admin Client Detail Page Redesign (February 2026)
+- **Header** - Avatar + client name + Active/Archived badge + "Login as Client" button + three-dots DropdownMenu (Edit Info, Archive/Restore, Delete Permanently)
+- **Summary Stat Cards** - 6 cards across top: Documents (progress bar), Messages (unread badge), Signatures (signed/total), Invoices (paid/total), Returns (status badge), Services
+- **Two-Column Layout** - Left profile card with editable info + services list with status dots; Right side has 8 tabs
+- **Documents Tab** - Search + status filter dropdown + table-style layout with view actions
+- **Messages Tab** - Chat-style bubbles with auto-scroll, client=left, admin=right, unread badges
+- **Signatures Tab** - Table layout with signed/pending icons and dates
+- **Invoices Tab** - Summary cards (Total Billed, Paid, Outstanding) + table with status badges
+- **Businesses Tab** - Cards with collapsible Owners and Expenses sections, inline editing
+- **Returns Tab** - Cards with prep/filing status dropdowns and federal/state amount fields
+- **Dependents Tab** - Table-style layout with relationship badges
+
 ### Admin Documents Page Redesign
 - **Stats Summary Cards** - Clickable cards showing total, pending, processing, verified, rejected, and archived document counts (clicking filters the table)
 - **Data Table Interface** - Replaced card list with sortable table columns (client, document, type, status, upload date, file size)
