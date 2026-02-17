@@ -2338,6 +2338,88 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
     }
   });
 
+  app.get("/api/admin/kanban-all", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { type } = req.query;
+      const allUsers = await storage.getAllUsers();
+      const userMap = new Map(allUsers.map(u => [u.id, u]));
+
+      const allReturns: any[] = [];
+      for (const user of allUsers) {
+        if (user.isArchived || user.isAdmin) continue;
+        const userReturns = await storage.getReturns(user.id);
+        for (const ret of userReturns) {
+          if (type && type !== 'all' && ret.returnType !== type) continue;
+          allReturns.push({
+            id: ret.id,
+            returnType: ret.returnType,
+            name: ret.name,
+            businessId: ret.businessId,
+            status: ret.status || 'not_started',
+            taxYear: ret.taxYear,
+            clientId: user.id,
+            clientName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email,
+            clientEmail: user.email,
+            createdAt: ret.createdAt,
+          });
+        }
+      }
+
+      const statuses = [
+        'not_started', 'documents_gathering', 'information_review',
+        'return_preparation', 'quality_review', 'client_review',
+        'signature_required', 'filing', 'filed'
+      ];
+      const returnColumns: Record<string, any[]> = {};
+      statuses.forEach(status => {
+        returnColumns[status] = allReturns.filter(r => r.status === status);
+      });
+
+      const allProducts = await storage.getProducts();
+      const allCps = await storage.getAllClientProducts();
+
+      const productRows: any[] = [];
+
+      for (const product of allProducts) {
+        if (!product.isActive) continue;
+        const stages = await storage.getProductStages(product.id);
+        if (!stages || stages.length === 0) continue;
+
+        const cps = allCps.filter(cp => cp.productId === product.id);
+        if (cps.length === 0) continue;
+
+        const enrichedCps = cps.map(cp => {
+          const user = userMap.get(cp.userId);
+          const currentStage = stages.find(s => s.id === cp.currentStageId);
+          return {
+            ...cp,
+            product: { id: product.id, name: product.name, icon: product.icon, stages },
+            currentStage: currentStage || null,
+            clientName: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email : 'Unknown',
+            clientEmail: user?.email || '',
+          };
+        });
+
+        productRows.push({
+          productId: product.id,
+          productName: product.name,
+          productIcon: product.icon,
+          stages: stages.sort((a: any, b: any) => (a.sortOrder || 0) - (b.sortOrder || 0)),
+          clientProducts: enrichedCps,
+          totalClients: enrichedCps.length,
+        });
+      }
+
+      res.json({
+        returns: { columns: returnColumns, statuses, totalClients: allReturns.length },
+        productRows,
+      });
+    } catch (error) {
+      console.error("Error fetching kanban-all data:", error);
+      res.status(500).json({ message: "Failed to fetch kanban data" });
+    }
+  });
+
   // =====================================================
   // PRODUCT ROUTES
   // =====================================================
