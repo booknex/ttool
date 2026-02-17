@@ -2345,8 +2345,10 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
       const enriched = await Promise.all(
         cps.map(async (cp) => {
           const product = await storage.getProduct(cp.productId);
-          const stage = cp.currentStageId ? await storage.getProductStages(cp.productId).then(stages => stages.find(s => s.id === cp.currentStageId)) : null;
-          return { ...cp, product, currentStage: stage };
+          const stages = await storage.getProductStages(cp.productId);
+          const currentStage = cp.currentStageId ? stages.find(s => s.id === cp.currentStageId) || null : null;
+          const productWithStages = product ? { ...product, stages } : null;
+          return { ...cp, product: productWithStages, currentStage };
         })
       );
       res.json(enriched);
