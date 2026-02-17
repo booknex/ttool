@@ -3,7 +3,18 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Link, useRoute } from "wouter";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Link, useRoute, useLocation } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -21,6 +32,7 @@ import {
   Sparkles,
   Building2,
   User,
+  XCircle,
 } from "lucide-react";
 import type { Document, Signature, RequiredDocument, QuestionnaireResponse, RefundTracking } from "@shared/schema";
 
@@ -79,6 +91,7 @@ export default function ReturnStatus() {
   const [, params] = useRoute("/return-status/:returnId");
   const returnId = params?.returnId;
   const isPersonal = returnId === "personal";
+  const [, navigate] = useLocation();
 
   const { data: returns = [], isLoading: returnsLoading } = useQuery<Return[]>({
     queryKey: ["/api/returns"],
@@ -127,6 +140,18 @@ export default function ReturnStatus() {
       });
     },
   });
+
+  const handleCancelReturn = async () => {
+    if (!selectedReturn || isPersonal) return;
+    try {
+      await apiRequest("DELETE", `/api/returns/${selectedReturn.id}`);
+      queryClient.invalidateQueries({ queryKey: ["/api/returns"] });
+      toast({ title: "Business return removed" });
+      navigate("/");
+    } catch {
+      toast({ title: "Failed to remove return", variant: "destructive" });
+    }
+  };
 
   const isLoading = docsLoading || reqDocsLoading || sigsLoading || questLoading || refundLoading || returnsLoading;
 
@@ -279,6 +304,30 @@ export default function ReturnStatus() {
             Track the progress of your 2025 tax return preparation
           </p>
         </div>
+        {!isPersonal && selectedReturn && (
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline" size="sm" className="text-destructive hover:text-destructive shrink-0">
+                <XCircle className="w-4 h-4 mr-1" />
+                Remove Return
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Remove this business return?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will remove "{selectedReturn.name}" from your portal. This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Keep Return</AlertDialogCancel>
+                <AlertDialogAction onClick={handleCancelReturn} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                  Yes, Remove Return
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
       </div>
 
       <Card>

@@ -1119,6 +1119,27 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
     }
   });
 
+  app.delete("/api/returns/:id", isAuthenticated, resolveDbUser, async (req: any, res) => {
+    try {
+      const userId = req.dbUser.id;
+      const ret = await storage.getReturn(req.params.id);
+      
+      if (!ret || ret.userId !== userId) {
+        return res.status(404).json({ message: "Return not found" });
+      }
+
+      if (ret.returnType === "personal") {
+        return res.status(400).json({ message: "Cannot delete personal return" });
+      }
+
+      await storage.deleteReturn(ret.id);
+      res.json({ message: "Return removed" });
+    } catch (error) {
+      console.error("Error deleting return:", error);
+      res.status(500).json({ message: "Failed to delete return" });
+    }
+  });
+
   const isAdmin = async (req: any, res: any, next: any) => {
     try {
       const userId = (req.session as any).userId;
