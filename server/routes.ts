@@ -2386,6 +2386,23 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
     }
   });
 
+  app.delete("/api/client-products/:id", isAuthenticated, resolveDbUser, async (req: any, res) => {
+    try {
+      const userId = req.dbUser.id;
+      const { id } = req.params;
+      const userCps = await storage.getClientProducts(userId);
+      const cp = userCps.find(c => c.id === id);
+      if (!cp) {
+        return res.status(404).json({ message: "Service not found" });
+      }
+      await storage.deleteClientProduct(id);
+      res.json({ message: "Service cancelled" });
+    } catch (error) {
+      console.error("Error deleting client product:", error);
+      res.status(500).json({ message: "Failed to cancel service" });
+    }
+  });
+
   // =====================================================
   // ADMIN PRODUCT ROUTES
   // =====================================================

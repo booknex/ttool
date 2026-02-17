@@ -1,9 +1,22 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Link, useRoute } from "wouter";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import { Link, useRoute, useLocation } from "wouter";
 import {
   CheckCircle2,
   Circle,
@@ -32,6 +45,7 @@ import {
   User,
   ClipboardCheck,
   Upload,
+  XCircle,
 } from "lucide-react";
 
 interface ProductWithStages {
@@ -65,10 +79,25 @@ const PRODUCT_ICON_MAP: Record<string, any> = {
 export default function ServiceStatus() {
   const [, params] = useRoute("/service-status/:clientProductId");
   const clientProductId = params?.clientProductId;
+  const [, navigate] = useLocation();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const { data: clientProducts = [], isLoading } = useQuery<ClientProductEnriched[]>({
     queryKey: ["/api/client-products"],
   });
+
+  const handleCancelService = async () => {
+    if (!clientProductId) return;
+    try {
+      await apiRequest("DELETE", `/api/client-products/${clientProductId}`);
+      queryClient.invalidateQueries({ queryKey: ["/api/client-products"] });
+      toast({ title: "Service cancelled" });
+      navigate("/");
+    } catch {
+      toast({ title: "Failed to cancel service", variant: "destructive" });
+    }
+  };
 
   const selectedCP = clientProducts.find(cp => cp.id === clientProductId);
 
@@ -124,6 +153,28 @@ export default function ServiceStatus() {
             Track the progress of your service
           </p>
         </div>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="outline" size="sm" className="text-destructive hover:text-destructive shrink-0">
+              <XCircle className="w-4 h-4 mr-1" />
+              Cancel Service
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Cancel this service?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will remove "{selectedCP.name || selectedCP.product?.name}" from your portal. This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Keep Service</AlertDialogCancel>
+              <AlertDialogAction onClick={handleCancelService} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Yes, Cancel Service
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
 
       <Card>
