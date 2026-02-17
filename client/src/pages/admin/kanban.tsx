@@ -605,7 +605,8 @@ export default function AdminKanban() {
   }
 
   const hasReturns = data && data.returns.totalClients > 0;
-  const hasProducts = data && data.productRows.length > 0;
+  const activeProductRows = data?.productRows.filter(row => row.clientProducts.length > 0) ?? [];
+  const hasProducts = activeProductRows.length > 0;
 
   return (
     <div className="p-6">
@@ -619,7 +620,7 @@ export default function AdminKanban() {
           <ReturnsRow data={data!.returns} typeFilter={typeFilter} setTypeFilter={setTypeFilter} />
         )}
 
-        {data?.productRows.map((row) => (
+        {activeProductRows.map((row) => (
           <ProductRowComponent key={row.productId} row={row} typeFilter={typeFilter} />
         ))}
 
