@@ -106,8 +106,9 @@ All admin data listing pages follow a consistent pattern for handling large data
 ### Products System (February 2026)
 - **Products table** - Admin-defined service templates with name, icon (Lucide), description, display location (sidebar/tools/both), active toggle
 - **Product stages table** - Custom Kanban pipeline stages per product (name, slug, color, sort order)
+- **Product document requirements table** - Admin-defined document requirements per product (name, description, isRequired, sortOrder); cascade deletes with product
 - **Client products table** - Tracks which products each client has with current stage progress
-- **Admin Products page** - Full CRUD for products with inline stage management
+- **Admin Products page** - Full CRUD for products with inline stage management and document requirements editor (name, description, required toggle)
 - **Client sidebar** - "My Services" section shows returns + products with status dots; "+" button shows available products (filters out already-assigned and inactive products)
 - **Kanban Board** - Dropdown selector switches between Tax Returns pipeline and any product pipeline; each product uses its own custom stages as columns
 
@@ -118,6 +119,12 @@ All admin data listing pages follow a consistent pattern for handling large data
   - `/service-status/:clientProductId` — Product/service status with custom pipeline stages
 - **Dashboard** (`/`) — Overview page with links to individual service pages
 - **Sidebar** — Each service links directly to its dedicated status page with active state highlighting
+
+### Client Documents Page (February 2026)
+- **Service-grouped checklist** - Document requirements organized by service: Personal Return, Business Returns, and Products/Services
+- **Product document requirements** - Each product shows its admin-defined required documents in the sidebar checklist with name, description, and required/optional badge
+- **Upload dialog integration** - When uploading files, users can tag documents as belonging to a specific product's requirement
+- **Existing features preserved** - Upload dropzone, drag-and-drop, file preview, AI classification, delete, mark N/A
 
 ### Client Sidebar Redesign (February 2026)
 - Compact logo + greeting header

@@ -354,6 +354,16 @@ export const productStages = pgTable("product_stages", {
   sortOrder: integer("sort_order").default(0),
 });
 
+// Product document requirements (documents needed per product)
+export const productDocumentRequirements = pgTable("product_document_requirements", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  productId: varchar("product_id").notNull().references(() => products.id, { onDelete: 'cascade' }),
+  name: varchar("name").notNull(),
+  description: text("description"),
+  isRequired: boolean("is_required").default(true),
+  sortOrder: integer("sort_order").default(0),
+});
+
 // Client products table (instances of products assigned to clients)
 export const clientProducts = pgTable("client_products", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -385,6 +395,7 @@ export const insertReturnSchema = createInsertSchema(returns).omit({ createdAt: 
 export const insertDependentSchema = createInsertSchema(dependents).omit({ createdAt: true, updatedAt: true });
 export const insertProductSchema = createInsertSchema(products).omit({ createdAt: true, updatedAt: true });
 export const insertProductStageSchema = createInsertSchema(productStages);
+export const insertProductDocumentRequirementSchema = createInsertSchema(productDocumentRequirements);
 export const insertClientProductSchema = createInsertSchema(clientProducts).omit({ createdAt: true, updatedAt: true });
 
 // Types
@@ -424,5 +435,7 @@ export type Product = typeof products.$inferSelect;
 export type InsertProduct = z.infer<typeof insertProductSchema>;
 export type ProductStage = typeof productStages.$inferSelect;
 export type InsertProductStage = z.infer<typeof insertProductStageSchema>;
+export type ProductDocumentRequirement = typeof productDocumentRequirements.$inferSelect;
+export type InsertProductDocumentRequirement = z.infer<typeof insertProductDocumentRequirementSchema>;
 export type ClientProduct = typeof clientProducts.$inferSelect;
 export type InsertClientProduct = z.infer<typeof insertClientProductSchema>;

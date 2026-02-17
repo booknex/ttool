@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Dialog,
@@ -100,6 +101,12 @@ interface StageInput {
   color: string;
 }
 
+interface DocumentRequirementInput {
+  name: string;
+  description: string;
+  isRequired: boolean;
+}
+
 interface ProductFormData {
   name: string;
   description: string;
@@ -107,6 +114,7 @@ interface ProductFormData {
   displayLocation: string;
   isActive: boolean;
   stages: StageInput[];
+  documentRequirements: DocumentRequirementInput[];
 }
 
 const defaultFormData: ProductFormData = {
@@ -116,6 +124,7 @@ const defaultFormData: ProductFormData = {
   displayLocation: "sidebar",
   isActive: true,
   stages: [],
+  documentRequirements: [],
 };
 
 function slugify(text: string): string {
@@ -203,6 +212,11 @@ export default function AdminProducts() {
         slug: s.slug,
         color: s.color || "#6b7280",
       })),
+      documentRequirements: (product.documentRequirements || []).map((d: any) => ({
+        name: d.name,
+        description: d.description || "",
+        isRequired: d.isRequired !== false,
+      })),
     });
     setIsDialogOpen(true);
   };
@@ -240,6 +254,26 @@ export default function AdminProducts() {
     setFormData({
       ...formData,
       stages: formData.stages.filter((_, i) => i !== index),
+    });
+  };
+
+  const addDocumentRequirement = () => {
+    setFormData({
+      ...formData,
+      documentRequirements: [...formData.documentRequirements, { name: "", description: "", isRequired: true }],
+    });
+  };
+
+  const updateDocumentRequirement = (index: number, field: keyof DocumentRequirementInput, value: string | boolean) => {
+    const newRequirements = [...formData.documentRequirements];
+    newRequirements[index] = { ...newRequirements[index], [field]: value };
+    setFormData({ ...formData, documentRequirements: newRequirements });
+  };
+
+  const removeDocumentRequirement = (index: number) => {
+    setFormData({
+      ...formData,
+      documentRequirements: formData.documentRequirements.filter((_, i) => i !== index),
     });
   };
 
@@ -286,6 +320,7 @@ export default function AdminProducts() {
                   <TableHead>Icon</TableHead>
                   <TableHead>Display Location</TableHead>
                   <TableHead className="text-center">Stages</TableHead>
+                  <TableHead className="text-center">Docs</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -316,6 +351,9 @@ export default function AdminProducts() {
                     </TableCell>
                     <TableCell className="text-center">
                       {product.stages?.length || 0}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {product.documentRequirements?.length || 0}
                     </TableCell>
                     <TableCell>
                       {product.isActive !== false ? (
@@ -479,6 +517,62 @@ export default function AdminProducts() {
                     variant="ghost"
                     size="icon"
                     onClick={() => removeStage(index)}
+                  >
+                    <Trash2 className="w-4 h-4 text-destructive" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <FileText className="w-4 h-4" />
+                  <Label>Required Documents</Label>
+                </div>
+                <Button type="button" variant="outline" size="sm" onClick={addDocumentRequirement}>
+                  <Plus className="w-4 h-4 mr-1" />
+                  Add
+                </Button>
+              </div>
+
+              {formData.documentRequirements.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-3">
+                  No document requirements defined. Add documents that clients need to provide.
+                </p>
+              )}
+
+              {formData.documentRequirements.map((requirement, index) => (
+                <div key={index} className="flex items-end gap-2 p-3 border rounded-md">
+                  <div className="flex-1 space-y-1">
+                    <Label className="text-xs">Document Name</Label>
+                    <Input
+                      value={requirement.name}
+                      onChange={(e) => updateDocumentRequirement(index, "name", e.target.value)}
+                      placeholder="e.g., Bank Statements"
+                    />
+                  </div>
+                  <div className="flex-1 space-y-1">
+                    <Label className="text-xs">Description</Label>
+                    <Input
+                      value={requirement.description}
+                      onChange={(e) => updateDocumentRequirement(index, "description", e.target.value)}
+                      placeholder="e.g., Last 12 months"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2 pb-1">
+                    <Checkbox
+                      id={`required-${index}`}
+                      checked={requirement.isRequired}
+                      onCheckedChange={(checked) => updateDocumentRequirement(index, "isRequired", checked === true)}
+                    />
+                    <Label htmlFor={`required-${index}`} className="text-xs cursor-pointer">Required</Label>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => removeDocumentRequirement(index)}
                   >
                     <Trash2 className="w-4 h-4 text-destructive" />
                   </Button>

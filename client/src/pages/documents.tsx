@@ -18,7 +18,9 @@ import {
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -43,10 +45,31 @@ import {
   Building2,
   XCircle,
   Undo2,
+  Package,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import type { Document, RequiredDocument, Return } from "@shared/schema";
+
+interface ProductDocReq {
+  id: string;
+  name: string;
+  description: string | null;
+  isRequired: boolean | null;
+  sortOrder: number | null;
+}
+
+interface ClientProductEnriched {
+  id: string;
+  productId: string;
+  name: string | null;
+  product: {
+    id: string;
+    name: string;
+    icon: string | null;
+    documentRequirements: ProductDocReq[];
+  } | null;
+}
 
 const documentTypeLabels: Record<string, string> = {
   w2: "W-2",
@@ -126,6 +149,10 @@ export default function Documents() {
     queryKey: ["/api/returns"],
   });
 
+  const { data: clientProducts = [] } = useQuery<ClientProductEnriched[]>({
+    queryKey: ["/api/client-products"],
+  });
+
   // Group required documents by return type
   const personalReturn = returns.find(r => r.returnType === 'personal');
   const businessReturns = returns.filter(r => r.returnType === 'business');
@@ -183,9 +210,10 @@ export default function Documents() {
       for (let i = 0; i < pendingFiles.length; i++) {
         const file = pendingFiles[i];
         const checklistItemId = finalMap.get(i);
+        const requiredDocId = checklistItemId && !checklistItemId.startsWith("product-") ? checklistItemId : undefined;
         await uploadSingleFileMutation.mutateAsync({ 
           file, 
-          requiredDocumentId: checklistItemId 
+          requiredDocumentId: requiredDocId 
         });
       }
       
@@ -312,7 +340,8 @@ export default function Documents() {
         }
         
         const incompleteItems = requiredDocs?.filter(d => !d.isUploaded) || [];
-        if (incompleteItems.length > 0) {
+        const hasProductDocReqs = clientProducts.some(cp => cp.product?.documentRequirements?.length);
+        if (incompleteItems.length > 0 || hasProductDocReqs) {
           setPendingFiles(acceptedFiles);
           setCurrentFileIndex(0);
           setFileChecklistMap(new Map());
@@ -345,7 +374,7 @@ export default function Documents() {
         }
       }
     },
-    [reqDocsLoading, requiredDocs, toast, uploadSingleFileMutation]
+    [reqDocsLoading, requiredDocs, clientProducts, toast, uploadSingleFileMutation]
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -771,6 +800,35 @@ export default function Documents() {
                       </div>
                     </div>
                   )}
+
+                  {/* Product/Service Document Requirements */}
+                  {clientProducts.filter(cp => cp.product?.documentRequirements && cp.product.documentRequirements.length > 0).map(cp => (
+                    <div key={cp.id}>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Package className="w-4 h-4 text-purple-600" />
+                        <span className="text-sm font-semibold text-purple-600">{cp.name || cp.product?.name}</span>
+                        <span className="text-xs text-muted-foreground">
+                          ({cp.product?.documentRequirements.length} docs needed)
+                        </span>
+                      </div>
+                      <div className="space-y-2">
+                        {cp.product?.documentRequirements.map(docReq => (
+                          <div key={docReq.id} className="flex items-center gap-3 p-3 rounded-lg bg-muted/30">
+                            <CircleDashed className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium">{docReq.name}</p>
+                              {docReq.description && (
+                                <p className="text-xs text-muted-foreground">{docReq.description}</p>
+                              )}
+                            </div>
+                            {docReq.isRequired === false && (
+                              <Badge variant="outline" className="text-xs">Optional</Badge>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : (
                 <div className="text-center py-6">
@@ -963,19 +1021,37 @@ export default function Documents() {
 
             <div className="space-y-2">
               <Label htmlFor="checklist-select">Document type</Label>
-              {incompleteChecklistItems.length > 0 ? (
+              {incompleteChecklistItems.length > 0 || clientProducts.some(cp => cp.product?.documentRequirements?.length) ? (
                 <Select value={selectedChecklistItem} onValueChange={setSelectedChecklistItem}>
                   <SelectTrigger id="checklist-select">
                     <SelectValue placeholder="Select from your checklist..." />
                   </SelectTrigger>
                   <SelectContent>
-                    {incompleteChecklistItems.map((item) => (
-                      <SelectItem key={item.id} value={item.id}>
-                        <div className="flex items-center gap-2">
-                          <CircleDashed className="w-4 h-4 text-muted-foreground" />
-                          <span>{item.description || documentTypeLabels[item.documentType || "other"]}</span>
-                        </div>
-                      </SelectItem>
+                    {incompleteChecklistItems.length > 0 && (
+                      <SelectGroup>
+                        <SelectLabel>Required Documents</SelectLabel>
+                        {incompleteChecklistItems.map((item) => (
+                          <SelectItem key={item.id} value={item.id}>
+                            <div className="flex items-center gap-2">
+                              <CircleDashed className="w-4 h-4 text-muted-foreground" />
+                              <span>{item.description || documentTypeLabels[item.documentType || "other"]}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    )}
+                    {clientProducts.filter(cp => cp.product?.documentRequirements?.length).map(cp => (
+                      <SelectGroup key={cp.id}>
+                        <SelectLabel>{cp.name || cp.product?.name}</SelectLabel>
+                        {cp.product?.documentRequirements?.map(docReq => (
+                          <SelectItem key={`product-${docReq.id}`} value={`product-${docReq.id}`}>
+                            <div className="flex items-center gap-2">
+                              <Package className="w-4 h-4 text-purple-600" />
+                              <span>{docReq.name}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
                     ))}
                   </SelectContent>
                 </Select>

@@ -2328,7 +2328,8 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
       const productsWithStages = await Promise.all(
         activeProducts.map(async (product) => {
           const stages = await storage.getProductStages(product.id);
-          return { ...product, stages };
+          const documentRequirements = await storage.getProductDocumentRequirements(product.id);
+          return { ...product, stages, documentRequirements };
         })
       );
       res.json(productsWithStages);
@@ -2346,8 +2347,9 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
         cps.map(async (cp) => {
           const product = await storage.getProduct(cp.productId);
           const stages = await storage.getProductStages(cp.productId);
+          const documentRequirements = await storage.getProductDocumentRequirements(cp.productId);
           const currentStage = cp.currentStageId ? stages.find(s => s.id === cp.currentStageId) || null : null;
-          const productWithStages = product ? { ...product, stages } : null;
+          const productWithStages = product ? { ...product, stages, documentRequirements } : null;
           return { ...cp, product: productWithStages, currentStage };
         })
       );
@@ -2398,7 +2400,8 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
       const productsWithStages = await Promise.all(
         allProducts.map(async (product) => {
           const stages = await storage.getProductStages(product.id);
-          return { ...product, stages };
+          const documentRequirements = await storage.getProductDocumentRequirements(product.id);
+          return { ...product, stages, documentRequirements };
         })
       );
       res.json(productsWithStages);
@@ -2410,7 +2413,7 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
 
   app.post("/api/admin/products", isAuthenticated, isAdmin, async (req: any, res) => {
     try {
-      const { name, description, icon, displayLocation, isActive, sortOrder, stages } = req.body;
+      const { name, description, icon, displayLocation, isActive, sortOrder, stages, documentRequirements } = req.body;
       if (!name) {
         return res.status(400).json({ message: "Product name is required" });
       }
@@ -2433,8 +2436,20 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
           });
         }
       }
+      if (documentRequirements && Array.isArray(documentRequirements)) {
+        for (let i = 0; i < documentRequirements.length; i++) {
+          await storage.createProductDocumentRequirement({
+            productId: product.id,
+            name: documentRequirements[i].name,
+            description: documentRequirements[i].description || null,
+            isRequired: documentRequirements[i].isRequired !== false,
+            sortOrder: i,
+          });
+        }
+      }
       const productStagesResult = await storage.getProductStages(product.id);
-      res.json({ ...product, stages: productStagesResult });
+      const docReqs = await storage.getProductDocumentRequirements(product.id);
+      res.json({ ...product, stages: productStagesResult, documentRequirements: docReqs });
     } catch (error) {
       console.error("Error creating product:", error);
       res.status(500).json({ message: "Failed to create product" });
@@ -2444,7 +2459,7 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
   app.put("/api/admin/products/:id", isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       const { id } = req.params;
-      const { name, description, icon, displayLocation, isActive, sortOrder, stages } = req.body;
+      const { name, description, icon, displayLocation, isActive, sortOrder, stages, documentRequirements } = req.body;
       const updated = await storage.updateProduct(id, {
         name,
         description,
@@ -2468,8 +2483,21 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
           });
         }
       }
+      if (documentRequirements && Array.isArray(documentRequirements)) {
+        await storage.deleteProductDocumentRequirements(id);
+        for (let i = 0; i < documentRequirements.length; i++) {
+          await storage.createProductDocumentRequirement({
+            productId: id,
+            name: documentRequirements[i].name,
+            description: documentRequirements[i].description || null,
+            isRequired: documentRequirements[i].isRequired !== false,
+            sortOrder: i,
+          });
+        }
+      }
       const productStagesResult = await storage.getProductStages(id);
-      res.json({ ...updated, stages: productStagesResult });
+      const docReqs = await storage.getProductDocumentRequirements(id);
+      res.json({ ...updated, stages: productStagesResult, documentRequirements: docReqs });
     } catch (error) {
       console.error("Error updating product:", error);
       res.status(500).json({ message: "Failed to update product" });

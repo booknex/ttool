@@ -50,11 +50,14 @@ import {
   type InsertDependent,
   products,
   productStages,
+  productDocumentRequirements,
   clientProducts,
   type Product,
   type InsertProduct,
   type ProductStage,
   type InsertProductStage,
+  type ProductDocumentRequirement,
+  type InsertProductDocumentRequirement,
   type ClientProduct,
   type InsertClientProduct,
 } from "@shared/schema";
@@ -194,6 +197,11 @@ export interface IStorage {
   updateProductStage(id: string, updates: Partial<ProductStage>): Promise<ProductStage | undefined>;
   deleteProductStage(id: string): Promise<void>;
   deleteProductStages(productId: string): Promise<void>;
+
+  // Product document requirement operations
+  getProductDocumentRequirements(productId: string): Promise<ProductDocumentRequirement[]>;
+  createProductDocumentRequirement(data: InsertProductDocumentRequirement): Promise<ProductDocumentRequirement>;
+  deleteProductDocumentRequirements(productId: string): Promise<void>;
 
   // Client product operations
   getClientProducts(userId: string): Promise<ClientProduct[]>;
@@ -862,6 +870,22 @@ export class DatabaseStorage implements IStorage {
 
   async deleteProductStages(productId: string): Promise<void> {
     await db.delete(productStages).where(eq(productStages.productId, productId));
+  }
+
+  // Product document requirement operations
+  async getProductDocumentRequirements(productId: string): Promise<ProductDocumentRequirement[]> {
+    return db.select().from(productDocumentRequirements)
+      .where(eq(productDocumentRequirements.productId, productId))
+      .orderBy(productDocumentRequirements.sortOrder);
+  }
+
+  async createProductDocumentRequirement(data: InsertProductDocumentRequirement): Promise<ProductDocumentRequirement> {
+    const [req] = await db.insert(productDocumentRequirements).values(data).returning();
+    return req;
+  }
+
+  async deleteProductDocumentRequirements(productId: string): Promise<void> {
+    await db.delete(productDocumentRequirements).where(eq(productDocumentRequirements.productId, productId));
   }
 
   // Client product operations
