@@ -57,7 +57,7 @@ export function AppSidebar({ user }: AppSidebarProps) {
       localStorage.removeItem("adminViewMode");
       await apiRequest("POST", "/api/auth/logout");
       queryClient.clear();
-      setLocation("/");
+      window.location.href = "/login";
     } catch (error) {
       console.error("Logout failed:", error);
     }

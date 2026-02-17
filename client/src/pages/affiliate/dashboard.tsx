@@ -130,7 +130,7 @@ export default function AffiliateDashboard() {
     },
     onSuccess: () => {
       queryClient.clear();
-      setLocation("/affiliate/login");
+      window.location.href = "/affiliate/login";
     },
   });
 

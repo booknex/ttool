@@ -22,8 +22,7 @@ export default function Login() {
     },
     onSuccess: () => {
       queryClient.clear();
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      setLocation("/");
+      window.location.href = "/";
     },
     onError: (error: Error) => {
       toast({

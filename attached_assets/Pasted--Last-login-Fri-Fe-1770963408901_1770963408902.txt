@@ -1,0 +1,81 @@
+********************************************************************************
+Last login: Fri Feb 13 04:59:34 2026 from 169.254.0.1
+root@srv1365851:~# pm2 status
+pm2 logs taxportal --lines 50
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 3  │ client-queue-mana… │ fork     │ 7    │ online    │ 0%       │ 150.3mb  │
+│ 0  │ meetingroadmap     │ fork     │ 16   │ online    │ 0%       │ 76.8mb   │
+│ 6  │ taxportal          │ fork     │ 0    │ online    │ 0%       │ 97.1mb   │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+[TAILING] Tailing last 50 lines for [taxportal] process (change the value with --lines option)
+/root/.pm2/logs/taxportal-error.log last 50 lines:
+6|taxporta |   routine: 'auth_failed'
+6|taxporta | }
+6|taxporta | Error logging in: error: password authentication failed for user "postgres"
+6|taxporta |     at /var/www/taxportal/dist/index.cjs:64:13330
+6|taxporta |     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+6|taxporta |     at async /var/www/taxportal/dist/index.cjs:88:106767
+6|taxporta |     at async jv.getUserByEmail (/var/www/taxportal/dist/index.cjs:88:109817)
+6|taxporta |     at async /var/www/taxportal/dist/index.cjs:88:147950 {
+6|taxporta |   length: 104,
+6|taxporta |   severity: 'FATAL',
+6|taxporta |   code: '28P01',
+6|taxporta |   detail: undefined,
+6|taxporta |   hint: undefined,
+6|taxporta |   position: undefined,
+6|taxporta |   internalPosition: undefined,
+6|taxporta |   internalQuery: undefined,
+6|taxporta |   where: undefined,
+6|taxporta |   schema: undefined,
+6|taxporta |   table: undefined,
+6|taxporta |   column: undefined,
+6|taxporta |   dataType: undefined,
+6|taxporta |   constraint: undefined,
+6|taxporta |   file: 'auth.c',
+6|taxporta |   line: '331',
+6|taxporta |   routine: 'auth_failed'
+6|taxporta | }
+6|taxporta | Error logging in: error: password authentication failed for user "postgres"
+6|taxporta |     at /var/www/taxportal/dist/index.cjs:64:13330
+6|taxporta |     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+6|taxporta |     at async /var/www/taxportal/dist/index.cjs:88:106767
+6|taxporta |     at async jv.getUserByEmail (/var/www/taxportal/dist/index.cjs:88:109817)
+6|taxporta |     at async /var/www/taxportal/dist/index.cjs:88:147950 {
+6|taxporta |   length: 104,
+6|taxporta |   severity: 'FATAL',
+6|taxporta |   code: '28P01',
+6|taxporta |   detail: undefined,
+6|taxporta |   hint: undefined,
+6|taxporta |   position: undefined,
+6|taxporta |   internalPosition: undefined,
+6|taxporta |   internalQuery: undefined,
+6|taxporta |   where: undefined,
+6|taxporta |   schema: undefined,
+6|taxporta |   table: undefined,
+6|taxporta |   column: undefined,
+6|taxporta |   dataType: undefined,
+6|taxporta |   constraint: undefined,
+6|taxporta |   file: 'auth.c',
+6|taxporta |   line: '331',
+6|taxporta |   routine: 'auth_failed'
+6|taxporta | }
+
+/root/.pm2/logs/taxportal-out.log last 50 lines:
+6|taxporta | Stripe integration enabled for invoice payments
+6|taxporta | 3:45:03 AM [express] serving on port 5000
+6|taxporta | Note: Admin user will be set when they first log in
+6|taxporta | 4:32:40 AM [express] GET /api/portfolio 200 in 3ms
+6|taxporta | 4:32:48 AM [express] GET /api/auth/user 401 in 1ms :: {"message":"Unauthorized"}
+6|taxporta | 4:32:51 AM [express] GET /api/portfolio 304 in 1ms
+6|taxporta | 4:32:53 AM [express] GET /api/auth/user 401 in 1ms :: {"message":"Unauthorized"}
+6|taxporta | 4:33:00 AM [express] GET /api/auth/user 401 in 0ms :: {"message":"Unauthorized"}
+6|taxporta | 5:04:10 AM [express] GET /api/auth/user 401 in 1ms :: {"message":"Unauthorized"}
+6|taxporta | 5:04:20 AM [express] POST /api/auth/login 500 in 52ms :: {"message":"Failed to login"}
+6|taxporta | 5:04:26 AM [express] POST /api/auth/login 500 in 9ms :: {"message":"Failed to login"}
+6|taxporta | 5:04:29 AM [express] POST /api/auth/login 500 in 8ms :: {"message":"Failed to login"}
+6|taxporta | 6:13:45 AM [express] GET /api/auth/user 401 in 2ms :: {"message":"Unauthorized"}
+6|taxporta | 6:13:54 AM [express] POST /api/auth/login 500 in 25ms :: {"message":"Failed to login"}
+6|taxporta | 6:15:12 AM [express] POST /api/auth/login 500 in 13ms :: {"message":"Failed to login"}
+

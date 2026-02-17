@@ -1,0 +1,137 @@
+
+^C
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <meta name="description" content="Secure tax client portal - Upload documents, track refunds, sign forms, and communicate with your tax preparer all in one place." />
+    <meta name="theme-color" content="#1d4ed8" />
+    <meta property="og:title" content="TaxPortal - Your Secure Tax Filing Hub" />
+    <meta property="og:description" content="Upload documents, track refunds, e-sign forms, and communicate securely with your tax professional." />
+    <meta property="og:type" content="website" />
+    <title>TaxPortal - Secure Client Portal</title>
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Architects+Daughter&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Fira+Code:wght@300..700&family=Geist+Mono:wght@100..900&family=Geist:wght@100..900&family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&family=IBM+Plex+Sans:ital,wght@0,100..700;1,100..700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400..700;1,400..700&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Outfit:wght@100..900&family=Oxanium:wght@200..800&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&family=Roboto:ital,wght@0,100..900;1,100..900&family=Source+Code+Pro:ital,wght@0,200..900;1,200..900&family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&family=Space+Grotesk:wght@300..700&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+    <script type="module" crossorigin src="/assets/index-DNLevMuO.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-BxkoaiD7.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>root@srv1365851:/var/www/taxpsudo -u postgres psql -c "ALTER USER postgres PASSWORD 'calc';"calc';"
+ALTER ROLE
+root@srv1365851:/var/www/taxportal# sudo -u postgres psql -d taxportal -f /var/www/taxportal/migration-export.sql
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+psql:/var/www/taxportal/migration-export.sql:106: NOTICE:  relation "users" already exists, skipping
+CREATE TABLE
+psql:/var/www/taxportal/migration-export.sql:123: NOTICE:  relation "documents" already exists, skipping
+CREATE TABLE
+psql:/var/www/taxportal/migration-export.sql:136: NOTICE:  relation "messages" already exists, skipping
+CREATE TABLE
+psql:/var/www/taxportal/migration-export.sql:153: NOTICE:  relation "invoices" already exists, skipping
+CREATE TABLE
+psql:/var/www/taxportal/migration-export.sql:163: NOTICE:  relation "invoice_items" already exists, skipping
+CREATE TABLE
+psql:/var/www/taxportal/migration-export.sql:174: NOTICE:  relation "signatures" already exists, skipping
+CREATE TABLE
+psql:/var/www/taxportal/migration-export.sql:191: NOTICE:  relation "refund_tracking" already exists, skipping
+CREATE TABLE
+psql:/var/www/taxportal/migration-export.sql:209: NOTICE:  relation "returns" already exists, skipping
+CREATE TABLE
+psql:/var/www/taxportal/migration-export.sql:225: NOTICE:  relation "businesses" already exists, skipping
+CREATE TABLE
+psql:/var/www/taxportal/migration-export.sql:237: NOTICE:  relation "business_owners" already exists, skipping
+CREATE TABLE
+psql:/var/www/taxportal/migration-export.sql:248: NOTICE:  relation "business_expenses" already exists, skipping
+CREATE TABLE
+psql:/var/www/taxportal/migration-export.sql:263: NOTICE:  relation "dependents" already exists, skipping
+CREATE TABLE
+psql:/var/www/taxportal/migration-export.sql:277: NOTICE:  relation "required_documents" already exists, skipping
+CREATE TABLE
+psql:/var/www/taxportal/migration-export.sql:287: NOTICE:  relation "questionnaire_responses" already exists, skipping
+CREATE TABLE
+psql:/var/www/taxportal/migration-export.sql:306: NOTICE:  relation "affiliates" already exists, skipping
+CREATE TABLE
+psql:/var/www/taxportal/migration-export.sql:322: NOTICE:  relation "affiliate_referrals" already exists, skipping
+CREATE TABLE
+psql:/var/www/taxportal/migration-export.sql:329: NOTICE:  relation "sessions" already exists, skipping
+CREATE TABLE
+psql:/var/www/taxportal/migration-export.sql:336: NOTICE:  relation "affiliate_sessions" already exists, skipping
+CREATE TABLE
+psql:/var/www/taxportal/migration-export.sql:342: NOTICE:  relation "users_email_unique" already exists, skipping
+CREATE INDEX
+psql:/var/www/taxportal/migration-export.sql:343: NOTICE:  relation "affiliates_email_unique" already exists, skipping
+CREATE INDEX
+psql:/var/www/taxportal/migration-export.sql:344: NOTICE:  relation "affiliates_referral_code_unique" already exists, skipping
+CREATE INDEX
+psql:/var/www/taxportal/migration-export.sql:345: NOTICE:  relation "IDX_session_expire" already exists, skipping
+CREATE INDEX
+psql:/var/www/taxportal/migration-export.sql:346: NOTICE:  relation "IDX_affiliate_session_expire" already exists, skipping
+CREATE INDEX
+INSERT 0 0
+INSERT 0 0
+INSERT 0 0
+INSERT 0 0
+INSERT 0 0
+INSERT 0 0
+INSERT 0 0
+INSERT 0 0
+INSERT 0 0
+INSERT 0 0
+INSERT 0 0
+       status        
+---------------------
+ Migration complete!
+(1 row)
+
+root@srv1365851:/var/www/taxportal# pm2 restart taxportal
+Use --update-env to update environment variables
+[PM2] Applying action restartProcessId on app [taxportal](ids: [ 7 ])
+[PM2] [taxportal](7) ✓
+┌────┬─────────────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name                    │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼─────────────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 3  │ client-queue-manager    │ default     │ 1.0.0   │ fork    │ 29839    │ 11h    │ 7    │ online    │ 0%       │ 150.4mb  │ root     │ disabled │
+│ 0  │ meetingroadmap          │ default     │ N/A     │ fork    │ 21024    │ 24h    │ 16   │ online    │ 0%       │ 77.0mb   │ root     │ disabled │
+│ 7  │ taxportal               │ default     │ N/A     │ fork    │ 37607    │ 0s     │ 1    │ online    │ 0%       │ 18.9mb   │ root     │ disabled │
+└────┴─────────────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+root@srv1365851:/var/www/taxportal# curl http://localhost:5003/api/user
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <meta name="description" content="Secure tax client portal - Upload documents, track refunds, sign forms, and communicate with your tax preparer all in one place." />
+    <meta name="theme-color" content="#1d4ed8" />
+    <meta property="og:title" content="TaxPortal - Your Secure Tax Filing Hub" />
+    <meta property="og:description" content="Upload documents, track refunds, e-sign forms, and communicate securely with your tax professional." />
+    <meta property="og:type" content="website" />
+    <title>TaxPortal - Secure Client Portal</title>
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Architects+Daughter&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Fira+Code:wght@300..700&family=Geist+Mono:wght@100..900&family=Geist:wght@100..900&family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&family=IBM+Plex+Sans:ital,wght@0,100..700;1,100..700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400..700;1,400..700&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Outfit:wght@100..900&family=Oxanium:wght@200..800&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&family=Roboto:ital,wght@0,100..900;1,100..900&family=Source+Code+Pro:ital,wght@0,200..900;1,200..900&family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&family=Space+Grotesk:wght@300..700&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+    <script type="module" crossorigin src="/assets/index-DNLevMuO.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-BxkoaiD7.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>root@srv1365851:/var/www/taxportal# 
