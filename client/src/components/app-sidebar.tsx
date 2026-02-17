@@ -313,10 +313,10 @@ export function AppSidebar({ user }: AppSidebarProps) {
             )}
 
             {businessReturns.map((ret) => (
-              <Link key={ret.id} href="/businesses">
+              <Link key={ret.id} href="/">
                 <div
                   className={`group flex items-center gap-3 px-2.5 py-2 rounded-lg cursor-pointer transition-colors ${
-                    location === "/businesses" ? "bg-accent" : "hover:bg-accent/50"
+                    location === "/" ? "bg-accent" : "hover:bg-accent/50"
                   }`}
                 >
                   <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
@@ -327,6 +327,9 @@ export function AppSidebar({ user }: AppSidebarProps) {
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0">
                     <span className={`w-2 h-2 rounded-full ${dot(ret.status)}`} />
+                    <span className="text-[10px] text-muted-foreground hidden group-hover:inline">
+                      {label(ret.status)}
+                    </span>
                   </div>
                 </div>
               </Link>
@@ -337,26 +340,29 @@ export function AppSidebar({ user }: AppSidebarProps) {
               const stageName = cp.currentStage?.name || "Not Started";
               const stageColor = cp.currentStage?.color || "#6b7280";
               return (
-                <div
-                  key={cp.id}
-                  className="group flex items-center gap-3 px-2.5 py-2 rounded-lg hover:bg-accent/50 transition-colors"
-                >
-                  <div className="w-8 h-8 rounded-full bg-purple-50 flex items-center justify-center shrink-0">
-                    <ProductIcon className="w-3.5 h-3.5 text-purple-600" />
+                <Link key={cp.id} href="/">
+                  <div
+                    className={`group flex items-center gap-3 px-2.5 py-2 rounded-lg cursor-pointer transition-colors ${
+                      location === "/" ? "bg-accent" : "hover:bg-accent/50"
+                    }`}
+                  >
+                    <div className="w-8 h-8 rounded-full bg-purple-50 flex items-center justify-center shrink-0">
+                      <ProductIcon className="w-3.5 h-3.5 text-purple-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{cp.name || cp.product?.name}</p>
+                    </div>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span
+                        className="w-2 h-2 rounded-full"
+                        style={{ backgroundColor: stageColor }}
+                      />
+                      <span className="text-[10px] text-muted-foreground hidden group-hover:inline">
+                        {stageName}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{cp.name || cp.product?.name}</p>
-                  </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <span
-                      className="w-2 h-2 rounded-full"
-                      style={{ backgroundColor: stageColor }}
-                    />
-                    <span className="text-[10px] text-muted-foreground hidden group-hover:inline">
-                      {stageName}
-                    </span>
-                  </div>
-                </div>
+                </Link>
               );
             })}
 
