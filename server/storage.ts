@@ -48,6 +48,15 @@ import {
   type InsertReturn,
   type Dependent,
   type InsertDependent,
+  products,
+  productStages,
+  clientProducts,
+  type Product,
+  type InsertProduct,
+  type ProductStage,
+  type InsertProductStage,
+  type ClientProduct,
+  type InsertClientProduct,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, ne, inArray, sql } from "drizzle-orm";
@@ -171,6 +180,28 @@ export interface IStorage {
   updateDependent(id: string, updates: Partial<Dependent>): Promise<Dependent | undefined>;
   deleteDependent(id: string): Promise<void>;
   deleteUserDependents(userId: string): Promise<void>;
+
+  // Product operations
+  getProducts(): Promise<Product[]>;
+  getProduct(id: string): Promise<Product | undefined>;
+  createProduct(data: InsertProduct): Promise<Product>;
+  updateProduct(id: string, updates: Partial<Product>): Promise<Product | undefined>;
+  deleteProduct(id: string): Promise<void>;
+
+  // Product stage operations
+  getProductStages(productId: string): Promise<ProductStage[]>;
+  createProductStage(data: InsertProductStage): Promise<ProductStage>;
+  updateProductStage(id: string, updates: Partial<ProductStage>): Promise<ProductStage | undefined>;
+  deleteProductStage(id: string): Promise<void>;
+  deleteProductStages(productId: string): Promise<void>;
+
+  // Client product operations
+  getClientProducts(userId: string): Promise<ClientProduct[]>;
+  getAllClientProducts(): Promise<ClientProduct[]>;
+  getClientProduct(id: string): Promise<ClientProduct | undefined>;
+  createClientProduct(data: InsertClientProduct): Promise<ClientProduct>;
+  updateClientProduct(id: string, updates: Partial<ClientProduct>): Promise<ClientProduct | undefined>;
+  deleteClientProduct(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -776,6 +807,93 @@ export class DatabaseStorage implements IStorage {
 
   async deleteUserDependents(userId: string): Promise<void> {
     await db.delete(dependents).where(eq(dependents.userId, userId));
+  }
+
+  // Product operations
+  async getProducts(): Promise<Product[]> {
+    return db.select().from(products).orderBy(products.sortOrder);
+  }
+
+  async getProduct(id: string): Promise<Product | undefined> {
+    const [product] = await db.select().from(products).where(eq(products.id, id));
+    return product;
+  }
+
+  async createProduct(data: InsertProduct): Promise<Product> {
+    const [product] = await db.insert(products).values(data).returning();
+    return product;
+  }
+
+  async updateProduct(id: string, updates: Partial<Product>): Promise<Product | undefined> {
+    const [updated] = await db
+      .update(products)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(products.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteProduct(id: string): Promise<void> {
+    await db.delete(products).where(eq(products.id, id));
+  }
+
+  // Product stage operations
+  async getProductStages(productId: string): Promise<ProductStage[]> {
+    return db.select().from(productStages).where(eq(productStages.productId, productId)).orderBy(productStages.sortOrder);
+  }
+
+  async createProductStage(data: InsertProductStage): Promise<ProductStage> {
+    const [stage] = await db.insert(productStages).values(data).returning();
+    return stage;
+  }
+
+  async updateProductStage(id: string, updates: Partial<ProductStage>): Promise<ProductStage | undefined> {
+    const [updated] = await db
+      .update(productStages)
+      .set(updates)
+      .where(eq(productStages.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteProductStage(id: string): Promise<void> {
+    await db.delete(productStages).where(eq(productStages.id, id));
+  }
+
+  async deleteProductStages(productId: string): Promise<void> {
+    await db.delete(productStages).where(eq(productStages.productId, productId));
+  }
+
+  // Client product operations
+  async getClientProducts(userId: string): Promise<ClientProduct[]> {
+    return db.select().from(clientProducts).where(eq(clientProducts.userId, userId)).orderBy(desc(clientProducts.createdAt));
+  }
+
+  async getAllClientProducts(): Promise<ClientProduct[]> {
+    return db.select().from(clientProducts).orderBy(desc(clientProducts.createdAt));
+  }
+
+  async getClientProduct(id: string): Promise<ClientProduct | undefined> {
+    const [cp] = await db.select().from(clientProducts).where(eq(clientProducts.id, id));
+    return cp;
+  }
+
+  async createClientProduct(data: InsertClientProduct): Promise<ClientProduct> {
+    const [cp] = await db.insert(clientProducts).values(data).returning();
+    return cp;
+  }
+
+  async updateClientProduct(id: string, updates: Partial<ClientProduct>): Promise<ClientProduct | undefined> {
+    const [updated] = await db
+      .update(clientProducts)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(clientProducts.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteClientProduct(id: string): Promise<void> {
+    await db.delete(clientProducts).where(eq(clientProducts.id, id));
   }
 }
 

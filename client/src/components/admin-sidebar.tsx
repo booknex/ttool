@@ -26,6 +26,7 @@ import {
   ListChecks,
   Kanban,
   User,
+  Package,
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
@@ -43,6 +44,7 @@ const adminMenuItems = [
   { title: "Return Status", url: "/admin/return-statuses", icon: ListChecks, testId: "link-admin-return-statuses" },
   { title: "Refunds", url: "/admin/refunds", icon: TrendingUp, testId: "link-admin-refunds" },
   { title: "Signatures", url: "/admin/signatures", icon: PenTool, testId: "link-admin-signatures" },
+  { title: "Products", url: "/admin/products", icon: Package, testId: "link-admin-products" },
 ];
 
 export function AdminSidebar({ user }: AdminSidebarProps) {

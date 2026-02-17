@@ -2317,5 +2317,224 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
     }
   });
 
+  // =====================================================
+  // PRODUCT ROUTES
+  // =====================================================
+
+  app.get("/api/products", isAuthenticated, async (req: any, res) => {
+    try {
+      const allProducts = await storage.getProducts();
+      const activeProducts = allProducts.filter(p => p.isActive);
+      const productsWithStages = await Promise.all(
+        activeProducts.map(async (product) => {
+          const stages = await storage.getProductStages(product.id);
+          return { ...product, stages };
+        })
+      );
+      res.json(productsWithStages);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      res.status(500).json({ message: "Failed to fetch products" });
+    }
+  });
+
+  app.get("/api/client-products", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const cps = await storage.getClientProducts(userId);
+      const enriched = await Promise.all(
+        cps.map(async (cp) => {
+          const product = await storage.getProduct(cp.productId);
+          const stage = cp.currentStageId ? await storage.getProductStages(cp.productId).then(stages => stages.find(s => s.id === cp.currentStageId)) : null;
+          return { ...cp, product, currentStage: stage };
+        })
+      );
+      res.json(enriched);
+    } catch (error) {
+      console.error("Error fetching client products:", error);
+      res.status(500).json({ message: "Failed to fetch client products" });
+    }
+  });
+
+  app.post("/api/client-products", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { productId, name } = req.body;
+      if (!productId) {
+        return res.status(400).json({ message: "Product ID is required" });
+      }
+      const product = await storage.getProduct(productId);
+      if (!product || !product.isActive) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+      const existingCps = await storage.getClientProducts(userId);
+      if (existingCps.some(cp => cp.productId === productId)) {
+        return res.status(400).json({ message: "You already have this product" });
+      }
+      const stages = await storage.getProductStages(productId);
+      const firstStage = stages.length > 0 ? stages[0] : null;
+      const cp = await storage.createClientProduct({
+        userId,
+        productId,
+        currentStageId: firstStage?.id || null,
+        name: name || product.name,
+      });
+      res.json(cp);
+    } catch (error) {
+      console.error("Error creating client product:", error);
+      res.status(500).json({ message: "Failed to add product" });
+    }
+  });
+
+  // =====================================================
+  // ADMIN PRODUCT ROUTES
+  // =====================================================
+
+  app.get("/api/admin/products", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const allProducts = await storage.getProducts();
+      const productsWithStages = await Promise.all(
+        allProducts.map(async (product) => {
+          const stages = await storage.getProductStages(product.id);
+          return { ...product, stages };
+        })
+      );
+      res.json(productsWithStages);
+    } catch (error) {
+      console.error("Error fetching admin products:", error);
+      res.status(500).json({ message: "Failed to fetch products" });
+    }
+  });
+
+  app.post("/api/admin/products", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { name, description, icon, displayLocation, isActive, sortOrder, stages } = req.body;
+      if (!name) {
+        return res.status(400).json({ message: "Product name is required" });
+      }
+      const product = await storage.createProduct({
+        name,
+        description: description || null,
+        icon: icon || 'Package',
+        displayLocation: displayLocation || 'sidebar',
+        isActive: isActive !== false,
+        sortOrder: sortOrder || 0,
+      });
+      if (stages && Array.isArray(stages)) {
+        for (let i = 0; i < stages.length; i++) {
+          await storage.createProductStage({
+            productId: product.id,
+            name: stages[i].name,
+            slug: stages[i].slug || stages[i].name.toLowerCase().replace(/\s+/g, '_'),
+            color: stages[i].color || '#6b7280',
+            sortOrder: i,
+          });
+        }
+      }
+      const productStagesResult = await storage.getProductStages(product.id);
+      res.json({ ...product, stages: productStagesResult });
+    } catch (error) {
+      console.error("Error creating product:", error);
+      res.status(500).json({ message: "Failed to create product" });
+    }
+  });
+
+  app.put("/api/admin/products/:id", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { name, description, icon, displayLocation, isActive, sortOrder, stages } = req.body;
+      const updated = await storage.updateProduct(id, {
+        name,
+        description,
+        icon,
+        displayLocation,
+        isActive,
+        sortOrder,
+      });
+      if (!updated) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+      if (stages && Array.isArray(stages)) {
+        await storage.deleteProductStages(id);
+        for (let i = 0; i < stages.length; i++) {
+          await storage.createProductStage({
+            productId: id,
+            name: stages[i].name,
+            slug: stages[i].slug || stages[i].name.toLowerCase().replace(/\s+/g, '_'),
+            color: stages[i].color || '#6b7280',
+            sortOrder: i,
+          });
+        }
+      }
+      const productStagesResult = await storage.getProductStages(id);
+      res.json({ ...updated, stages: productStagesResult });
+    } catch (error) {
+      console.error("Error updating product:", error);
+      res.status(500).json({ message: "Failed to update product" });
+    }
+  });
+
+  app.delete("/api/admin/products/:id", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteProduct(id);
+      res.json({ message: "Product deleted" });
+    } catch (error) {
+      console.error("Error deleting product:", error);
+      res.status(500).json({ message: "Failed to delete product" });
+    }
+  });
+
+  // Admin: Get all client products for Kanban
+  app.get("/api/admin/client-products", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { productId } = req.query;
+      const allCps = await storage.getAllClientProducts();
+      const allUsers = await storage.getAllUsers();
+      const userMap = new Map(allUsers.map(u => [u.id, u]));
+
+      let filtered = allCps;
+      if (productId) {
+        filtered = allCps.filter(cp => cp.productId === productId);
+      }
+
+      const enriched = await Promise.all(
+        filtered.map(async (cp) => {
+          const product = await storage.getProduct(cp.productId);
+          const stages = product ? await storage.getProductStages(product.id) : [];
+          const currentStage = stages.find(s => s.id === cp.currentStageId);
+          const user = userMap.get(cp.userId);
+          return {
+            ...cp,
+            product,
+            currentStage,
+            clientName: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email : 'Unknown',
+            clientEmail: user?.email || '',
+          };
+        })
+      );
+      res.json(enriched);
+    } catch (error) {
+      console.error("Error fetching admin client products:", error);
+      res.status(500).json({ message: "Failed to fetch client products" });
+    }
+  });
+
+  // Admin: Update client product stage (for Kanban drag-and-drop)
+  app.patch("/api/admin/client-products/:id", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { currentStageId } = req.body;
+      const updated = await storage.updateClientProduct(id, { currentStageId });
+      if (!updated) {
+        return res.status(404).json({ message: "Client product not found" });
+      }
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating client product:", error);
+      res.status(500).json({ message: "Failed to update client product" });
+    }
+  });
+
   return server;
 }

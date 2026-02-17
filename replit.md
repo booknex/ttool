@@ -101,3 +101,19 @@ All admin data listing pages follow a consistent pattern for handling large data
 - **refunds.tsx** - Stats (total, completed, in progress, total refunds); sortable by client, federal/state status/amount, updated date
 - **return-statuses.tsx** - Stats (total, not started, in progress, filed); sortable by client, status; inline status update
 - **documents.tsx** - Stats (total, pending, processing, verified, rejected, archived); bulk actions; advanced filters
+- **products.tsx** - Admin CRUD for products with pipeline stages, icon selection, display location configuration
+
+### Products System (February 2026)
+- **Products table** - Admin-defined service templates with name, icon (Lucide), description, display location (sidebar/tools/both), active toggle
+- **Product stages table** - Custom Kanban pipeline stages per product (name, slug, color, sort order)
+- **Client products table** - Tracks which products each client has with current stage progress
+- **Admin Products page** - Full CRUD for products with inline stage management
+- **Client sidebar** - "My Services" section shows returns + products with status dots; "+" button shows available products (filters out already-assigned and inactive products)
+- **Kanban Board** - Dropdown selector switches between Tax Returns pipeline and any product pipeline; each product uses its own custom stages as columns
+
+### Client Sidebar Redesign (February 2026)
+- Compact logo + greeting header
+- "My Services" section with returns and products as clean rows with status dots
+- Icon-grid tools bar with notification badges (unread messages, pending signatures, unpaid invoices)
+- Product tool links removed (no product detail page exists yet); products currently informational in sidebar only
+- Simple sign-out link at bottom

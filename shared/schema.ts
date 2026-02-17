@@ -326,6 +326,46 @@ export const affiliateReferrals = pgTable("affiliate_referrals", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Product display location enum
+export const productDisplayEnum = pgEnum('product_display', [
+  'sidebar', 'tools', 'both'
+]);
+
+// Products table (admin-defined service templates)
+export const products = pgTable("products", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name").notNull(),
+  description: text("description"),
+  icon: varchar("icon").default('Package'),
+  displayLocation: productDisplayEnum("display_location").default('sidebar'),
+  isActive: boolean("is_active").default(true),
+  sortOrder: integer("sort_order").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Product stages table (Kanban columns per product)
+export const productStages = pgTable("product_stages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  productId: varchar("product_id").notNull().references(() => products.id, { onDelete: 'cascade' }),
+  name: varchar("name").notNull(),
+  slug: varchar("slug").notNull(),
+  color: varchar("color").default('#6b7280'),
+  sortOrder: integer("sort_order").default(0),
+});
+
+// Client products table (instances of products assigned to clients)
+export const clientProducts = pgTable("client_products", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  productId: varchar("product_id").notNull().references(() => products.id),
+  currentStageId: varchar("current_stage_id").references(() => productStages.id),
+  name: varchar("name"),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({ createdAt: true, updatedAt: true });
 export const insertDocumentSchema = createInsertSchema(documents).omit({ uploadedAt: true });
@@ -343,6 +383,9 @@ export const insertBusinessOwnerSchema = createInsertSchema(businessOwners).omit
 export const insertBusinessExpenseSchema = createInsertSchema(businessExpenses).omit({ createdAt: true });
 export const insertReturnSchema = createInsertSchema(returns).omit({ createdAt: true, updatedAt: true });
 export const insertDependentSchema = createInsertSchema(dependents).omit({ createdAt: true, updatedAt: true });
+export const insertProductSchema = createInsertSchema(products).omit({ createdAt: true, updatedAt: true });
+export const insertProductStageSchema = createInsertSchema(productStages);
+export const insertClientProductSchema = createInsertSchema(clientProducts).omit({ createdAt: true, updatedAt: true });
 
 // Types
 export type UpsertUser = typeof users.$inferInsert;
@@ -377,3 +420,9 @@ export type Return = typeof returns.$inferSelect;
 export type InsertReturn = z.infer<typeof insertReturnSchema>;
 export type Dependent = typeof dependents.$inferSelect;
 export type InsertDependent = z.infer<typeof insertDependentSchema>;
+export type Product = typeof products.$inferSelect;
+export type InsertProduct = z.infer<typeof insertProductSchema>;
+export type ProductStage = typeof productStages.$inferSelect;
+export type InsertProductStage = z.infer<typeof insertProductStageSchema>;
+export type ClientProduct = typeof clientProducts.$inferSelect;
+export type InsertClientProduct = z.infer<typeof insertClientProductSchema>;

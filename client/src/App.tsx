@@ -32,6 +32,7 @@ import AdminSignatures from "@/pages/admin/signatures";
 import AdminClientDetail from "@/pages/admin/client-detail";
 import AdminReturnStatuses from "@/pages/admin/return-statuses";
 import AdminKanban from "@/pages/admin/kanban";
+import AdminProducts from "@/pages/admin/products";
 import AffiliateLogin from "@/pages/affiliate/login";
 import AffiliateRegister from "@/pages/affiliate/register";
 import AffiliateDashboard from "@/pages/affiliate/dashboard";
@@ -170,6 +171,7 @@ function Router() {
           <Route path="/admin/refunds" component={AdminRefunds} />
           <Route path="/admin/signatures" component={AdminSignatures} />
           <Route path="/admin/kanban" component={AdminKanban} />
+          <Route path="/admin/products" component={AdminProducts} />
           <Route component={NotFound} />
         </Switch>
       </AdminLayout>
