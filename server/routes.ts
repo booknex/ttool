@@ -2385,10 +2385,23 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
         const stages = await storage.getProductStages(product.id);
         if (!stages || stages.length === 0) continue;
 
-        const cps = allCps.filter(cp => cp.productId === product.id);
-        if (cps.length === 0) continue;
+        const cps = allCps.filter(cp => cp.productId === product.id && !cp.completedAt);
+        const completedCps = allCps.filter(cp => cp.productId === product.id && cp.completedAt);
+        if (cps.length === 0 && completedCps.length === 0) continue;
 
         const enrichedCps = cps.map(cp => {
+          const user = userMap.get(cp.userId);
+          const currentStage = stages.find(s => s.id === cp.currentStageId);
+          return {
+            ...cp,
+            product: { id: product.id, name: product.name, icon: product.icon, stages },
+            currentStage: currentStage || null,
+            clientName: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email : 'Unknown',
+            clientEmail: user?.email || '',
+          };
+        });
+
+        const enrichedCompleted = completedCps.map(cp => {
           const user = userMap.get(cp.userId);
           const currentStage = stages.find(s => s.id === cp.currentStageId);
           return {
@@ -2406,7 +2419,9 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
           productIcon: product.icon,
           stages: stages.sort((a: any, b: any) => (a.sortOrder || 0) - (b.sortOrder || 0)),
           clientProducts: enrichedCps,
+          completedProducts: enrichedCompleted,
           totalClients: enrichedCps.length,
+          completedCount: enrichedCompleted.length,
         });
       }
 
@@ -2681,6 +2696,34 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
     } catch (error) {
       console.error("Error updating client product:", error);
       res.status(500).json({ message: "Failed to update client product" });
+    }
+  });
+
+  app.patch("/api/admin/client-products/:id/complete", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const updated = await storage.updateClientProduct(id, { completedAt: new Date() } as any);
+      if (!updated) {
+        return res.status(404).json({ message: "Client product not found" });
+      }
+      res.json(updated);
+    } catch (error) {
+      console.error("Error completing client product:", error);
+      res.status(500).json({ message: "Failed to complete client product" });
+    }
+  });
+
+  app.patch("/api/admin/client-products/:id/reopen", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const updated = await storage.updateClientProduct(id, { completedAt: null } as any);
+      if (!updated) {
+        return res.status(404).json({ message: "Client product not found" });
+      }
+      res.json(updated);
+    } catch (error) {
+      console.error("Error reopening client product:", error);
+      res.status(500).json({ message: "Failed to reopen client product" });
     }
   });
 

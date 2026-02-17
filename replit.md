@@ -37,7 +37,7 @@ Preferred communication style: Simple, everyday language.
 ### Features
 - **Client Portal**: Document upload, secure messaging, refund tracking, e-signatures, dynamic questionnaires, invoice management, personalized homepage with actionable items, document progress, and returns summary.
 - **Admin Dashboard**: Role-based access, client management (view, edit, create, impersonate, archive, delete), document review, message management, invoice creation, refund status updates, signature review.
-- **Admin Kanban Board**: Multi-row workflow board showing all active services simultaneously. Tax Returns row at top with All/Personal/Business filter, plus a row per active product/service type. Each row is collapsible, has independent drag-and-drop, and shows client counts per stage. Only products with active clients appear. API: `/api/admin/kanban-all`.
+- **Admin Kanban Board**: Multi-row workflow board showing all active services simultaneously. Tax Returns row at top with All/Personal/Business filter, plus a row per active product/service type. Each row is collapsible, has independent drag-and-drop, and shows client counts per stage. Only products with active clients appear. Three-dots menu on product cards for "Mark Complete" action; completed items shown in expandable section with "Reopen" option. API: `/api/admin/kanban-all`.
 - **Affiliate Portal**: Separate authentication, unique referral codes, client attribution, dashboard for tracking referrals/commissions, gamification with tier system, achievement badges, and leaderboards.
 - **General**: Light mode only, responsive design.
 

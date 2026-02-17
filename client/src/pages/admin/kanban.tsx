@@ -5,6 +5,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   DndContext,
   DragEndEvent,
   DragOverlay,
@@ -22,7 +28,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useState, useMemo } from "react";
-import { User, GripVertical, Building2, Package, ChevronDown, ChevronRight, FileText } from "lucide-react";
+import { User, GripVertical, Building2, Package, ChevronDown, ChevronRight, FileText, MoreVertical, CheckCircle2, RotateCcw } from "lucide-react";
 
 interface Return {
   id: string;
@@ -63,7 +69,9 @@ interface ProductRow {
   productIcon: string | null;
   stages: ProductStage[];
   clientProducts: ClientProductEnriched[];
+  completedProducts: ClientProductEnriched[];
   totalClients: number;
+  completedCount: number;
 }
 
 interface KanbanAllData {
@@ -123,7 +131,7 @@ function ReturnCard({ ret, isDragging }: { ret: Return; isDragging?: boolean }) 
   );
 }
 
-function ProductCard({ cp, isDragging }: { cp: ClientProductEnriched; isDragging?: boolean }) {
+function ProductCard({ cp, isDragging, onComplete, showMenu = false }: { cp: ClientProductEnriched; isDragging?: boolean; onComplete?: (id: string) => void; showMenu?: boolean }) {
   return (
     <div className={`bg-white rounded border shadow-sm px-2 py-1.5 ${isDragging ? "shadow-lg ring-2 ring-primary" : ""}`}>
       <div className="flex items-start gap-1.5">
@@ -136,6 +144,21 @@ function ProductCard({ cp, isDragging }: { cp: ClientProductEnriched; isDragging
             {cp.name || cp.product?.name}
           </p>
         </div>
+        {showMenu && onComplete && !isDragging && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+              <button className="p-0.5 rounded hover:bg-gray-100 flex-shrink-0">
+                <MoreVertical className="h-3.5 w-3.5 text-gray-400" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-40">
+              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onComplete(cp.id); }}>
+                <CheckCircle2 className="h-3.5 w-3.5 mr-2 text-green-600" />
+                Mark Complete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
     </div>
   );
@@ -157,7 +180,7 @@ function SortableReturnCard({ ret }: { ret: Return }) {
   );
 }
 
-function SortableProductCard({ cp }: { cp: ClientProductEnriched }) {
+function SortableProductCard({ cp, onComplete }: { cp: ClientProductEnriched; onComplete?: (id: string) => void }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: cp.id, data: { cp } });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
 
@@ -166,7 +189,7 @@ function SortableProductCard({ cp }: { cp: ClientProductEnriched }) {
       <div className="flex items-center gap-0.5">
         <GripVertical className="h-3 w-3 text-gray-400 flex-shrink-0" />
         <div className="flex-1">
-          <ProductCard cp={cp} isDragging={isDragging} />
+          <ProductCard cp={cp} isDragging={isDragging} onComplete={onComplete} showMenu />
         </div>
       </div>
     </div>
@@ -200,7 +223,7 @@ function KanbanColumn({ status, label, colorClass, returns }: { status: string; 
   );
 }
 
-function ProductKanbanColumn({ stageId, label, color, items }: { stageId: string; label: string; color: string | null; items: ClientProductEnriched[] }) {
+function ProductKanbanColumn({ stageId, label, color, items, onComplete }: { stageId: string; label: string; color: string | null; items: ClientProductEnriched[]; onComplete?: (id: string) => void }) {
   const { setNodeRef, isOver } = useDroppable({ id: stageId });
   const borderColor = color || '#6b7280';
 
@@ -217,7 +240,7 @@ function ProductKanbanColumn({ stageId, label, color, items }: { stageId: string
         <SortableContext items={items.map(cp => cp.id)} strategy={verticalListSortingStrategy}>
           <div className="space-y-1">
             {items.map((cp) => (
-              <SortableProductCard key={cp.id} cp={cp} />
+              <SortableProductCard key={cp.id} cp={cp} onComplete={onComplete} />
             ))}
             {items.length === 0 && (
               <div className="h-12 flex items-center justify-center text-xs text-gray-400 border-2 border-dashed border-gray-200 rounded">
@@ -367,26 +390,57 @@ function ProductRowComponent({ row, typeFilter }: { row: ProductRow; typeFilter:
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [collapsed, setCollapsed] = useState(false);
+  const [showCompleted, setShowCompleted] = useState(false);
   const [activeClientProduct, setActiveClientProduct] = useState<ClientProductEnriched | null>(null);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
+
+  const invalidateKanban = () => {
+    queryClient.invalidateQueries({ predicate: (query) =>
+      typeof query.queryKey[0] === 'string' && query.queryKey[0].startsWith('/api/admin/kanban')
+    });
+  };
 
   const updateClientProductStageMutation = useMutation({
     mutationFn: async ({ id, currentStageId }: { id: string; currentStageId: string }) => {
       return apiRequest("PATCH", `/api/admin/client-products/${id}`, { currentStageId });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ predicate: (query) =>
-        typeof query.queryKey[0] === 'string' && query.queryKey[0].startsWith('/api/admin/kanban')
-      });
-    },
+    onSuccess: invalidateKanban,
     onError: (error: any) => {
       toast({ title: "Failed to update", description: error.message || "Could not update stage", variant: "destructive" });
-      queryClient.invalidateQueries({ predicate: (query) =>
-        typeof query.queryKey[0] === 'string' && query.queryKey[0].startsWith('/api/admin/kanban')
-      });
+      invalidateKanban();
     },
   });
+
+  const completeProductMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return apiRequest("PATCH", `/api/admin/client-products/${id}/complete`);
+    },
+    onSuccess: () => {
+      toast({ title: "Marked as complete" });
+      invalidateKanban();
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to complete", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const reopenProductMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return apiRequest("PATCH", `/api/admin/client-products/${id}/reopen`);
+    },
+    onSuccess: () => {
+      toast({ title: "Reopened" });
+      invalidateKanban();
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to reopen", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const handleComplete = (id: string) => {
+    completeProductMutation.mutate(id);
+  };
 
   const handleDragStart = (event: DragStartEvent) => {
     const cp = event.active.data.current?.cp as ClientProductEnriched;
@@ -458,7 +512,15 @@ function ProductRowComponent({ row, typeFilter }: { row: ProductRow; typeFilter:
             <p className="text-xs text-muted-foreground">{row.totalClients} active client{row.totalClients !== 1 ? 's' : ''}</p>
           </div>
         </div>
-        <Badge variant="secondary" className="text-xs">{row.stages.length} stages</Badge>
+        <div className="flex items-center gap-2">
+          {row.completedCount > 0 && (
+            <Badge variant="outline" className="text-xs text-green-700 border-green-300 bg-green-50">
+              <CheckCircle2 className="h-3 w-3 mr-1" />
+              {row.completedCount} completed
+            </Badge>
+          )}
+          <Badge variant="secondary" className="text-xs">{row.stages.length} stages</Badge>
+        </div>
       </div>
       {!collapsed && (
         <div className="px-4 pb-4 border-t">
@@ -471,6 +533,7 @@ function ProductRowComponent({ row, typeFilter }: { row: ProductRow; typeFilter:
                   label={stage.name}
                   color={stage.color}
                   items={items}
+                  onComplete={handleComplete}
                 />
               ))}
             </div>
@@ -478,6 +541,43 @@ function ProductRowComponent({ row, typeFilter }: { row: ProductRow; typeFilter:
               {activeClientProduct && <ProductCard cp={activeClientProduct} isDragging />}
             </DragOverlay>
           </DndContext>
+
+          {row.completedCount > 0 && (
+            <div className="mt-3 border-t pt-3">
+              <button
+                onClick={() => setShowCompleted(!showCompleted)}
+                className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {showCompleted ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+                <CheckCircle2 className="h-3 w-3 text-green-600" />
+                {row.completedCount} completed
+              </button>
+              {showCompleted && (
+                <div className="mt-2 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                  {row.completedProducts.map((cp) => (
+                    <div key={cp.id} className="bg-green-50 rounded border border-green-200 px-2 py-1.5 opacity-75">
+                      <div className="flex items-start gap-1.5">
+                        <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 bg-green-100">
+                          <CheckCircle2 className="h-3 w-3 text-green-600" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-xs truncate">{cp.clientName}</p>
+                          <p className="text-[10px] text-muted-foreground truncate">{cp.name || cp.product?.name}</p>
+                        </div>
+                        <button
+                          onClick={() => reopenProductMutation.mutate(cp.id)}
+                          className="p-0.5 rounded hover:bg-green-200 flex-shrink-0"
+                          title="Reopen"
+                        >
+                          <RotateCcw className="h-3 w-3 text-green-700" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>

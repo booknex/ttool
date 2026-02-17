@@ -373,6 +373,7 @@ export const clientProducts = pgTable("client_products", {
   currentStageId: varchar("current_stage_id").references(() => productStages.id),
   name: varchar("name"),
   metadata: jsonb("metadata"),
+  completedAt: timestamp("completed_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
