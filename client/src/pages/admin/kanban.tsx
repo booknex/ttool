@@ -586,6 +586,7 @@ function ProductRowComponent({ row, typeFilter }: { row: ProductRow; typeFilter:
 
 export default function AdminKanban() {
   const [typeFilter, setTypeFilter] = useState<'all' | 'personal' | 'business'>('all');
+  const [showCompleted, setShowCompleted] = useState(false);
 
   const { data, isLoading } = useQuery<KanbanAllData>({
     queryKey: ["/api/admin/kanban-all?type=" + typeFilter],
@@ -606,13 +607,30 @@ export default function AdminKanban() {
 
   const hasReturns = data && data.returns.totalClients > 0;
   const activeProductRows = data?.productRows.filter(row => row.clientProducts.length > 0) ?? [];
+  const completedOnlyRows = data?.productRows.filter(row => row.clientProducts.length === 0 && row.completedCount > 0) ?? [];
+  const totalCompleted = data?.productRows.reduce((sum, row) => sum + row.completedCount, 0) ?? 0;
   const hasProducts = activeProductRows.length > 0;
 
   return (
     <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Workflow Board</h1>
-        <p className="text-gray-500">All active services at a glance. Drag clients between stages to update progress.</p>
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Workflow Board</h1>
+          <p className="text-gray-500">All active services at a glance. Drag clients between stages to update progress.</p>
+        </div>
+        {totalCompleted > 0 && (
+          <button
+            onClick={() => setShowCompleted(!showCompleted)}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+              showCompleted
+                ? 'bg-green-100 text-green-800 border border-green-300'
+                : 'bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-200'
+            }`}
+          >
+            <CheckCircle2 className="h-4 w-4" />
+            {totalCompleted} Completed
+          </button>
+        )}
       </div>
 
       <div className="space-y-4">
@@ -623,6 +641,19 @@ export default function AdminKanban() {
         {activeProductRows.map((row) => (
           <ProductRowComponent key={row.productId} row={row} typeFilter={typeFilter} />
         ))}
+
+        {showCompleted && completedOnlyRows.length > 0 && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 pt-2">
+              <div className="h-px flex-1 bg-green-200" />
+              <span className="text-xs font-medium text-green-700 px-2">Completed Services</span>
+              <div className="h-px flex-1 bg-green-200" />
+            </div>
+            {completedOnlyRows.map((row) => (
+              <ProductRowComponent key={row.productId} row={row} typeFilter={typeFilter} />
+            ))}
+          </div>
+        )}
 
         {!hasReturns && !hasProducts && (
           <div className="text-center py-12 text-gray-500">
