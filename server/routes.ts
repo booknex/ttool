@@ -2371,10 +2371,6 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
       if (!product || !product.isActive) {
         return res.status(404).json({ message: "Product not found" });
       }
-      const existingCps = await storage.getClientProducts(userId);
-      if (existingCps.some(cp => cp.productId === productId)) {
-        return res.status(400).json({ message: "You already have this product" });
-      }
       const stages = await storage.getProductStages(productId);
       const firstStage = stages.length > 0 ? stages[0] : null;
       const cp = await storage.createClientProduct({

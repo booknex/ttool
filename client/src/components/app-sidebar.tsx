@@ -20,6 +20,9 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import {
   Home,
   FileText,
@@ -119,6 +122,8 @@ const STATUS_LABEL: Record<string, string> = {
 export function AppSidebar({ user }: AppSidebarProps) {
   const [location] = useLocation();
   const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<ProductWithStages | null>(null);
+  const [serviceName, setServiceName] = useState("");
   const { toast } = useToast();
 
   const { data: refund } = useQuery<RefundTracking>({
@@ -161,10 +166,9 @@ export function AppSidebar({ user }: AppSidebarProps) {
   const personalReturn = returns.find((r) => r.returnType === "personal");
   const businessReturns = returns.filter((r) => r.returnType === "business");
 
-  const assignedProductIds = new Set(clientProducts.map(cp => cp.productId));
   const sidebarProducts = allProducts.filter(p => 
     (p.displayLocation === "sidebar" || p.displayLocation === "both") && 
-    !assignedProductIds.has(p.id)
+    p.isActive
   );
 
   const handleLogout = async () => {
@@ -178,11 +182,22 @@ export function AppSidebar({ user }: AppSidebarProps) {
     }
   };
 
-  const handleAddProduct = async (productId: string) => {
+  const handleSelectProduct = (product: ProductWithStages) => {
+    setSelectedProduct(product);
+    setServiceName(product.name);
+  };
+
+  const handleAddProduct = async () => {
+    if (!selectedProduct) return;
     try {
-      await apiRequest("POST", "/api/client-products", { productId });
+      await apiRequest("POST", "/api/client-products", { 
+        productId: selectedProduct.id, 
+        name: serviceName.trim() || selectedProduct.name 
+      });
       queryClient.invalidateQueries({ queryKey: ["/api/client-products"] });
       setAddDialogOpen(false);
+      setSelectedProduct(null);
+      setServiceName("");
       toast({ title: "Added successfully" });
     } catch (error) {
       toast({ title: "Failed to add", variant: "destructive" });
@@ -236,54 +251,89 @@ export function AppSidebar({ user }: AppSidebarProps) {
             <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">
               My Services
             </span>
-            <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+            <Dialog open={addDialogOpen} onOpenChange={(open) => {
+              setAddDialogOpen(open);
+              if (!open) { setSelectedProduct(null); setServiceName(""); }
+            }}>
               <DialogTrigger asChild>
                 <button className="w-5 h-5 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
                   <Plus className="w-3.5 h-3.5" />
                 </button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-sm">
-                <DialogHeader>
-                  <DialogTitle>Add Service</DialogTitle>
-                  <DialogDescription>
-                    Choose a service to add to your portal.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-2">
-                  <Link
-                    href="/businesses"
-                    onClick={() => setAddDialogOpen(false)}
-                    className="flex items-center gap-3 p-3 rounded-lg border hover:bg-accent transition-colors"
-                  >
-                    <div className="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
-                      <Building2 className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">New Business Return</p>
-                      <p className="text-xs text-muted-foreground">LLC, S-Corp, etc.</p>
-                    </div>
-                  </Link>
-                  {sidebarProducts.map((product) => {
-                    const ProductIcon = getIcon(product.icon);
-                    return (
-                      <button
-                        key={product.id}
-                        onClick={() => handleAddProduct(product.id)}
-                        className="flex items-center gap-3 p-3 rounded-lg border hover:bg-accent transition-colors w-full text-left"
+                {!selectedProduct ? (
+                  <>
+                    <DialogHeader>
+                      <DialogTitle>Add Service</DialogTitle>
+                      <DialogDescription>
+                        Choose a service to add to your portal.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-2">
+                      <Link
+                        href="/businesses"
+                        onClick={() => setAddDialogOpen(false)}
+                        className="flex items-center gap-3 p-3 rounded-lg border hover:bg-accent transition-colors"
                       >
-                        <div className="w-9 h-9 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
-                          <ProductIcon className="w-4 h-4" />
+                        <div className="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                          <Building2 className="w-4 h-4" />
                         </div>
                         <div>
-                          <p className="text-sm font-medium">{product.name}</p>
-                          {product.description && (
-                            <p className="text-xs text-muted-foreground">{product.description}</p>
-                          )}
+                          <p className="text-sm font-medium">New Business Return</p>
+                          <p className="text-xs text-muted-foreground">LLC, S-Corp, etc.</p>
                         </div>
-                      </button>
-                    );
-                  })}
-                </div>
+                      </Link>
+                      {sidebarProducts.map((product) => {
+                        const ProductIcon = getIcon(product.icon);
+                        return (
+                          <button
+                            key={product.id}
+                            onClick={() => handleSelectProduct(product)}
+                            className="flex items-center gap-3 p-3 rounded-lg border hover:bg-accent transition-colors w-full text-left"
+                          >
+                            <div className="w-9 h-9 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
+                              <ProductIcon className="w-4 h-4" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium">{product.name}</p>
+                              {product.description && (
+                                <p className="text-xs text-muted-foreground">{product.description}</p>
+                              )}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <DialogHeader>
+                      <DialogTitle>Name Your Service</DialogTitle>
+                      <DialogDescription>
+                        Give this service a name so you can tell it apart from others.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="service-name">Service Name</Label>
+                        <Input
+                          id="service-name"
+                          value={serviceName}
+                          onChange={(e) => setServiceName(e.target.value)}
+                          placeholder={selectedProduct.name}
+                        />
+                      </div>
+                      <div className="flex gap-2 justify-end">
+                        <Button variant="outline" size="sm" onClick={() => setSelectedProduct(null)}>
+                          Back
+                        </Button>
+                        <Button size="sm" onClick={handleAddProduct}>
+                          Add Service
+                        </Button>
+                      </div>
+                    </div>
+                  </>
+                )}
               </DialogContent>
             </Dialog>
           </div>
