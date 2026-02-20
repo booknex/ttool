@@ -26,7 +26,8 @@ import {
   CircleDot,
   Building2,
 } from "lucide-react";
-import type { Document, Message, RefundTracking, Invoice, Signature, RequiredDocument, Return, Business } from "@shared/schema";
+import type { Document, Message, RefundTracking, Invoice, Signature, RequiredDocument, Return, Business, Appointment } from "@shared/schema";
+import { format } from "date-fns";
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -65,6 +66,14 @@ export default function Dashboard() {
   const { data: businesses = [] } = useQuery<Business[]>({
     queryKey: ["/api/businesses"],
   });
+
+  const { data: appointments = [] } = useQuery<Appointment[]>({
+    queryKey: ["/api/appointments"],
+  });
+
+  const upcomingAppointments = appointments.filter(
+    (a) => new Date(a.startTime!) > new Date() && a.status !== "cancelled" && a.status !== "completed"
+  ).sort((a, b) => new Date(a.startTime!).getTime() - new Date(b.startTime!).getTime()).slice(0, 3);
 
   const unreadMessages = messages?.filter((m) => !m.isRead && !m.isFromClient).length || 0;
   const uploadedDocs = documents?.length || 0;
@@ -474,6 +483,40 @@ export default function Dashboard() {
           </div>
         </Card>
       </div>
+
+      {upcomingAppointments.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-blue-600" />
+              Upcoming Appointments
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {upcomingAppointments.map((apt) => (
+                <div key={apt.id} className="flex items-center gap-3 p-3 rounded-lg bg-blue-50/50 border border-blue-100">
+                  <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+                    <Calendar className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{apt.title}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {format(new Date(apt.startTime!), "EEEE, MMM d 'at' h:mm a")}
+                    </p>
+                    {apt.location && (
+                      <p className="text-xs text-muted-foreground mt-0.5">{apt.location}</p>
+                    )}
+                  </div>
+                  <Badge variant="outline" className="text-xs bg-blue-100 text-blue-800 border-blue-200 capitalize">
+                    {(apt.status || "scheduled").replace("_", " ")}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Recent Messages */}
       {messages && messages.length > 0 && (

@@ -2941,5 +2941,88 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
     }
   });
 
+  // ==================== APPOINTMENT ROUTES ====================
+
+  app.get("/api/admin/appointments", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const allAppointments = await storage.getAppointments();
+      const allUsers = await storage.getAllUsers();
+      const userMap = new Map(allUsers.map(u => [u.id, u]));
+      const enriched = allAppointments.map(apt => ({
+        ...apt,
+        client: apt.clientId ? userMap.get(apt.clientId) : null,
+      }));
+      res.json(enriched);
+    } catch (error) {
+      console.error("Error fetching appointments:", error);
+      res.status(500).json({ message: "Failed to fetch appointments" });
+    }
+  });
+
+  app.post("/api/admin/appointments", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { title, description, clientId, startTime, endTime, status, location, notes } = req.body;
+      const appointment = await storage.createAppointment({
+        title,
+        description: description || null,
+        clientId: clientId || null,
+        adminId: req.user.id,
+        startTime: new Date(startTime),
+        endTime: new Date(endTime),
+        status: status || 'scheduled',
+        location: location || null,
+        notes: notes || null,
+      });
+      res.json(appointment);
+    } catch (error) {
+      console.error("Error creating appointment:", error);
+      res.status(500).json({ message: "Failed to create appointment" });
+    }
+  });
+
+  app.patch("/api/admin/appointments/:id", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const updates: any = {};
+      if (req.body.title !== undefined) updates.title = req.body.title;
+      if (req.body.description !== undefined) updates.description = req.body.description;
+      if (req.body.clientId !== undefined) updates.clientId = req.body.clientId;
+      if (req.body.startTime !== undefined) updates.startTime = new Date(req.body.startTime);
+      if (req.body.endTime !== undefined) updates.endTime = new Date(req.body.endTime);
+      if (req.body.status !== undefined) updates.status = req.body.status;
+      if (req.body.location !== undefined) updates.location = req.body.location;
+      if (req.body.notes !== undefined) updates.notes = req.body.notes;
+      const updated = await storage.updateAppointment(id, updates);
+      if (!updated) {
+        return res.status(404).json({ message: "Appointment not found" });
+      }
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating appointment:", error);
+      res.status(500).json({ message: "Failed to update appointment" });
+    }
+  });
+
+  app.delete("/api/admin/appointments/:id", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteAppointment(id);
+      res.json({ message: "Appointment deleted" });
+    } catch (error) {
+      console.error("Error deleting appointment:", error);
+      res.status(500).json({ message: "Failed to delete appointment" });
+    }
+  });
+
+  app.get("/api/appointments", isAuthenticated, async (req: any, res) => {
+    try {
+      const userAppointments = await storage.getAppointmentsByClient(req.user.id);
+      res.json(userAppointments);
+    } catch (error) {
+      console.error("Error fetching client appointments:", error);
+      res.status(500).json({ message: "Failed to fetch appointments" });
+    }
+  });
+
   return server;
 }

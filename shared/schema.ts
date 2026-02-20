@@ -379,7 +379,28 @@ export const clientProducts = pgTable("client_products", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Appointments table
+export const appointmentStatusEnum = pgEnum('appointment_status', [
+  'scheduled', 'confirmed', 'completed', 'cancelled', 'no_show'
+]);
+
+export const appointments = pgTable("appointments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: varchar("title").notNull(),
+  description: text("description"),
+  clientId: varchar("client_id").references(() => users.id),
+  adminId: varchar("admin_id").references(() => users.id),
+  startTime: timestamp("start_time").notNull(),
+  endTime: timestamp("end_time").notNull(),
+  status: appointmentStatusEnum("status").default('scheduled'),
+  location: varchar("location"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Insert schemas
+export const insertAppointmentSchema = createInsertSchema(appointments).omit({ createdAt: true, updatedAt: true });
 export const insertUserSchema = createInsertSchema(users).omit({ createdAt: true, updatedAt: true });
 export const insertDocumentSchema = createInsertSchema(documents).omit({ uploadedAt: true });
 export const insertRequiredDocumentSchema = createInsertSchema(requiredDocuments);
@@ -442,3 +463,5 @@ export type ProductDocumentRequirement = typeof productDocumentRequirements.$inf
 export type InsertProductDocumentRequirement = z.infer<typeof insertProductDocumentRequirementSchema>;
 export type ClientProduct = typeof clientProducts.$inferSelect;
 export type InsertClientProduct = z.infer<typeof insertClientProductSchema>;
+export type Appointment = typeof appointments.$inferSelect;
+export type InsertAppointment = z.infer<typeof insertAppointmentSchema>;

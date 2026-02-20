@@ -27,6 +27,7 @@ import {
   Kanban,
   User,
   Package,
+  CalendarDays,
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
@@ -45,6 +46,7 @@ const adminMenuItems = [
   { title: "Refunds", url: "/admin/refunds", icon: TrendingUp, testId: "link-admin-refunds" },
   { title: "Signatures", url: "/admin/signatures", icon: PenTool, testId: "link-admin-signatures" },
   { title: "Products", url: "/admin/products", icon: Package, testId: "link-admin-products" },
+  { title: "Calendar", url: "/admin/calendar", icon: CalendarDays, testId: "link-admin-calendar" },
 ];
 
 export function AdminSidebar({ user }: AdminSidebarProps) {

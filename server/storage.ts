@@ -60,6 +60,9 @@ import {
   type InsertProductDocumentRequirement,
   type ClientProduct,
   type InsertClientProduct,
+  appointments,
+  type Appointment,
+  type InsertAppointment,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, ne, inArray, sql } from "drizzle-orm";
@@ -210,6 +213,14 @@ export interface IStorage {
   createClientProduct(data: InsertClientProduct): Promise<ClientProduct>;
   updateClientProduct(id: string, updates: Partial<ClientProduct>): Promise<ClientProduct | undefined>;
   deleteClientProduct(id: string): Promise<void>;
+
+  // Appointment operations
+  getAppointments(): Promise<Appointment[]>;
+  getAppointmentsByClient(clientId: string): Promise<Appointment[]>;
+  getAppointment(id: string): Promise<Appointment | undefined>;
+  createAppointment(data: InsertAppointment): Promise<Appointment>;
+  updateAppointment(id: string, updates: Partial<Appointment>): Promise<Appointment | undefined>;
+  deleteAppointment(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -918,6 +929,37 @@ export class DatabaseStorage implements IStorage {
 
   async deleteClientProduct(id: string): Promise<void> {
     await db.delete(clientProducts).where(eq(clientProducts.id, id));
+  }
+
+  async getAppointments(): Promise<Appointment[]> {
+    return await db.select().from(appointments).orderBy(desc(appointments.startTime));
+  }
+
+  async getAppointmentsByClient(clientId: string): Promise<Appointment[]> {
+    return await db.select().from(appointments).where(eq(appointments.clientId, clientId)).orderBy(desc(appointments.startTime));
+  }
+
+  async getAppointment(id: string): Promise<Appointment | undefined> {
+    const [appointment] = await db.select().from(appointments).where(eq(appointments.id, id));
+    return appointment;
+  }
+
+  async createAppointment(data: InsertAppointment): Promise<Appointment> {
+    const [appointment] = await db.insert(appointments).values(data).returning();
+    return appointment;
+  }
+
+  async updateAppointment(id: string, updates: Partial<Appointment>): Promise<Appointment | undefined> {
+    const [updated] = await db
+      .update(appointments)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(appointments.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteAppointment(id: string): Promise<void> {
+    await db.delete(appointments).where(eq(appointments.id, id));
   }
 }
 
