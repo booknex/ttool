@@ -1,0 +1,537 @@
+root@srv1365851:/var/www/taxportal# pm2 logs taxportal
+[TAILING] Tailing last 15 lines for [taxportal] process (change the value with --lines option)
+/root/.pm2/logs/taxportal-error.log last 15 lines:
+7|taxporta |   detail: undefined,
+7|taxporta |   hint: undefined,
+7|taxporta |   position: undefined,
+7|taxporta |   internalPosition: undefined,
+7|taxporta |   internalQuery: undefined,
+7|taxporta |   where: "unnamed portal parameter $8 = ''",
+7|taxporta |   schema: undefined,
+7|taxporta |   table: undefined,
+7|taxporta |   column: undefined,
+7|taxporta |   dataType: undefined,
+7|taxporta |   constraint: undefined,
+7|taxporta |   file: 'numeric.c',
+7|taxporta |   line: '800',
+7|taxporta |   routine: 'numeric_in'
+7|taxporta | }
+
+/root/.pm2/logs/taxportal-out.log last 15 lines:
+7|taxporta | . If you have any questions, feel free to message us here.","messageType":"text","isFromClient":false,"attachmentUrl":null,"attachmentName":null,"isRead":false,"createdAt":"2026-01-28T18:52:15.513Z"}],"unreadCount":0,"lastMessage":{"id":"679f168e-f011-4223-a77f-180554419ba2","userId":"092efe0b-ec61-42c8-b260-996621ee5d80","content":"Welcome to TaxPortal! We're excited to help you with your tax preparation. Please start by uploading your tax documents and completing the questionnaire. If you have any questions, feel free to message us here.","messageType":"text","isFromClient":false,"attachmentUrl":null,"attachmentName":null,"isRead":false,"createdAt":"2026-01-28T18:52:15.513Z"}},{"userId":"68255a53-e163-469b-89f4-03069e4b6de5","clientName":"SUSAN KUCERA","clientEmail":"SUSAN@BOOKNEX.COM","clientIsArchived":false,"messages":[{"id":"0ab1509f-28c5-4e88-82b5-c75ff7ca06c9","userId":"68255a53-e163-469b-89f4-03069e4b6de5","content":"Welcome to TaxPortal! We're excited to help you with your tax preparation. Please start by uploading your tax documents and completing the questionnaire. If you have any questions, feel free to message us here.","messageType":"text","isFromClient":false,"attachmentUrl":null,"attachmentName":null,"isRead":true,"createdAt":"2026-01-28T18:22:41.989Z"}],"unreadCount":0,"lastMessage":{"id":"0ab1509f-28c5-4e88-82b5-c75ff7ca06c9","userId":"68255a53-e163-469b-89f4-03069e4b6de5","content":"Welcome to TaxPortal! We're excited to help you with your tax preparation. Please start by uploading your tax documents and completing the questionnaire. If you have any questions, feel free to message us here.","messageType":"text","isFromClient":false,"attachmentUrl":null,"attachmentName":null,"isRead":true,"createdAt":"2026-01-28T18:22:41.989Z"}},{"userId":"40cd7e68-c996-4661-8174-0f293d13093f","clientName":"admin admin","clientEmail":"admin@admin.com","clientIsArchived":false,"messages":[{"id":"0ed2f701-394c-4cf2-bc04-09230ae90fd5","userId":"40cd7e68-c996-4661-8174-0f293d13093f","content":"Welcome to TaxPortal! We're excited to help you with your tax preparation. Please start by uploading your tax documents and completing the questionnaire. If you have any questions, feel free to message us here.","messageType":"text","isFromClient":false,"attachmentUrl":null,"attachmentName":null,"isRead":false,"createdAt":"2026-01-23T17:21:53.290Z"}],"unreadCount":0,"lastMessage":{"id":"0ed2f701-394c-4cf2-bc04-09230ae90fd5","userId":"40cd7e68-c996-4661-8174-0f293d13093f","content":"Welcome to TaxPortal! We're excited to help you with your tax preparation. Please start by uploading your tax documents and completing the questionnaire. If you have any questions, feel free to message us here.","messageType":"text","isFromClient":false,"attachmentUrl":null,"attachmentName":null,"isRead":false,"createdAt":"2026-01-23T17:21:53.290Z"}}]
+7|taxporta | Stripe integration enabled for invoice payments
+7|taxporta | 10:12:12 AM [express] serving on port 5003
+7|taxporta | Admin user configured: dylan@booknex.com
+
+7|taxportal  | 10:12:22 AM [express] GET /api/auth/user 304 in 9ms :: {"id":"f39bf5ba-c3b6-4a4f-b66d-469935c86b0f","email":"dylan@booknex.com","passwordHash":"$2b$12$pjspSrOuPlkhWNrMx8I2lepQ9X6pmzs/neIHWK4nZOBhUMXVv4jca","firstName":"dylan","lastName":"oter","profileImageUrl":null,"phone":null,"isAdmin":true,"hasSeenOnboarding":true,"hasCompletedQuestionnaire":true,"referredByAffiliateId":null,"referralCode":null,"isArchived":false,"archivedAt":null,"createdAt":"2025-12-30T21:25:47.847Z","updatedAt":"2025-12-30T21:27:24.080Z"}
+7|taxportal  | 10:12:22 AM [express] GET /api/admin/messages 304 in 11ms :: [{"userId":"8a15bc0b-71f8-45d6-b65b-b053494948e0","clientName":"Dylan Otero","clientEmail":"dylan@inboxplace.com","clientIsArchived":false,"messages":[{"id":"6db81bbd-3f17-429f-abd0-07f5f9684eb9","userId":"8a15bc0b-71f8-45d6-b65b-b053494948e0","content":"Welcome to TaxPortal! We're excited to help you with your tax preparation. Please start by uploading your tax documents and completing the questionnaire. If you have any questions, feel free to message us here.","messageType":"text","isFromClient":false,"attachmentUrl":null,"attachmentName":null,"isRead":true,"createdAt":"2026-02-17T05:27:32.824Z"}],"unreadCount":0,"lastMessage":{"id":"6db81bbd-3f17-429f-abd0-07f5f9684eb9","userId":"8a15bc0b-71f8-45d6-b65b-b053494948e0","content":"Welcome to TaxPortal! We're excited to help you with your tax preparation. Please start by uploading your tax documents and completing the questionnaire. If you have any questions, feel free to message us here.","messageType":"text","isFromClient":false,"attachmentUrl":null,"attachmentName":null,"isRead":true,"createdAt":"2026-02-17T05:27:32.824Z"}},{"userId":"f39bf5ba-c3b6-4a4f-b66d-469935c86b0f","clientName":"dylan oter","clientEmail":"dylan@booknex.com","clientIsArchived":false,"messages":[{"id":"b5537508-ec8d-4bf5-8cd8-65db7645493b","userId":"f39bf5ba-c3b6-4a4f-b66d-469935c86b0f","content":"Welcome to TaxPortal! We're excited to help you with your tax preparation. Please start by uploading your tax documents and completing the questionnaire. If you have any questions, feel free to message us here.","messageType":"text","isFromClient":false,"attachmentUrl":null,"attachmentName":null,"isRead":true,"createdAt":"2026-02-13T06:34:50.636Z"}],"unreadCount":0,"lastMessage":{"id":"b5537508-ec8d-4bf5-8cd8-65db7645493b","userId":"f39bf5ba-c3b6-4a4f-b66d-469935c86b0f","content":"Welcome to TaxPortal! We're excited to help you with your tax preparation. Please start by uploading your tax documents and completing the questionnaire. If you have any questions, feel free to message us here.","messageType":"text","isFromClient":false,"attachmentUrl":null,"attachmentName":null,"isRead":true,"createdAt":"2026-02-13T06:34:50.636Z"}},{"userId":"092efe0b-ec61-42c8-b260-996621ee5d80","clientName":"YANET SAGO ARREBATO","clientEmail":"islanay@gmail.com","clientIsArchived":false,"messages":[{"id":"679f168e-f011-4223-a77f-180554419ba2","userId":"092efe0b-ec61-42c8-b260-996621ee5d80","content":"Welcome to TaxPortal! We're excited to help you with your tax preparation. Please start by uploading your tax documents and completing the questionnaire. If you have any questions, feel free to message us here.","messageType":"text","isFromClient":false,"attachmentUrl":null,"attachmentName":null,"isRead":false,"createdAt":"2026-01-28T18:52:15.513Z"}],"unreadCount":0,"lastMessage":{"id":"679f168e-f011-4223-a77f-180554419ba2","userId":"092efe0b-ec61-42c8-b260-996621ee5d80","content":"Welcome to TaxPortal! We're excited to help you with your tax preparation. Please start by uploading your tax documents and completing the questionnaire. If you have any questions, feel free to message us here.","messageType":"text","isFromClient":false,"attachmentUrl":null,"attachmentName":null,"isRead":false,"createdAt":"2026-01-28T18:52:15.513Z"}},{"userId":"68255a53-e163-469b-89f4-03069e4b6de5","clientName":"SUSAN KUCERA","clientEmail":"SUSAN@BOOKNEX.COM","clientIsArchived":false,"messages":[{"id":"0ab1509f-28c5-4e88-82b5-c75ff7ca06c9","userId":"68255a53-e163-469b-89f4-03069e4b6de5","content":"Welcome to TaxPortal! We're excited to help you with your tax preparation. Please start by uploading your tax documents and completing the questionnaire. If you have any questions, feel free to message us here.","messageType":"text","isFromClient":false,"attachmentUrl":null,"attachmentName":null,"isRead":true,"createdAt":"2026-01-28T18:22:41.989Z"}],"unreadCount":0,"lastMessage":{"id":"0ab1509f-28c5-4e88-82b5-c75ff7ca06c9","userId":"68255a53-e163-469b-89f4-03069e4b6de5","content":"Welcome to TaxPortal! We're excited to help you with your tax preparation. Please start by uploading your tax documents and completing the questionnaire. If you have any questions, feel free to message us here.","messageType":"text","isFromClient":false,"attachmentUrl":null,"attachmentName":null,"isRead":true,"createdAt":"2026-01-28T18:22:41.989Z"}},{"userId":"40cd7e68-c996-4661-8174-0f293d13093f","clientName":"admin admin","clientEmail":"admin@admin.com","clientIsArchived":false,"messages":[{"id":"0ed2f701-394c-4cf2-bc04-09230ae90fd5","userId":"40cd7e68-c996-4661-8174-0f293d13093f","content":"Welcome to TaxPortal! We're excited to help you with your tax preparation. Please start by uploading your tax documents and completing the questionnaire. If you have any questions, feel free to message us here.","messageType":"text","isFromClient":false,"attachmentUrl":null,"attachmentName":null,"isRead":false,"createdAt":"2026-01-23T17:21:53.290Z"}],"unreadCount":0,"lastMessage":{"id":"0ed2f701-394c-4cf2-bc04-09230ae90fd5","userId":"40cd7e68-c996-4661-8174-0f293d13093f","content":"Welcome to TaxPortal! We're excited to help you with your tax preparation. Please start by uploading your tax documents and completing the questionnaire. If you have any questions, feel free to message us here.","messageType":"text","isFromClient":false,"attachmentUrl":null,"attachmentName":null,"isRead":false,"createdAt":"2026-01-23T17:21:53.290Z"}}]
+7|taxportal  | Error fetching clients: error: column "completed_at" does not exist
+7|taxportal  |     at /var/www/taxportal/dist/index.cjs:64:13330
+7|taxportal  |     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+7|taxportal  |     at async /var/www/taxportal/dist/index.cjs:88:108438
+7|taxportal  |     at async /var/www/taxportal/dist/index.cjs:88:170371
+7|taxportal  |     at async Promise.all (index 0)
+7|taxportal  |     at async /var/www/taxportal/dist/index.cjs:88:170140 {
+7|taxportal  |   length: 113,
+7|taxportal  |   severity: 'ERROR',
+7|taxportal  |   code: '42703',
+7|taxportal  |   detail: undefined,
+7|taxportal  |   hint: undefined,
+7|taxportal  |   position: '167',
+7|taxportal  |   internalPosition: undefined,
+7|taxportal  |   internalQuery: undefined,
+7|taxportal  |   where: undefined,
+7|taxportal  |   schema: undefined,
+7|taxportal  |   table: undefined,
+7|taxportal  |   column: undefined,
+7|taxportal  |   dataType: undefined,
+7|taxportal  |   constraint: undefined,
+7|taxportal  |   file: 'parse_relation.c',
+7|taxportal  |   line: '3722',
+7|taxportal  |   routine: 'errorMissingColumn'
+7|taxportal  | }
+7|taxportal  | 10:12:23 AM [express] GET /api/admin/clients 500 in 52ms :: {"message":"Failed to fetch clients"}
+7|taxportal  | Error fetching kanban-all data: error: column "completed_at" does not exist
+7|taxportal  |     at /var/www/taxportal/dist/index.cjs:64:13330
+7|taxportal  |     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+7|taxportal  |     at async /var/www/taxportal/dist/index.cjs:88:108438
+7|taxportal  |     at async /var/www/taxportal/dist/index.cjs:88:196077 {
+7|taxportal  |   length: 113,
+7|taxportal  |   severity: 'ERROR',
+7|taxportal  |   code: '42703',
+7|taxportal  |   detail: undefined,
+7|taxportal  |   hint: undefined,
+7|taxportal  |   position: '167',
+7|taxportal  |   internalPosition: undefined,
+7|taxportal  |   internalQuery: undefined,
+7|taxportal  |   where: undefined,
+7|taxportal  |   schema: undefined,
+7|taxportal  |   table: undefined,
+7|taxportal  |   column: undefined,
+7|taxportal  |   dataType: undefined,
+7|taxportal  |   constraint: undefined,
+7|taxportal  |   file: 'parse_relation.c',
+7|taxportal  |   line: '3722',
+7|taxportal  |   routine: 'errorMissingColumn'
+7|taxportal  | }
+7|taxportal  | 10:12:26 AM [express] GET /api/admin/kanban-all 500 in 22ms :: {"message":"Failed to fetch kanban data"}
+7|taxportal  | Error fetching clients: error: column "completed_at" does not exist
+7|taxportal  |     at /var/www/taxportal/dist/index.cjs:64:13330
+7|taxportal  |     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+7|taxportal  |     at async /var/www/taxportal/dist/index.cjs:88:108438
+7|taxportal  |     at async /var/www/taxportal/dist/index.cjs:88:170371
+7|taxportal  |     at async Promise.all (index 1)
+7|taxportal  |     at async /var/www/taxportal/dist/index.cjs:88:170140 {
+7|taxportal  |   length: 113,
+7|taxportal  |   severity: 'ERROR',
+7|taxportal  |   code: '42703',
+7|taxportal  |   detail: undefined,
+7|taxportal  |   hint: undefined,
+7|taxportal  |   position: '167',
+7|taxportal  |   internalPosition: undefined,
+7|taxportal  |   internalQuery: undefined,
+7|taxportal  |   where: undefined,
+7|taxportal  |   schema: undefined,
+7|taxportal  |   table: undefined,
+7|taxportal  |   column: undefined,
+7|taxportal  |   dataType: undefined,
+7|taxportal  |   constraint: undefined,
+7|taxportal  |   file: 'parse_relation.c',
+7|taxportal  |   line: '3722',
+7|taxportal  |   routine: 'errorMissingColumn'
+7|taxportal  | }
+7|taxportal  | 10:12:28 AM [express] GET /api/admin/clients 500 in 75ms :: {"message":"Failed to fetch clients"}
+7|taxportal  | 10:12:28 AM [express] GET /api/admin/documents 304 in 109ms :: [{"id":"ae511957-dc7d-419a-8d31-bad239a92a36","userId":"092efe0b-ec61-42c8-b260-996621ee5d80","businessId":null,"fileName":"3503a973-b8c1-472c-b97d-0c32a8c3f18c.pdf","originalName":"Taxes 2024.pdf","fileType":"application/pdf","fileSize":9240141,"documentType":"other","status":"verified","taxYear":2025,"aiClassification":{"taxYear":2025,"keywords":["document","tax related"],"confidence":0.99,"suggestedType":"other","extractedFields":{"source":"ai_classification_v1","filename":"Taxes 2024.pdf","analyzedAt":"2026-01-28T18:57:08.696Z"}},"isArchived":false,"uploadedAt":"2026-01-28T18:57:08.697Z","clientName":"YANET SAGO ARREBATO","clientEmail":"islanay@gmail.com","clientIsArchived":false},{"id":"48368786-958a-4120-9317-f9af5507ca9e","userId":"68255a53-e163-469b-89f4-03069e4b6de5","businessId":null,"fileName":"d11540fa-0ac1-4e9c-b8be-fe2381bc7edb.pdf","originalName":"ID.pdf","fileType":"application/pdf","fileSize":327409,"documentType":"other","status":"verified","taxYear":2024,"aiClassification":{"taxYear":2024,"keywords":["document","tax related"],"confidence":0.87,"suggestedType":"other","extractedFields":{"source":"ai_classification_v1","filename":"ID.pdf","analyzedAt":"2026-01-28T18:29:31.119Z"}},"isArchived":false,"uploadedAt":"2026-01-28T18:29:31.120Z","clientName":"SUSAN KUCERA","clientEmail":"SUSAN@BOOKNEX.COM","clientIsArchived":false},{"id":"856595d7-5831-4723-a15d-439b40c31849","userId":"68255a53-e163-469b-89f4-03069e4b6de5","businessId":null,"fileName":"2d57b08e-bbc7-4600-8e44-dc996ad2b8f7.pdf","originalName":"1040 2024.pdf","fileType":"application/pdf","fileSize":1395821,"documentType":"other","status":"verified","taxYear":2024,"aiClassification":{"taxYear":2024,"keywords":["document","tax related"],"confidence":0.94,"suggestedType":"other","extractedFields":{"source":"ai_classification_v1","filename":"1040 2024.pdf","analyzedAt":"2026-01-28T18:29:18.930Z"}},"isArchived":false,"uploadedAt":"2026-01-28T18:29:18.934Z","clientName":"SUSAN KUCERA","clientEmail":"SUSAN@BOOKNEX.COM","clientIsArchived":false},{"id":"8a0f9b4f-d360-4bb6-b53b-d650d3572820","userId":"68255a53-e163-469b-89f4-03069e4b6de5","businessId":null,"fileName":"0426149f-d526-4c2d-b41a-88ec0cca1c42.JPG","originalName":"w2.JPG","fileType":"image/jpeg","fileSize":512962,"documentType":"w2","status":"verified","taxYear":2024,"aiClassification":{"taxYear":2024,"keywords":["wages","salary","federal tax withheld","employer"],"confidence":0.81,"suggestedType":"w2","extractedFields":{"source":"ai_classification_v1","filename":"w2.JPG","analyzedAt":"2026-01-28T18:23:45.947Z"}},"isArchived":false,"uploadedAt":"2026-01-28T18:23:45.949Z","clientName":"SUSAN KUCERA","clientEmail":"SUSAN@BOOKNEX.COM","clientIsArchived":false}]
+7|taxportal  | 10:12:36 AM [express] GET /api/admin/invoices 304 in 16ms :: [{"id":"31ca04d1-592b-48eb-9478-82103194d8ab","userId":"092efe0b-ec61-42c8-b260-996621ee5d80","invoiceNumber":"INV-2024-001","status":"sent","subtotal":"350.00","tax":"0.00","total":"350.00","dueDate":"2026-02-27T18:52:15.500Z","paidAt":null,"paymentMethod":null,"stripePaymentIntentId":null,"taxYear":2025,"createdAt":"2026-01-28T18:52:15.502Z","clientName":"YANET SAGO ARREBATO","clientEmail":"islanay@gmail.com","clientIsArchived":false,"items":[{"id":"78ee3378-ad44-438e-ab03-778a7fb14319","invoiceId":"31ca04d1-592b-48eb-9478-82103194d8ab","description":"Federal Tax Return Preparation","quantity":1,"rate":"250.00","amount":"250.00"},{"id":"60ea9908-3331-4cda-8065-584ce3bb6b89","invoiceId":"31ca04d1-592b-48eb-9478-82103194d8ab","description":"State Tax Return Preparation","quantity":1,"rate":"100.00","amount":"100.00"}]},{"id":"e363a7ee-7186-4f41-a7a7-e5e2671a5794","userId":"68255a53-e163-469b-89f4-03069e4b6de5","invoiceNumber":"INV-2024-001","status":"paid","subtotal":"350.00","tax":"0.00","total":"350.00","dueDate":"2026-02-27T18:22:41.971Z","paidAt":"2026-01-28T18:30:02.974Z","paymentMethod":"card","stripePaymentIntentId":null,"taxYear":2024,"createdAt":"2026-01-28T18:22:41.973Z","clientName":"SUSAN KUCERA","clientEmail":"SUSAN@BOOKNEX.COM","clientIsArchived":false,"items":[{"id":"f31abf35-589f-4bfa-8447-ea61d203dc67","invoiceId":"e363a7ee-7186-4f41-a7a7-e5e2671a5794","description":"Federal Tax Return Preparation","quantity":1,"rate":"250.00","amount":"250.00"},{"id":"e01b409a-e080-424d-8d15-15feee088874","invoiceId":"e363a7ee-7186-4f41-a7a7-e5e2671a5794","description":"State Tax Return Preparation","quantity":1,"rate":"100.00","amount":"100.00"}]},{"id":"8d311552-ee9f-4273-aac6-700d3f3faa29","userId":"40cd7e68-c996-4661-8174-0f293d13093f","invoiceNumber":"INV-2024-001","status":"sent","subtotal":"350.00","tax":"0.00","total":"350.00","dueDate":"2026-02-22T17:21:53.274Z","paidAt":null,"paymentMethod":null,"stripePaymentIntentId":null,"taxYear":2024,"createdAt":"2026-01-23T17:21:53.276Z","clientName":"admin admin","clientEmail":"admin@admin.com","clientIsArchived":false,"items":[{"id":"cef46cf6-d001-4cc5-ac2c-e0c2f80685d3","invoiceId":"8d311552-ee9f-4273-aac6-700d3f3faa29","description":"Federal Tax Return Preparation","quantity":1,"rate":"250.00","amount":"250.00"},{"id":"55d5b264-7df6-4967-b9d4-2129859a84f1","invoiceId":"8d311552-ee9f-4273-aac6-700d3f3faa29","description":"State Tax Return Preparation","quantity":1,"rate":"100.00","amount":"100.00"}]}]
+7|taxportal  | Error fetching clients: error: column "completed_at" does not exist
+7|taxportal  |     at /var/www/taxportal/dist/index.cjs:64:13330
+7|taxportal  |     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+7|taxportal  |     at async /var/www/taxportal/dist/index.cjs:88:108438
+7|taxportal  |     at async /var/www/taxportal/dist/index.cjs:88:170371
+7|taxportal  |     at async Promise.all (index 0)
+7|taxportal  |     at async /var/www/taxportal/dist/index.cjs:88:170140 {
+7|taxportal  |   length: 113,
+7|taxportal  |   severity: 'ERROR',
+7|taxportal  |   code: '42703',
+7|taxportal  |   detail: undefined,
+7|taxportal  |   hint: undefined,
+7|taxportal  |   position: '167',
+7|taxportal  |   internalPosition: undefined,
+7|taxportal  |   internalQuery: undefined,
+7|taxportal  |   where: undefined,
+7|taxportal  |   schema: undefined,
+7|taxportal  |   table: undefined,
+7|taxportal  |   column: undefined,
+7|taxportal  |   dataType: undefined,
+7|taxportal  |   constraint: undefined,
+7|taxportal  |   file: 'parse_relation.c',
+7|taxportal  |   line: '3722',
+7|taxportal  |   routine: 'errorMissingColumn'
+7|taxportal  | }
+7|taxportal  | 10:12:36 AM [express] GET /api/admin/clients 500 in 54ms :: {"message":"Failed to fetch clients"}
+7|taxportal  | Error fetching kanban-all data: error: column "completed_at" does not exist
+7|taxportal  |     at /var/www/taxportal/dist/index.cjs:64:13330
+7|taxportal  |     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+7|taxportal  |     at async /var/www/taxportal/dist/index.cjs:88:108438
+7|taxportal  |     at async /var/www/taxportal/dist/index.cjs:88:196077 {
+7|taxportal  |   length: 113,
+7|taxportal  |   severity: 'ERROR',
+7|taxportal  |   code: '42703',
+7|taxportal  |   detail: undefined,
+7|taxportal  |   hint: undefined,
+7|taxportal  |   position: '167',
+7|taxportal  |   internalPosition: undefined,
+7|taxportal  |   internalQuery: undefined,
+7|taxportal  |   where: undefined,
+7|taxportal  |   schema: undefined,
+7|taxportal  |   table: undefined,
+7|taxportal  |   column: undefined,
+7|taxportal  |   dataType: undefined,
+7|taxportal  |   constraint: undefined,
+7|taxportal  |   file: 'parse_relation.c',
+7|taxportal  |   line: '3722',
+7|taxportal  |   routine: 'errorMissingColumn'
+7|taxportal  | }
+7|taxportal  | 10:12:37 AM [express] GET /api/admin/kanban-all 500 in 17ms :: {"message":"Failed to fetch kanban data"}
+7|taxportal  | Error fetching clients: error: column "completed_at" does not exist
+7|taxportal  |     at /var/www/taxportal/dist/index.cjs:64:13330
+7|taxportal  |     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+7|taxportal  |     at async /var/www/taxportal/dist/index.cjs:88:108438
+7|taxportal  |     at async /var/www/taxportal/dist/index.cjs:88:170371
+7|taxportal  |     at async Promise.all (index 0)
+7|taxportal  |     at async /var/www/taxportal/dist/index.cjs:88:170140 {
+7|taxportal  |   length: 113,
+7|taxportal  |   severity: 'ERROR',
+7|taxportal  |   code: '42703',
+7|taxportal  |   detail: undefined,
+7|taxportal  |   hint: undefined,
+7|taxportal  |   position: '167',
+7|taxportal  |   internalPosition: undefined,
+7|taxportal  |   internalQuery: undefined,
+7|taxportal  |   where: undefined,
+7|taxportal  |   schema: undefined,
+7|taxportal  |   table: undefined,
+7|taxportal  |   column: undefined,
+7|taxportal  |   dataType: undefined,
+7|taxportal  |   constraint: undefined,
+7|taxportal  |   file: 'parse_relation.c',
+7|taxportal  |   line: '3722',
+7|taxportal  |   routine: 'errorMissingColumn'
+7|taxportal  | }
+7|taxportal  | 10:12:38 AM [express] GET /api/admin/clients 500 in 40ms :: {"message":"Failed to fetch clients"}
+7|taxportal  | Error fetching admin stats: error: column "completed_at" does not exist
+7|taxportal  |     at /var/www/taxportal/dist/index.cjs:64:13330
+7|taxportal  |     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+7|taxportal  |     at async /var/www/taxportal/dist/index.cjs:88:108438
+7|taxportal  |     at async /var/www/taxportal/dist/index.cjs:88:187390 {
+7|taxportal  |   length: 113,
+7|taxportal  |   severity: 'ERROR',
+7|taxportal  |   code: '42703',
+7|taxportal  |   detail: undefined,
+7|taxportal  |   hint: undefined,
+7|taxportal  |   position: '167',
+7|taxportal  |   internalPosition: undefined,
+7|taxportal  |   internalQuery: undefined,
+7|taxportal  |   where: undefined,
+7|taxportal  |   schema: undefined,
+7|taxportal  |   table: undefined,
+7|taxportal  |   column: undefined,
+7|taxportal  |   dataType: undefined,
+7|taxportal  |   constraint: undefined,
+7|taxportal  |   file: 'parse_relation.c',
+7|taxportal  |   line: '3722',
+7|taxportal  |   routine: 'errorMissingColumn'
+7|taxportal  | }
+7|taxportal  | 10:12:40 AM [express] GET /api/admin/stats 500 in 17ms :: {"message":"Failed to fetch stats"}
+7|taxportal  | 10:12:40 AM [express] GET /api/auth/user 304 in 12ms :: {"id":"f39bf5ba-c3b6-4a4f-b66d-469935c86b0f","email":"dylan@booknex.com","passwordHash":"$2b$12$pjspSrOuPlkhWNrMx8I2lepQ9X6pmzs/neIHWK4nZOBhUMXVv4jca","firstName":"dylan","lastName":"oter","profileImageUrl":null,"phone":null,"isAdmin":true,"hasSeenOnboarding":true,"hasCompletedQuestionnaire":true,"referredByAffiliateId":null,"referralCode":null,"isArchived":false,"archivedAt":null,"createdAt":"2025-12-30T21:25:47.847Z","updatedAt":"2025-12-30T21:27:24.080Z"}
+7|taxportal  | 10:12:41 AM [express] GET /api/admin/impersonation-status 304 in 5ms :: {"isImpersonating":false}
+7|taxportal  | 10:12:41 AM [express] GET /api/refund 200 in 7ms :: {"id":"de4cc392-7685-46d2-a3ba-d550857680a3","userId":"f39bf5ba-c3b6-4a4f-b66d-469935c86b0f","returnPrepStatus":"not_started","federalStatus":"not_filed","federalAmount":null,"federalEstimatedDate":null,"stateStatus":"not_filed","stateAmount":null,"stateEstimatedDate":null,"stateName":"California","taxYear":2025,"lastChecked":"2026-02-13T06:34:50.634Z","updatedAt":"2026-02-13T06:34:50.634Z"}
+7|taxportal  | Error fetching returns: error: column "completed_at" does not exist
+7|taxportal  |     at /var/www/taxportal/dist/index.cjs:64:13330
+7|taxportal  |     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+7|taxportal  |     at async /var/www/taxportal/dist/index.cjs:88:108438
+7|taxportal  |     at async Bv.ensurePersonalReturn (/var/www/taxportal/dist/index.cjs:88:120965)
+7|taxportal  |     at async /var/www/taxportal/dist/index.cjs:88:168611 {
+7|taxportal  |   length: 113,
+7|taxportal  |   severity: 'ERROR',
+7|taxportal  |   code: '42703',
+7|taxportal  |   detail: undefined,
+7|taxportal  |   hint: undefined,
+7|taxportal  |   position: '167',
+7|taxportal  |   internalPosition: undefined,
+7|taxportal  |   internalQuery: undefined,
+7|taxportal  |   where: undefined,
+7|taxportal  |   schema: undefined,
+7|taxportal  |   table: undefined,
+7|taxportal  |   column: undefined,
+7|taxportal  |   dataType: undefined,
+7|taxportal  |   constraint: undefined,
+7|taxportal  |   file: 'parse_relation.c',
+7|taxportal  |   line: '3722',
+7|taxportal  |   routine: 'errorMissingColumn'
+7|taxportal  | }
+7|taxportal  | 10:12:41 AM [express] GET /api/returns 500 in 12ms :: {"message":"Failed to fetch returns"}
+7|taxportal  | 10:12:41 AM [express] GET /api/messages 200 in 16ms :: [{"id":"b5537508-ec8d-4bf5-8cd8-65db7645493b","userId":"f39bf5ba-c3b6-4a4f-b66d-469935c86b0f","content":"Welcome to TaxPortal! We're excited to help you with your tax preparation. Please start by uploading your tax documents and completing the questionnaire. If you have any questions, feel free to message us here.","messageType":"text","isFromClient":false,"attachmentUrl":null,"attachmentName":null,"isRead":true,"createdAt":"2026-02-13T06:34:50.636Z"}]
+7|taxportal  | 10:12:41 AM [express] GET /api/signatures 200 in 10ms :: []
+7|taxportal  | 10:12:41 AM [express] GET /api/products 200 in 13ms :: []
+7|taxportal  | 10:12:41 AM [express] GET /api/documents 304 in 12ms :: []
+7|taxportal  | 10:12:41 AM [express] GET /api/required-documents 200 in 8ms :: [{"id":"f7ddbdf0-f3bd-426b-bbc6-425b36f83555","userId":"f39bf5ba-c3b6-4a4f-b66d-469935c86b0f","returnId":null,"documentType":"w2","description":"W-2 from your employer(s)","isRequired":true,"isUploaded":false,"markedNotApplicable":false,"documentId":null,"taxYear":2025},{"id":"3bc67a90-8490-4a5f-b8e9-fdfcb495aac9","userId":"f39bf5ba-c3b6-4a4f-b66d-469935c86b0f","returnId":null,"documentType":"1099_nec","description":"1099-NEC for freelance or contract work","isRequired":true,"isUploaded":false,"markedNotApplicable":false,"documentId":null,"taxYear":2025},{"id":"e4cce8bc-1f10-4f77-9084-db15cdfe4cc6","userId":"f39bf5ba-c3b6-4a4f-b66d-469935c86b0f","returnId":null,"documentType":"1099_int","description":"1099-INT for interest income","isRequired":true,"isUploaded":false,"markedNotApplicable":false,"documentId":null,"taxYear":2025},{"id":"9839bbe1-d2bf-4152-99f0-df8ffd9313da","userId":"f39bf5ba-c3b6-4a4f-b66d-469935c86b0f","returnId":null,"documentType":"1099_div","description":"1099-DIV for dividend income","isRequired":true,"isUploaded":false,"markedNotApplicable":false,"documentId":null,"taxYear":2025},{"id":"a138cea2-6757-4bdd-a769-046b69cbbd8e","userId":"f39bf5ba-c3b6-4a4f-b66d-469935c86b0f","returnId":null,"documentType":"mortgage_interest","description":"Form 1098 for mortgage interest","isRequired":true,"isUploaded":false,"markedNotApplicable":false,"documentId":null,"taxYear":2025},{"id":"517f163a-4e8b-4ec5-a14f-82f35eb87898","userId":"f39bf5ba-c3b6-4a4f-b66d-469935c86b0f","returnId":null,"documentType":"property_tax","description":"Property tax statements","isRequired":true,"isUploaded":false,"markedNotApplicable":false,"documentId":null,"taxYear":2025}]
+7|taxportal  | 10:12:41 AM [express] GET /api/client-products 200 in 46ms :: []
+7|taxportal  | 10:12:41 AM [express] GET /api/invoices 304 in 46ms :: []
+7|taxportal  | 10:12:41 AM [express] GET /api/businesses 200 in 4ms :: []
+7|taxportal  | 10:12:44 AM [express] GET /api/auth/user 304 in 7ms :: {"id":"f39bf5ba-c3b6-4a4f-b66d-469935c86b0f","email":"dylan@booknex.com","passwordHash":"$2b$12$pjspSrOuPlkhWNrMx8I2lepQ9X6pmzs/neIHWK4nZOBhUMXVv4jca","firstName":"dylan","lastName":"oter","profileImageUrl":null,"phone":null,"isAdmin":true,"hasSeenOnboarding":true,"hasCompletedQuestionnaire":true,"referredByAffiliateId":null,"referralCode":null,"isArchived":false,"archivedAt":null,"createdAt":"2025-12-30T21:25:47.847Z","updatedAt":"2025-12-30T21:27:24.080Z"}
+7|taxportal  | Error fetching admin stats: error: column "completed_at" does not exist
+7|taxportal  |     at /var/www/taxportal/dist/index.cjs:64:13330
+7|taxportal  |     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+7|taxportal  |     at async /var/www/taxportal/dist/index.cjs:88:108438
+7|taxportal  |     at async /var/www/taxportal/dist/index.cjs:88:187390 {
+7|taxportal  |   length: 113,
+7|taxportal  |   severity: 'ERROR',
+7|taxportal  |   code: '42703',
+7|taxportal  |   detail: undefined,
+7|taxportal  |   hint: undefined,
+7|taxportal  |   position: '167',
+7|taxportal  |   internalPosition: undefined,
+7|taxportal  |   internalQuery: undefined,
+7|taxportal  |   where: undefined,
+7|taxportal  |   schema: undefined,
+7|taxportal  |   table: undefined,
+7|taxportal  |   column: undefined,
+7|taxportal  |   dataType: undefined,
+7|taxportal  |   constraint: undefined,
+7|taxportal  |   file: 'parse_relation.c',
+7|taxportal  |   line: '3722',
+7|taxportal  |   routine: 'errorMissingColumn'
+7|taxportal  | }
+7|taxportal  | 10:12:44 AM [express] GET /api/admin/stats 500 in 20ms :: {"message":"Failed to fetch stats"}
+7|taxportal  | 10:12:45 AM [express] GET /api/auth/user 304 in 3ms :: {"id":"f39bf5ba-c3b6-4a4f-b66d-469935c86b0f","email":"dylan@booknex.com","passwordHash":"$2b$12$pjspSrOuPlkhWNrMx8I2lepQ9X6pmzs/neIHWK4nZOBhUMXVv4jca","firstName":"dylan","lastName":"oter","profileImageUrl":null,"phone":null,"isAdmin":true,"hasSeenOnboarding":true,"hasCompletedQuestionnaire":true,"referredByAffiliateId":null,"referralCode":null,"isArchived":false,"archivedAt":null,"createdAt":"2025-12-30T21:25:47.847Z","updatedAt":"2025-12-30T21:27:24.080Z"}
+7|taxportal  | 10:12:45 AM [express] GET /api/signatures 304 in 7ms :: []
+7|taxportal  | 10:12:45 AM [express] GET /api/admin/impersonation-status 304 in 5ms :: {"isImpersonating":false}
+7|taxportal  | Error fetching returns: error: column "completed_at" does not exist
+7|taxportal  |     at /var/www/taxportal/dist/index.cjs:64:13330
+7|taxportal  |     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+7|taxportal  |     at async /var/www/taxportal/dist/index.cjs:88:108438
+7|taxportal  |     at async Bv.ensurePersonalReturn (/var/www/taxportal/dist/index.cjs:88:120965)
+7|taxportal  |     at async /var/www/taxportal/dist/index.cjs:88:168611 {
+7|taxportal  |   length: 113,
+7|taxportal  |   severity: 'ERROR',
+7|taxportal  |   code: '42703',
+7|taxportal  |   detail: undefined,
+7|taxportal  |   hint: undefined,
+7|taxportal  |   position: '167',
+7|taxportal  |   internalPosition: undefined,
+7|taxportal  |   internalQuery: undefined,
+7|taxportal  |   where: undefined,
+7|taxportal  |   schema: undefined,
+7|taxportal  |   table: undefined,
+7|taxportal  |   column: undefined,
+7|taxportal  |   dataType: undefined,
+7|taxportal  |   constraint: undefined,
+7|taxportal  |   file: 'parse_relation.c',
+7|taxportal  |   line: '3722',
+7|taxportal  |   routine: 'errorMissingColumn'
+7|taxportal  | }
+7|taxportal  | 10:12:45 AM [express] GET /api/returns 500 in 16ms :: {"message":"Failed to fetch returns"}
+7|taxportal  | 10:12:45 AM [express] GET /api/refund 304 in 22ms :: {"id":"de4cc392-7685-46d2-a3ba-d550857680a3","userId":"f39bf5ba-c3b6-4a4f-b66d-469935c86b0f","returnPrepStatus":"not_started","federalStatus":"not_filed","federalAmount":null,"federalEstimatedDate":null,"stateStatus":"not_filed","stateAmount":null,"stateEstimatedDate":null,"stateName":"California","taxYear":2025,"lastChecked":"2026-02-13T06:34:50.634Z","updatedAt":"2026-02-13T06:34:50.634Z"}
+7|taxportal  | 10:12:45 AM [express] GET /api/invoices 304 in 24ms :: []
+7|taxportal  | 10:12:45 AM [express] GET /api/messages 304 in 25ms :: [{"id":"b5537508-ec8d-4bf5-8cd8-65db7645493b","userId":"f39bf5ba-c3b6-4a4f-b66d-469935c86b0f","content":"Welcome to TaxPortal! We're excited to help you with your tax preparation. Please start by uploading your tax documents and completing the questionnaire. If you have any questions, feel free to message us here.","messageType":"text","isFromClient":false,"attachmentUrl":null,"attachmentName":null,"isRead":true,"createdAt":"2026-02-13T06:34:50.636Z"}]
+7|taxportal  | 10:12:45 AM [express] GET /api/products 304 in 4ms :: []
+7|taxportal  | 10:12:45 AM [express] GET /api/client-products 304 in 5ms :: []
+7|taxportal  | 10:12:45 AM [express] GET /api/documents 304 in 3ms :: []
+7|taxportal  | 10:12:45 AM [express] GET /api/required-documents 304 in 2ms :: [{"id":"f7ddbdf0-f3bd-426b-bbc6-425b36f83555","userId":"f39bf5ba-c3b6-4a4f-b66d-469935c86b0f","returnId":null,"documentType":"w2","description":"W-2 from your employer(s)","isRequired":true,"isUploaded":false,"markedNotApplicable":false,"documentId":null,"taxYear":2025},{"id":"3bc67a90-8490-4a5f-b8e9-fdfcb495aac9","userId":"f39bf5ba-c3b6-4a4f-b66d-469935c86b0f","returnId":null,"documentType":"1099_nec","description":"1099-NEC for freelance or contract work","isRequired":true,"isUploaded":false,"markedNotApplicable":false,"documentId":null,"taxYear":2025},{"id":"e4cce8bc-1f10-4f77-9084-db15cdfe4cc6","userId":"f39bf5ba-c3b6-4a4f-b66d-469935c86b0f","returnId":null,"documentType":"1099_int","description":"1099-INT for interest income","isRequired":true,"isUploaded":false,"markedNotApplicable":false,"documentId":null,"taxYear":2025},{"id":"9839bbe1-d2bf-4152-99f0-df8ffd9313da","userId":"f39bf5ba-c3b6-4a4f-b66d-469935c86b0f","returnId":null,"documentType":"1099_div","description":"1099-DIV for dividend income","isRequired":true,"isUploaded":false,"markedNotApplicable":false,"documentId":null,"taxYear":2025},{"id":"a138cea2-6757-4bdd-a769-046b69cbbd8e","userId":"f39bf5ba-c3b6-4a4f-b66d-469935c86b0f","returnId":null,"documentType":"mortgage_interest","description":"Form 1098 for mortgage interest","isRequired":true,"isUploaded":false,"markedNotApplicable":false,"documentId":null,"taxYear":2025},{"id":"517f163a-4e8b-4ec5-a14f-82f35eb87898","userId":"f39bf5ba-c3b6-4a4f-b66d-469935c86b0f","returnId":null,"documentType":"property_tax","description":"Property tax statements","isRequired":true,"isUploaded":false,"markedNotApplicable":false,"documentId":null,"taxYear":2025}]
+7|taxportal  | 10:12:45 AM [express] GET /api/businesses 304 in 4ms :: []
+7|taxportal  | Error fetching returns: error: column "completed_at" does not exist
+7|taxportal  |     at /var/www/taxportal/dist/index.cjs:64:13330
+7|taxportal  |     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+7|taxportal  |     at async /var/www/taxportal/dist/index.cjs:88:108438
+7|taxportal  |     at async Bv.ensurePersonalReturn (/var/www/taxportal/dist/index.cjs:88:120965)
+7|taxportal  |     at async /var/www/taxportal/dist/index.cjs:88:168611 {
+7|taxportal  |   length: 113,
+7|taxportal  |   severity: 'ERROR',
+7|taxportal  |   code: '42703',
+7|taxportal  |   detail: undefined,
+7|taxportal  |   hint: undefined,
+7|taxportal  |   position: '167',
+7|taxportal  |   internalPosition: undefined,
+7|taxportal  |   internalQuery: undefined,
+7|taxportal  |   where: undefined,
+7|taxportal  |   schema: undefined,
+7|taxportal  |   table: undefined,
+7|taxportal  |   column: undefined,
+7|taxportal  |   dataType: undefined,
+7|taxportal  |   constraint: undefined,
+7|taxportal  |   file: 'parse_relation.c',
+7|taxportal  |   line: '3722',
+7|taxportal  |   routine: 'errorMissingColumn'
+7|taxportal  | }
+7|taxportal  | 10:12:47 AM [express] GET /api/returns 500 in 8ms :: {"message":"Failed to fetch returns"}
+7|taxportal  | 10:12:49 AM [express] GET /api/dependents 200 in 9ms :: []
+7|taxportal  | 10:12:49 AM [express] GET /api/questionnaire 200 in 7ms :: []
+7|taxportal  | Error fetching returns: error: column "completed_at" does not exist
+7|taxportal  |     at /var/www/taxportal/dist/index.cjs:64:13330
+7|taxportal  |     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+7|taxportal  |     at async /var/www/taxportal/dist/index.cjs:88:108438
+7|taxportal  |     at async Bv.ensurePersonalReturn (/var/www/taxportal/dist/index.cjs:88:120965)
+7|taxportal  |     at async /var/www/taxportal/dist/index.cjs:88:168611 {
+7|taxportal  |   length: 113,
+7|taxportal  |   severity: 'ERROR',
+7|taxportal  |   code: '42703',
+7|taxportal  |   detail: undefined,
+7|taxportal  |   hint: undefined,
+7|taxportal  |   position: '167',
+7|taxportal  |   internalPosition: undefined,
+7|taxportal  |   internalQuery: undefined,
+7|taxportal  |   where: undefined,
+7|taxportal  |   schema: undefined,
+7|taxportal  |   table: undefined,
+7|taxportal  |   column: undefined,
+7|taxportal  |   dataType: undefined,
+7|taxportal  |   constraint: undefined,
+7|taxportal  |   file: 'parse_relation.c',
+7|taxportal  |   line: '3722',
+7|taxportal  |   routine: 'errorMissingColumn'
+7|taxportal  | }
+7|taxportal  | 10:12:49 AM [express] GET /api/returns 500 in 7ms :: {"message":"Failed to fetch returns"}
+7|taxportal  | 10:12:57 AM [express] GET /api/auth/user 304 in 19ms :: {"id":"f39bf5ba-c3b6-4a4f-b66d-469935c86b0f","email":"dylan@booknex.com","passwordHash":"$2b$12$pjspSrOuPlkhWNrMx8I2lepQ9X6pmzs/neIHWK4nZOBhUMXVv4jca","firstName":"dylan","lastName":"oter","profileImageUrl":null,"phone":null,"isAdmin":true,"hasSeenOnboarding":true,"hasCompletedQuestionnaire":true,"referredByAffiliateId":null,"referralCode":null,"isArchived":false,"archivedAt":null,"createdAt":"2025-12-30T21:25:47.847Z","updatedAt":"2025-12-30T21:27:24.080Z"}
+7|taxportal  | Error fetching admin stats: error: column "completed_at" does not exist
+7|taxportal  |     at /var/www/taxportal/dist/index.cjs:64:13330
+7|taxportal  |     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+7|taxportal  |     at async /var/www/taxportal/dist/index.cjs:88:108438
+7|taxportal  |     at async /var/www/taxportal/dist/index.cjs:88:187390 {
+7|taxportal  |   length: 113,
+7|taxportal  |   severity: 'ERROR',
+7|taxportal  |   code: '42703',
+7|taxportal  |   detail: undefined,
+7|taxportal  |   hint: undefined,
+7|taxportal  |   position: '167',
+7|taxportal  |   internalPosition: undefined,
+7|taxportal  |   internalQuery: undefined,
+7|taxportal  |   where: undefined,
+7|taxportal  |   schema: undefined,
+7|taxportal  |   table: undefined,
+7|taxportal  |   column: undefined,
+7|taxportal  |   dataType: undefined,
+7|taxportal  |   constraint: undefined,
+7|taxportal  |   file: 'parse_relation.c',
+7|taxportal  |   line: '3722',
+7|taxportal  |   routine: 'errorMissingColumn'
+7|taxportal  | }
+7|taxportal  | 10:12:57 AM [express] GET /api/admin/stats 500 in 13ms :: {"message":"Failed to fetch stats"}
+7|taxportal  | Error fetching clients: error: column "completed_at" does not exist
+7|taxportal  |     at /var/www/taxportal/dist/index.cjs:64:13330
+7|taxportal  |     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+7|taxportal  |     at async /var/www/taxportal/dist/index.cjs:88:108438
+7|taxportal  |     at async /var/www/taxportal/dist/index.cjs:88:170371
+7|taxportal  |     at async Promise.all (index 0)
+7|taxportal  |     at async /var/www/taxportal/dist/index.cjs:88:170140 {
+7|taxportal  |   length: 113,
+7|taxportal  |   severity: 'ERROR',
+7|taxportal  |   code: '42703',
+7|taxportal  |   detail: undefined,
+7|taxportal  |   hint: undefined,
+7|taxportal  |   position: '167',
+7|taxportal  |   internalPosition: undefined,
+7|taxportal  |   internalQuery: undefined,
+7|taxportal  |   where: undefined,
+7|taxportal  |   schema: undefined,
+7|taxportal  |   table: undefined,
+7|taxportal  |   column: undefined,
+7|taxportal  |   dataType: undefined,
+7|taxportal  |   constraint: undefined,
+7|taxportal  |   file: 'parse_relation.c',
+7|taxportal  |   line: '3722',
+7|taxportal  |   routine: 'errorMissingColumn'
+7|taxportal  | }
+7|taxportal  | 10:12:58 AM [express] GET /api/admin/clients 500 in 39ms :: {"message":"Failed to fetch clients"}
+7|taxportal  | 10:12:59 AM [express] GET /api/admin/products 200 in 13ms :: []
+7|taxportal  | 10:13:10 AM [express] POST /api/admin/clients 200 in 339ms :: {"id":"90ae5cba-7640-4f47-bb85-1c708c97379a","email":"testset@54e","passwordHash":"$2b$12$Y5bY0cOROzGGGWPjSXMQ/OT7.mD5zqnyAj/cNw2HQYvhsc9EKryii","firstName":"test","lastName":"test","profileImageUrl":null,"phone":null,"isAdmin":false,"hasSeenOnboarding":false,"hasCompletedQuestionnaire":false,"referredByAffiliateId":null,"referralCode":null,"isArchived":false,"archivedAt":null,"createdAt":"2026-02-17T10:13:10.131Z","updatedAt":"2026-02-17T10:13:10.131Z"}
+7|taxportal  | Error fetching clients: error: column "completed_at" does not exist
+7|taxportal  |     at /var/www/taxportal/dist/index.cjs:64:13330
+7|taxportal  |     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+7|taxportal  |     at async /var/www/taxportal/dist/index.cjs:88:108438
+7|taxportal  |     at async /var/www/taxportal/dist/index.cjs:88:170371
+7|taxportal  |     at async Promise.all (index 0)
+7|taxportal  |     at async /var/www/taxportal/dist/index.cjs:88:170140 {
+7|taxportal  |   length: 113,
+7|taxportal  |   severity: 'ERROR',
+7|taxportal  |   code: '42703',
+7|taxportal  |   detail: undefined,
+7|taxportal  |   hint: undefined,
+7|taxportal  |   position: '167',
+7|taxportal  |   internalPosition: undefined,
+7|taxportal  |   internalQuery: undefined,
+7|taxportal  |   where: undefined,
+7|taxportal  |   schema: undefined,
+7|taxportal  |   table: undefined,
+7|taxportal  |   column: undefined,
+7|taxportal  |   dataType: undefined,
+7|taxportal  |   constraint: undefined,
+7|taxportal  |   file: 'parse_relation.c',
+7|taxportal  |   line: '3722',
+7|taxportal  |   routine: 'errorMissingColumn'
+7|taxportal  | }
+7|taxportal  | 10:13:10 AM [express] GET /api/admin/clients 500 in 30ms :: {"message":"Failed to fetch clients"}
+7|taxportal  | Error fetching kanban-all data: error: column "completed_at" does not exist
+7|taxportal  |     at /var/www/taxportal/dist/index.cjs:64:13330
+7|taxportal  |     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+7|taxportal  |     at async /var/www/taxportal/dist/index.cjs:88:108438
+7|taxportal  |     at async /var/www/taxportal/dist/index.cjs:88:196077 {
+7|taxportal  |   length: 113,
+7|taxportal  |   severity: 'ERROR',
+7|taxportal  |   code: '42703',
+7|taxportal  |   detail: undefined,
+7|taxportal  |   hint: undefined,
+7|taxportal  |   position: '167',
+7|taxportal  |   internalPosition: undefined,
+7|taxportal  |   internalQuery: undefined,
+7|taxportal  |   where: undefined,
+7|taxportal  |   schema: undefined,
+7|taxportal  |   table: undefined,
+7|taxportal  |   column: undefined,
+7|taxportal  |   dataType: undefined,
+7|taxportal  |   constraint: undefined,
+7|taxportal  |   file: 'parse_relation.c',
+7|taxportal  |   line: '3722',
+7|taxportal  |   routine: 'errorMissingColumn'
+7|taxportal  | }
+7|taxportal  | 10:13:12 AM [express] GET /api/admin/kanban-all 500 in 19ms :: {"message":"Failed to fetch kanban data"}
+7|taxportal  | Error fetching clients: error: column "completed_at" does not exist
+7|taxportal  |     at /var/www/taxportal/dist/index.cjs:64:13330
+7|taxportal  |     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+7|taxportal  |     at async /var/www/taxportal/dist/index.cjs:88:108438
+7|taxportal  |     at async /var/www/taxportal/dist/index.cjs:88:170371
+7|taxportal  |     at async Promise.all (index 0)
+7|taxportal  |     at async /var/www/taxportal/dist/index.cjs:88:170140 {
+7|taxportal  |   length: 113,
+7|taxportal  |   severity: 'ERROR',
+7|taxportal  |   code: '42703',
+7|taxportal  |   detail: undefined,
+7|taxportal  |   hint: undefined,
+7|taxportal  |   position: '167',
+7|taxportal  |   internalPosition: undefined,
+7|taxportal  |   internalQuery: undefined,
+7|taxportal  |   where: undefined,
+7|taxportal  |   schema: undefined,
+7|taxportal  |   table: undefined,
+7|taxportal  |   column: undefined,
+7|taxportal  |   dataType: undefined,
+7|taxportal  |   constraint: undefined,
+7|taxportal  |   file: 'parse_relation.c',
+7|taxportal  |   line: '3722',
+7|taxportal  |   routine: 'errorMissingColumn'
+7|taxportal  | }
+7|taxportal  | 10:13:12 AM [express] GET /api/admin/clients 500 in 40ms :: {"message":"Failed to fetch clients"}
+7|taxportal  | 10:13:13 AM [express] GET /api/auth/user 304 in 15ms :: {"id":"f39bf5ba-c3b6-4a4f-b66d-469935c86b0f","email":"dylan@booknex.com","passwordHash":"$2b$12$pjspSrOuPlkhWNrMx8I2lepQ9X6pmzs/neIHWK4nZOBhUMXVv4jca","firstName":"dylan","lastName":"oter","profileImageUrl":null,"phone":null,"isAdmin":true,"hasSeenOnboarding":true,"hasCompletedQuestionnaire":true,"referredByAffiliateId":null,"referralCode":null,"isArchived":false,"archivedAt":null,"createdAt":"2025-12-30T21:25:47.847Z","updatedAt":"2025-12-30T21:27:24.080Z"}
+7|taxportal  | Error fetching clients: error: column "completed_at" does not exist
+7|taxportal  |     at /var/www/taxportal/dist/index.cjs:64:13330
+7|taxportal  |     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+7|taxportal  |     at async /var/www/taxportal/dist/index.cjs:88:108438
+7|taxportal  |     at async /var/www/taxportal/dist/index.cjs:88:170371
+7|taxportal  |     at async Promise.all (index 0)
+7|taxportal  |     at async /var/www/taxportal/dist/index.cjs:88:170140 {
+7|taxportal  |   length: 113,
+7|taxportal  |   severity: 'ERROR',
+7|taxportal  |   code: '42703',
+7|taxportal  |   detail: undefined,
+7|taxportal  |   hint: undefined,
+7|taxportal  |   position: '167',
+7|taxportal  |   internalPosition: undefined,
+7|taxportal  |   internalQuery: undefined,
+7|taxportal  |   where: undefined,
+7|taxportal  |   schema: undefined,
+7|taxportal  |   table: undefined,
+7|taxportal  |   column: undefined,
+7|taxportal  |   dataType: undefined,
+7|taxportal  |   constraint: undefined,
+7|taxportal  |   file: 'parse_relation.c',
+7|taxportal  |   line: '3722',
+7|taxportal  |   routine: 'errorMissingColumn'
+7|taxportal  | }
+7|taxportal  | 10:13:14 AM [express] GET /api/admin/clients 500 in 32ms :: {"message":"Failed to fetch clients"}
+7|taxportal  | 10:13:15 AM [express] GET /api/auth/user 304 in 13ms :: {"id":"f39bf5ba-c3b6-4a4f-b66d-469935c86b0f","email":"dylan@booknex.com","passwordHash":"$2b$12$pjspSrOuPlkhWNrMx8I2lepQ9X6pmzs/neIHWK4nZOBhUMXVv4jca","firstName":"dylan","lastName":"oter","profileImageUrl":null,"phone":null,"isAdmin":true,"hasSeenOnboarding":true,"hasCompletedQuestionnaire":true,"referredByAffiliateId":null,"referralCode":null,"isArchived":false,"archivedAt":null,"createdAt":"2025-12-30T21:25:47.847Z","updatedAt":"2025-12-30T21:27:24.080Z"}
+7|taxportal  | Error fetching clients: error: column "completed_at" does not exist
+7|taxportal  |     at /var/www/taxportal/dist/index.cjs:64:13330
+7|taxportal  |     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+7|taxportal  |     at async /var/www/taxportal/dist/index.cjs:88:108438
+7|taxportal  |     at async /var/www/taxportal/dist/index.cjs:88:170371
+7|taxportal  |     at async Promise.all (index 0)
+7|taxportal  |     at async /var/www/taxportal/dist/index.cjs:88:170140 {
+7|taxportal  |   length: 113,
+7|taxportal  |   severity: 'ERROR',
+7|taxportal  |   code: '42703',
+7|taxportal  |   detail: undefined,
+7|taxportal  |   hint: undefined,
+7|taxportal  |   position: '167',
+7|taxportal  |   internalPosition: undefined,
+7|taxportal  |   internalQuery: undefined,
+7|taxportal  |   where: undefined,
+7|taxportal  |   schema: undefined,
+7|taxportal  |   table: undefined,
+7|taxportal  |   column: undefined,
+7|taxportal  |   dataType: undefined,
+7|taxportal  |   constraint: undefined,
+7|taxportal  |   file: 'parse_relation.c',
+7|taxportal  |   line: '3722',
+7|taxportal  |   routine: 'errorMissingColumn'
+7|taxportal  | }
+7|taxportal  | 10:13:15 AM [express] GET /api/admin/clients 500 in 30ms :: {"message":"Failed to fetch clients"}
