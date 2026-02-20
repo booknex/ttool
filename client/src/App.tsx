@@ -22,6 +22,7 @@ import Invoices from "@/pages/invoices";
 import ReturnStatus from "@/pages/return-status";
 import ServiceStatus from "@/pages/service-status";
 import Businesses from "@/pages/businesses";
+import ClientCalendar from "@/pages/calendar";
 
 import AdminDashboard from "@/pages/admin/dashboard";
 import AdminClients from "@/pages/admin/clients";
@@ -213,6 +214,7 @@ function Router() {
         <Route path="/signatures" component={Signatures} />
         <Route path="/invoices" component={Invoices} />
         <Route path="/businesses" component={Businesses} />
+        <Route path="/calendar" component={ClientCalendar} />
         <Route component={NotFound} />
       </Switch>
     </ClientLayout>

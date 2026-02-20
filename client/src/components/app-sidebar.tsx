@@ -37,6 +37,7 @@ import {
   PenTool,
   ClipboardList,
   Package,
+  CalendarDays,
   Calculator,
   Briefcase,
   Heart,
@@ -229,6 +230,7 @@ export function AppSidebar({ user }: AppSidebarProps) {
     { icon: ClipboardList, href: "/questionnaire", label: "Questionnaire", badge: 0 },
     ...(isFiled ? [{ icon: DollarSign, href: "/refund", label: "Refund", badge: 0 }] : []),
     { icon: Receipt, href: "/invoices", label: "Invoices", badge: unpaidInvoices },
+    { icon: CalendarDays, href: "/calendar", label: "Calendar", badge: 0 },
   ];
 
   const tools = [...coreTools];
