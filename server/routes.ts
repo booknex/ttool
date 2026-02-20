@@ -3024,5 +3024,104 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
     }
   });
 
+  app.post("/api/appointments/request", isAuthenticated, async (req: any, res) => {
+    try {
+      const { title, description, preferredDate, preferredTime, notes } = req.body;
+      if (!title || !preferredDate || !preferredTime) {
+        return res.status(400).json({ message: "Title, preferred date, and time are required" });
+      }
+      const startTime = new Date(`${preferredDate}T${preferredTime}:00`);
+      const endTime = new Date(startTime.getTime() + 60 * 60 * 1000);
+      const appointment = await storage.createAppointment({
+        title,
+        description: description || null,
+        clientId: req.user.id,
+        adminId: null,
+        startTime,
+        endTime,
+        status: 'requested',
+        location: null,
+        notes: notes || null,
+      });
+      res.json(appointment);
+    } catch (error) {
+      console.error("Error requesting appointment:", error);
+      res.status(500).json({ message: "Failed to request appointment" });
+    }
+  });
+
+  // ==================== PERSONAL EVENTS ROUTES ====================
+
+  app.get("/api/personal-events", isAuthenticated, async (req: any, res) => {
+    try {
+      const events = await storage.getPersonalEvents(req.user.id);
+      res.json(events);
+    } catch (error) {
+      console.error("Error fetching personal events:", error);
+      res.status(500).json({ message: "Failed to fetch personal events" });
+    }
+  });
+
+  app.post("/api/personal-events", isAuthenticated, async (req: any, res) => {
+    try {
+      const { title, description, startDate, startTime, endDate, endTime, location, color } = req.body;
+      if (!title || !startDate || !startTime) {
+        return res.status(400).json({ message: "Title, date, and time are required" });
+      }
+      const start = new Date(`${startDate}T${startTime}:00`);
+      const end = new Date(`${endDate || startDate}T${endTime || startTime}:00`);
+      const event = await storage.createPersonalEvent({
+        userId: req.user.id,
+        title,
+        description: description || null,
+        startTime: start,
+        endTime: end,
+        location: location || null,
+        color: color || '#3b82f6',
+      });
+      res.json(event);
+    } catch (error) {
+      console.error("Error creating personal event:", error);
+      res.status(500).json({ message: "Failed to create personal event" });
+    }
+  });
+
+  app.patch("/api/personal-events/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const existing = await storage.getPersonalEvent(id);
+      if (!existing || existing.userId !== req.user.id) {
+        return res.status(404).json({ message: "Event not found" });
+      }
+      const updates: any = {};
+      if (req.body.title !== undefined) updates.title = req.body.title;
+      if (req.body.description !== undefined) updates.description = req.body.description;
+      if (req.body.startDate && req.body.startTime) updates.startTime = new Date(`${req.body.startDate}T${req.body.startTime}:00`);
+      if (req.body.endDate && req.body.endTime) updates.endTime = new Date(`${req.body.endDate}T${req.body.endTime}:00`);
+      if (req.body.location !== undefined) updates.location = req.body.location;
+      if (req.body.color !== undefined) updates.color = req.body.color;
+      const updated = await storage.updatePersonalEvent(id, updates);
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating personal event:", error);
+      res.status(500).json({ message: "Failed to update personal event" });
+    }
+  });
+
+  app.delete("/api/personal-events/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const existing = await storage.getPersonalEvent(id);
+      if (!existing || existing.userId !== req.user.id) {
+        return res.status(404).json({ message: "Event not found" });
+      }
+      await storage.deletePersonalEvent(id);
+      res.json({ message: "Event deleted" });
+    } catch (error) {
+      console.error("Error deleting personal event:", error);
+      res.status(500).json({ message: "Failed to delete personal event" });
+    }
+  });
+
   return server;
 }

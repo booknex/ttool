@@ -49,11 +49,13 @@ import {
   Trash2,
   CalendarDays,
   UserPlus,
+  Send,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, addMonths, subMonths, isSameMonth, isSameDay, isToday, parseISO } from "date-fns";
 
 const STATUS_COLORS: Record<string, string> = {
+  requested: "bg-purple-100 text-purple-800 border-purple-200",
   scheduled: "bg-blue-100 text-blue-800 border-blue-200",
   confirmed: "bg-green-100 text-green-800 border-green-200",
   completed: "bg-gray-100 text-gray-700 border-gray-200",
@@ -62,6 +64,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 const STATUS_DOT_COLORS: Record<string, string> = {
+  requested: "bg-purple-500",
   scheduled: "bg-blue-500",
   confirmed: "bg-green-500",
   completed: "bg-gray-400",
@@ -223,10 +226,14 @@ export default function AdminCalendar() {
     return appointmentsByDate.get(todayKey) || [];
   }, [appointmentsByDate]);
 
+  const pendingRequests = useMemo(() => {
+    return appointments.filter(a => a.status === "requested");
+  }, [appointments]);
+
   const upcomingAppointments = useMemo(() => {
     const now = new Date();
     return appointments
-      .filter(a => new Date(a.startTime) > now && a.status !== "cancelled" && a.status !== "completed")
+      .filter(a => new Date(a.startTime) > now && a.status !== "cancelled" && a.status !== "completed" && a.status !== "requested")
       .slice(0, 5);
   }, [appointments]);
 
@@ -468,10 +475,36 @@ export default function AdminCalendar() {
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
-                      <div className="mt-1">
-                        <Badge variant="outline" className={`text-[10px] ${STATUS_COLORS[apt.status || "scheduled"]}`}>
+                      <div className="mt-1 flex items-center gap-2">
+                        <Badge variant="outline" className={`text-[10px] capitalize ${STATUS_COLORS[apt.status || "scheduled"]}`}>
                           {(apt.status || "scheduled").replace("_", " ")}
                         </Badge>
+                        {apt.status === "requested" && (
+                          <div className="flex gap-1 ml-auto">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-5 text-[10px] px-2 text-green-700 border-green-300 hover:bg-green-50"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                updateMutation.mutate({ id: apt.id, data: { status: "scheduled" } });
+                              }}
+                            >
+                              Approve
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-5 text-[10px] px-2 text-red-700 border-red-300 hover:bg-red-50"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                updateMutation.mutate({ id: apt.id, data: { status: "cancelled" } });
+                              }}
+                            >
+                              Decline
+                            </Button>
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))
@@ -479,6 +512,56 @@ export default function AdminCalendar() {
               </CardContent>
             </Card>
           ) : null}
+
+          {pendingRequests.length > 0 && (
+            <Card className="border-purple-200">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium flex items-center gap-2 text-purple-700">
+                  <Send className="w-4 h-4" />
+                  Meeting Requests ({pendingRequests.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {pendingRequests.map(apt => (
+                  <div key={apt.id} className="p-2 rounded-lg border border-purple-100 bg-purple-50/50">
+                    <p className="text-sm font-medium">{apt.title}</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      {format(new Date(apt.startTime), "EEE, MMM d 'at' h:mm a")}
+                      {apt.client ? ` · ${apt.client.firstName} ${apt.client.lastName}` : ""}
+                    </p>
+                    {apt.description && (
+                      <p className="text-[11px] text-muted-foreground mt-1 italic">"{apt.description}"</p>
+                    )}
+                    <div className="flex gap-1.5 mt-2">
+                      <Button
+                        size="sm"
+                        className="h-6 text-[11px] px-3 bg-green-600 hover:bg-green-700"
+                        onClick={() => updateMutation.mutate({ id: apt.id, data: { status: "scheduled" } })}
+                      >
+                        Approve
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-6 text-[11px] px-3"
+                        onClick={() => openEditAppointment(apt)}
+                      >
+                        Edit & Approve
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-6 text-[11px] px-3 text-red-600 border-red-200 hover:bg-red-50"
+                        onClick={() => updateMutation.mutate({ id: apt.id, data: { status: "cancelled" } })}
+                      >
+                        Decline
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
 
           <Card>
             <CardHeader className="pb-2">
@@ -629,6 +712,7 @@ export default function AdminCalendar() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="requested">Requested</SelectItem>
                   <SelectItem value="scheduled">Scheduled</SelectItem>
                   <SelectItem value="confirmed">Confirmed</SelectItem>
                   <SelectItem value="completed">Completed</SelectItem>

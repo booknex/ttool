@@ -63,6 +63,9 @@ import {
   appointments,
   type Appointment,
   type InsertAppointment,
+  personalEvents,
+  type PersonalEvent,
+  type InsertPersonalEvent,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, ne, inArray, sql } from "drizzle-orm";
@@ -221,6 +224,13 @@ export interface IStorage {
   createAppointment(data: InsertAppointment): Promise<Appointment>;
   updateAppointment(id: string, updates: Partial<Appointment>): Promise<Appointment | undefined>;
   deleteAppointment(id: string): Promise<void>;
+
+  // Personal event operations
+  getPersonalEvents(userId: string): Promise<PersonalEvent[]>;
+  getPersonalEvent(id: string): Promise<PersonalEvent | undefined>;
+  createPersonalEvent(data: InsertPersonalEvent): Promise<PersonalEvent>;
+  updatePersonalEvent(id: string, updates: Partial<PersonalEvent>): Promise<PersonalEvent | undefined>;
+  deletePersonalEvent(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -960,6 +970,33 @@ export class DatabaseStorage implements IStorage {
 
   async deleteAppointment(id: string): Promise<void> {
     await db.delete(appointments).where(eq(appointments.id, id));
+  }
+
+  async getPersonalEvents(userId: string): Promise<PersonalEvent[]> {
+    return await db.select().from(personalEvents).where(eq(personalEvents.userId, userId)).orderBy(desc(personalEvents.startTime));
+  }
+
+  async getPersonalEvent(id: string): Promise<PersonalEvent | undefined> {
+    const [event] = await db.select().from(personalEvents).where(eq(personalEvents.id, id));
+    return event;
+  }
+
+  async createPersonalEvent(data: InsertPersonalEvent): Promise<PersonalEvent> {
+    const [event] = await db.insert(personalEvents).values(data).returning();
+    return event;
+  }
+
+  async updatePersonalEvent(id: string, updates: Partial<PersonalEvent>): Promise<PersonalEvent | undefined> {
+    const [updated] = await db
+      .update(personalEvents)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(personalEvents.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deletePersonalEvent(id: string): Promise<void> {
+    await db.delete(personalEvents).where(eq(personalEvents.id, id));
   }
 }
 

@@ -381,7 +381,7 @@ export const clientProducts = pgTable("client_products", {
 
 // Appointments table
 export const appointmentStatusEnum = pgEnum('appointment_status', [
-  'scheduled', 'confirmed', 'completed', 'cancelled', 'no_show'
+  'requested', 'scheduled', 'confirmed', 'completed', 'cancelled', 'no_show'
 ]);
 
 export const appointments = pgTable("appointments", {
@@ -399,7 +399,22 @@ export const appointments = pgTable("appointments", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Personal events table (client-only private calendar items)
+export const personalEvents = pgTable("personal_events", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  title: varchar("title").notNull(),
+  description: text("description"),
+  startTime: timestamp("start_time").notNull(),
+  endTime: timestamp("end_time").notNull(),
+  location: varchar("location"),
+  color: varchar("color").default('#3b82f6'),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Insert schemas
+export const insertPersonalEventSchema = createInsertSchema(personalEvents).omit({ createdAt: true, updatedAt: true });
 export const insertAppointmentSchema = createInsertSchema(appointments).omit({ createdAt: true, updatedAt: true });
 export const insertUserSchema = createInsertSchema(users).omit({ createdAt: true, updatedAt: true });
 export const insertDocumentSchema = createInsertSchema(documents).omit({ uploadedAt: true });
@@ -465,3 +480,5 @@ export type ClientProduct = typeof clientProducts.$inferSelect;
 export type InsertClientProduct = z.infer<typeof insertClientProductSchema>;
 export type Appointment = typeof appointments.$inferSelect;
 export type InsertAppointment = z.infer<typeof insertAppointmentSchema>;
+export type PersonalEvent = typeof personalEvents.$inferSelect;
+export type InsertPersonalEvent = z.infer<typeof insertPersonalEventSchema>;

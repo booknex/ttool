@@ -30,7 +30,7 @@ Preferred communication style: Simple, everyday language.
 - **Database**: PostgreSQL via Neon serverless driver
 - **ORM**: Drizzle ORM with `drizzle-zod` for schema validation.
 - **Schema**: Defined in `shared/schema.ts`, managed with `drizzle-kit` migrations.
-- **Core Entities**: Users, Documents, Required Documents, Messages, Signatures, Refund Tracking, Invoices, Sessions, Dependents, Affiliates, Affiliate Referrals, Appointments, Products, Product Stages, Product Document Requirements, Client Products.
+- **Core Entities**: Users, Documents, Required Documents, Messages, Signatures, Refund Tracking, Invoices, Sessions, Dependents, Affiliates, Affiliate Referrals, Appointments, Personal Events, Products, Product Stages, Product Document Requirements, Client Products.
 
 ### Authentication and Onboarding
 - **Auth Flow**: Custom username/password, bcrypt hashing, 1-week PostgreSQL session TTL.
@@ -43,7 +43,7 @@ Preferred communication style: Simple, everyday language.
 - **Affiliate Portal**: Separate authentication, unique referral codes, client attribution, dashboard for tracking referrals/commissions, gamification with tier system, achievement badges, and leaderboards.
 - **Admin Module Pages**: Consistent pattern for handling large datasets with stats summary cards, sortable data tables, search bars, dropdown filters, and pagination controls. Pages include Clients, Invoices, Signatures, Refunds, Return Statuses, Documents, and Products.
 - **Products System**: Admin-defined service templates with name, icon, description, display location, active toggle. Custom Kanban pipeline stages and document requirements per product. Client-specific product tracking.
-- **Appointment Scheduling Calendar**: Admin calendar page with monthly view, color-coded appointment indicators, month navigation, side panel for daily/upcoming appointments. CRUD for appointments with client search and status management. Integration of upcoming appointments on the client dashboard.
+- **Appointment Scheduling Calendar**: Admin calendar page with monthly view, color-coded appointment indicators (including purple for client-requested meetings), month navigation, side panel for daily/upcoming appointments with pending request approve/decline actions. CRUD for appointments with client search and status management. Client calendar with "Request Meeting" (sends request to admin) and "Add Event" (personal private events) features. Personal events displayed alongside appointments with color-coded left borders. Integration of upcoming appointments on the client dashboard.
 
 ## External Dependencies
 
