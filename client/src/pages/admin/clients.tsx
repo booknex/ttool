@@ -962,10 +962,13 @@ export default function AdminClients() {
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
                             className="text-red-600 focus:text-red-600"
-                            onClick={() => {
-                              if (window.confirm(`Are you sure you want to permanently delete ${client.firstName ? `${client.firstName} ${client.lastName}` : client.email}? This will remove ALL their data including documents, messages, invoices, returns, and services. This cannot be undone.`)) {
-                                deleteClientMutation.mutate(client.id);
-                              }
+                            onSelect={() => {
+                              const clientName = client.firstName ? `${client.firstName} ${client.lastName}` : client.email;
+                              setTimeout(() => {
+                                if (window.confirm(`Are you sure you want to permanently delete ${clientName}? This will remove ALL their data including documents, messages, invoices, returns, and services. This cannot be undone.`)) {
+                                  deleteClientMutation.mutate(client.id);
+                                }
+                              }, 100);
                             }}
                           >
                             <Trash2 className="h-3.5 w-3.5 mr-2" />Delete Permanently
