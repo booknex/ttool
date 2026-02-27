@@ -1025,30 +1025,27 @@ export default function AdminClients() {
         </div>
       )}
 
-      <Dialog open={!!deleteConfirmClient} onOpenChange={(open) => { if (!open) setDeleteConfirmClient(null); }}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="text-red-600">Delete Client Permanently</DialogTitle>
-          </DialogHeader>
-          <p className="text-sm text-muted-foreground">
-            Are you sure you want to permanently delete <strong>{deleteConfirmClient?.name}</strong>? This will remove ALL their data including documents, messages, invoices, returns, and services. This cannot be undone.
-          </p>
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setDeleteConfirmClient(null)}>Cancel</Button>
-            <Button
-              variant="destructive"
-              disabled={deleteClientMutation.isPending}
-              onClick={() => {
-                if (deleteConfirmClient) {
-                  deleteClientMutation.mutate(deleteConfirmClient.id);
-                }
-              }}
-            >
-              {deleteClientMutation.isPending ? "Deleting..." : "Delete Permanently"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {deleteConfirmClient && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="fixed inset-0 bg-black/50" onClick={() => setDeleteConfirmClient(null)} />
+          <div className="relative bg-white rounded-lg shadow-lg p-6 max-w-sm w-full mx-4 z-50">
+            <h3 className="text-lg font-semibold text-red-600 mb-2">Delete Client Permanently</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Are you sure you want to permanently delete <strong>{deleteConfirmClient.name}</strong>? This will remove ALL their data including documents, messages, invoices, returns, and services. This cannot be undone.
+            </p>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setDeleteConfirmClient(null)}>Cancel</Button>
+              <Button
+                variant="destructive"
+                disabled={deleteClientMutation.isPending}
+                onClick={() => deleteClientMutation.mutate(deleteConfirmClient.id)}
+              >
+                {deleteClientMutation.isPending ? "Deleting..." : "Delete Permanently"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
