@@ -222,6 +222,7 @@ export default function AdminClients() {
   const [dialogStep, setDialogStep] = useState<'form' | 'assign' | 'return'>('form');
   const [createdClientId, setCreatedClientId] = useState<string | null>(null);
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
+  const [deleteConfirmClient, setDeleteConfirmClient] = useState<{ id: string; name: string } | null>(null);
   const [startReturn, setStartReturn] = useState(true);
   
   const { toast } = useToast();
@@ -466,9 +467,11 @@ export default function AdminClients() {
     onSuccess: () => {
       toast({ title: "Client permanently deleted" });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/clients"] });
+      setDeleteConfirmClient(null);
     },
     onError: (error: any) => {
       toast({ title: "Failed to delete client", description: error.message, variant: "destructive" });
+      setDeleteConfirmClient(null);
     },
   });
 
@@ -963,12 +966,10 @@ export default function AdminClients() {
                           <DropdownMenuItem
                             className="text-red-600 focus:text-red-600"
                             onSelect={() => {
-                              const clientName = client.firstName ? `${client.firstName} ${client.lastName}` : client.email;
-                              setTimeout(() => {
-                                if (window.confirm(`Are you sure you want to permanently delete ${clientName}? This will remove ALL their data including documents, messages, invoices, returns, and services. This cannot be undone.`)) {
-                                  deleteClientMutation.mutate(client.id);
-                                }
-                              }, 100);
+                              setDeleteConfirmClient({
+                                id: client.id,
+                                name: client.firstName ? `${client.firstName} ${client.lastName}` : client.email
+                              });
                             }}
                           >
                             <Trash2 className="h-3.5 w-3.5 mr-2" />Delete Permanently
@@ -1023,6 +1024,31 @@ export default function AdminClients() {
           </div>
         </div>
       )}
+
+      <Dialog open={!!deleteConfirmClient} onOpenChange={(open) => { if (!open) setDeleteConfirmClient(null); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-red-600">Delete Client Permanently</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Are you sure you want to permanently delete <strong>{deleteConfirmClient?.name}</strong>? This will remove ALL their data including documents, messages, invoices, returns, and services. This cannot be undone.
+          </p>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setDeleteConfirmClient(null)}>Cancel</Button>
+            <Button
+              variant="destructive"
+              disabled={deleteClientMutation.isPending}
+              onClick={() => {
+                if (deleteConfirmClient) {
+                  deleteClientMutation.mutate(deleteConfirmClient.id);
+                }
+              }}
+            >
+              {deleteClientMutation.isPending ? "Deleting..." : "Delete Permanently"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

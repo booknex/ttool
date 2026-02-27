@@ -1438,10 +1438,6 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
         return res.status(400).json({ message: "Cannot delete an admin account" });
       }
       
-      if (!client.isArchived) {
-        return res.status(400).json({ message: "Client must be archived before deletion" });
-      }
-      
       await storage.deleteClient(clientId);
       
       res.json({ message: "Client and all their data have been permanently deleted" });
