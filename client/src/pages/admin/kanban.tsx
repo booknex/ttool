@@ -50,6 +50,7 @@ import {
   Calendar,
   Archive,
   Trash2,
+  AlertTriangle,
 } from "lucide-react";
 import { useLocation } from "wouter";
 
@@ -63,6 +64,7 @@ interface Return {
   clientId: string;
   clientName: string;
   clientEmail: string;
+  hasCompletedQuestionnaire: boolean;
   createdAt: string;
   completedAt: string | null;
 }
@@ -238,6 +240,12 @@ function ReturnCard({
             <span className="text-[10px] text-muted-foreground ml-auto">{ret.name}</span>
           )}
         </div>
+        {!ret.hasCompletedQuestionnaire && (
+          <div className="flex items-center gap-1 mt-2 px-1.5 py-1 rounded-md bg-amber-50 border border-amber-200">
+            <AlertTriangle className="h-3 w-3 text-amber-600 flex-shrink-0" />
+            <span className="text-[10px] font-medium text-amber-700">Needs Questionnaire</span>
+          </div>
+        )}
       </div>
     </div>
   );

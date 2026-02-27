@@ -219,9 +219,10 @@ export default function AdminClients() {
     lastName: "",
     phone: ""
   });
-  const [dialogStep, setDialogStep] = useState<'form' | 'assign'>('form');
+  const [dialogStep, setDialogStep] = useState<'form' | 'assign' | 'return'>('form');
   const [createdClientId, setCreatedClientId] = useState<string | null>(null);
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
+  const [startReturn, setStartReturn] = useState(true);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -375,6 +376,9 @@ export default function AdminClients() {
       if (clientId && activeProducts.length > 0) {
         setCreatedClientId(clientId);
         setDialogStep('assign');
+      } else if (clientId) {
+        setCreatedClientId(clientId);
+        setDialogStep('return');
       } else {
         closeAddDialog();
       }
@@ -397,10 +401,25 @@ export default function AdminClients() {
     onSuccess: () => {
       toast({ title: "Services assigned successfully" });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/clients"] });
-      closeAddDialog();
+      setDialogStep('return');
     },
     onError: (error: any) => {
       toast({ title: "Failed to assign services", description: error.message, variant: "destructive" });
+      closeAddDialog();
+    },
+  });
+
+  const startReturnMutation = useMutation({
+    mutationFn: async (clientId: string) => {
+      return apiRequest("POST", `/api/admin/clients/${clientId}/start-return`);
+    },
+    onSuccess: () => {
+      toast({ title: "Tax return started" });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/clients"] });
+      closeAddDialog();
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to start return", description: error.message, variant: "destructive" });
       closeAddDialog();
     },
   });
@@ -411,6 +430,7 @@ export default function AdminClients() {
     setDialogStep('form');
     setCreatedClientId(null);
     setSelectedProducts(new Set());
+    setStartReturn(true);
   };
 
   const archiveMutation = useMutation({
@@ -559,7 +579,7 @@ export default function AdminClients() {
                   </DialogFooter>
                 </form>
               </>
-            ) : (
+            ) : dialogStep === 'assign' ? (
               <>
                 <DialogHeader>
                   <DialogTitle>Assign Services (Optional)</DialogTitle>
@@ -598,7 +618,7 @@ export default function AdminClients() {
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button type="button" variant="outline" onClick={closeAddDialog}>
+                  <Button type="button" variant="outline" onClick={() => setDialogStep('return')}>
                     Skip
                   </Button>
                   <Button
@@ -616,7 +636,50 @@ export default function AdminClients() {
                   </Button>
                 </DialogFooter>
               </>
-            )}
+            ) : dialogStep === 'return' ? (
+              <>
+                <DialogHeader>
+                  <DialogTitle>Start a Tax Return? (Optional)</DialogTitle>
+                </DialogHeader>
+                <div className="py-4">
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Would you like to start a personal tax return for this client? It will be placed in the "Not Started" stage on the Kanban board.
+                  </p>
+                  <label
+                    className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                      startReturn ? 'bg-blue-50 border-blue-300' : 'hover:bg-gray-50 border-gray-200'
+                    }`}
+                  >
+                    <Checkbox
+                      checked={startReturn}
+                      onCheckedChange={(checked) => setStartReturn(!!checked)}
+                    />
+                    <div className="flex items-center gap-2 flex-1">
+                      <FileText className="h-4 w-4 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm font-medium">Personal Tax Return (2025)</p>
+                        <p className="text-xs text-muted-foreground">Creates a return in "Not Started" status</p>
+                      </div>
+                    </div>
+                  </label>
+                </div>
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={closeAddDialog}>
+                    Skip
+                  </Button>
+                  <Button
+                    disabled={!startReturn || startReturnMutation.isPending}
+                    onClick={() => {
+                      if (createdClientId && startReturn) {
+                        startReturnMutation.mutate(createdClientId);
+                      }
+                    }}
+                  >
+                    {startReturnMutation.isPending ? "Starting..." : "Start Return"}
+                  </Button>
+                </DialogFooter>
+              </>
+            ) : null}
           </DialogContent>
         </Dialog>
       </div>

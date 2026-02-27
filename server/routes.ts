@@ -1451,6 +1451,21 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
     }
   });
 
+  app.post("/api/admin/clients/:id/start-return", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const clientId = req.params.id;
+      const client = await storage.getUser(clientId);
+      if (!client) {
+        return res.status(404).json({ message: "Client not found" });
+      }
+      const ret = await storage.ensurePersonalReturn(clientId);
+      res.json(ret);
+    } catch (error) {
+      console.error("Error starting return:", error);
+      res.status(500).json({ message: "Failed to start return" });
+    }
+  });
+
   app.post("/api/admin/clients/:id/assign-product", isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       const clientId = req.params.id;
@@ -2534,6 +2549,7 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
             clientName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email,
             clientEmail: user.email,
             clientIsArchived: user.isArchived || false,
+            hasCompletedQuestionnaire: user.hasCompletedQuestionnaire || false,
             createdAt: ret.createdAt,
             completedAt: (ret as any).completedAt || null,
           };
