@@ -2941,6 +2941,17 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
     }
   });
 
+  app.delete("/api/admin/client-products/:id", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteClientProduct(id);
+      res.json({ message: "Client product deleted" });
+    } catch (error) {
+      console.error("Error deleting client product:", error);
+      res.status(500).json({ message: "Failed to delete client product" });
+    }
+  });
+
   // ==================== APPOINTMENT ROUTES ====================
 
   app.get("/api/admin/appointments", isAuthenticated, isAdmin, async (req: any, res) => {

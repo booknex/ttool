@@ -48,6 +48,8 @@ import {
   LayoutGrid,
   Inbox,
   Calendar,
+  Archive,
+  Trash2,
 } from "lucide-react";
 import { useLocation } from "wouter";
 
@@ -246,6 +248,8 @@ function ProductCard({
   isDragging,
   onComplete,
   onAdvance,
+  onArchive,
+  onDelete,
   showMenu = false,
   searchMatch = true,
 }: {
@@ -253,6 +257,8 @@ function ProductCard({
   isDragging?: boolean;
   onComplete?: (id: string) => void;
   onAdvance?: (id: string) => void;
+  onArchive?: (id: string) => void;
+  onDelete?: (id: string) => void;
   showMenu?: boolean;
   searchMatch?: boolean;
 }) {
@@ -295,6 +301,21 @@ function ProductCard({
                     Mark Complete
                   </DropdownMenuItem>
                 )}
+                {onArchive && (
+                  <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onArchive(cp.id); }}>
+                    <Archive className="h-3.5 w-3.5 mr-2 text-amber-600" />
+                    Archive
+                  </DropdownMenuItem>
+                )}
+                {onDelete && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onDelete(cp.id); }} className="text-red-600 focus:text-red-600">
+                      <Trash2 className="h-3.5 w-3.5 mr-2" />
+                      Delete
+                    </DropdownMenuItem>
+                  </>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           )}
@@ -321,7 +342,7 @@ function SortableReturnCard({ ret, onComplete, onAdvance, searchMatch }: { ret: 
   );
 }
 
-function SortableProductCard({ cp, onComplete, onAdvance, searchMatch }: { cp: ClientProductEnriched; onComplete?: (id: string) => void; onAdvance?: (id: string) => void; searchMatch?: boolean }) {
+function SortableProductCard({ cp, onComplete, onAdvance, onArchive, onDelete, searchMatch }: { cp: ClientProductEnriched; onComplete?: (id: string) => void; onAdvance?: (id: string) => void; onArchive?: (id: string) => void; onDelete?: (id: string) => void; searchMatch?: boolean }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: cp.id, data: { cp } });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1 };
 
@@ -330,7 +351,7 @@ function SortableProductCard({ cp, onComplete, onAdvance, searchMatch }: { cp: C
       <div className="flex items-center gap-1" {...listeners}>
         <GripVertical className="h-4 w-4 text-gray-300 flex-shrink-0 hover:text-gray-500 transition-colors" />
         <div className="flex-1 min-w-0">
-          <ProductCard cp={cp} isDragging={isDragging} onComplete={onComplete} onAdvance={onAdvance} showMenu searchMatch={searchMatch} />
+          <ProductCard cp={cp} isDragging={isDragging} onComplete={onComplete} onAdvance={onAdvance} onArchive={onArchive} onDelete={onDelete} showMenu searchMatch={searchMatch} />
         </div>
       </div>
     </div>
@@ -411,6 +432,8 @@ function ProductKanbanColumn({
   items,
   onComplete,
   onAdvance,
+  onArchive,
+  onDelete,
   searchQuery,
   totalAcrossAll,
 }: {
@@ -420,6 +443,8 @@ function ProductKanbanColumn({
   items: ClientProductEnriched[];
   onComplete?: (id: string) => void;
   onAdvance?: (id: string) => void;
+  onArchive?: (id: string) => void;
+  onDelete?: (id: string) => void;
   searchQuery: string;
   totalAcrossAll: number;
 }) {
@@ -452,6 +477,8 @@ function ProductKanbanColumn({
                 cp={cp}
                 onComplete={onComplete}
                 onAdvance={onAdvance}
+                onArchive={onArchive}
+                onDelete={onDelete}
                 searchMatch={!searchQuery || cp.clientName.toLowerCase().includes(searchQuery.toLowerCase()) || cp.clientEmail.toLowerCase().includes(searchQuery.toLowerCase())}
               />
             ))}
@@ -783,8 +810,27 @@ function ProductRowComponent({ row, typeFilter, searchQuery }: { row: ProductRow
     },
   });
 
+  const deleteProductMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return apiRequest("DELETE", `/api/admin/client-products/${id}`);
+    },
+    onSuccess: () => {
+      toast({ title: "Service deleted" });
+      invalidateKanban();
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to delete", description: error.message, variant: "destructive" });
+    },
+  });
+
   const handleComplete = (id: string) => {
     completeProductMutation.mutate(id);
+  };
+
+  const handleDelete = (id: string) => {
+    if (window.confirm("Are you sure you want to delete this service? This cannot be undone.")) {
+      deleteProductMutation.mutate(id);
+    }
   };
 
   const handleAdvance = (id: string) => {
@@ -915,6 +961,8 @@ function ProductRowComponent({ row, typeFilter, searchQuery }: { row: ProductRow
                   items={items}
                   onComplete={handleComplete}
                   onAdvance={handleAdvance}
+                  onArchive={handleComplete}
+                  onDelete={handleDelete}
                   searchQuery={searchQuery}
                   totalAcrossAll={row.totalClients}
                 />
