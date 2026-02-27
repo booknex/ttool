@@ -184,8 +184,8 @@ function ReturnCard({
             {getInitials(ret.clientName)}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="font-semibold text-sm truncate leading-tight">{ret.clientName}</p>
-            <p className="text-xs text-muted-foreground truncate mt-0.5">{ret.clientEmail}</p>
+            <p className="font-semibold text-sm leading-tight">{ret.clientName}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{ret.clientEmail}</p>
           </div>
           {showMenu && !isDragging && (
             <DropdownMenu>
@@ -233,7 +233,7 @@ function ReturnCard({
           </Badge>
           <span className="text-[10px] text-muted-foreground">{ret.taxYear}</span>
           {ret.returnType !== 'personal' && ret.name && (
-            <span className="text-[10px] text-muted-foreground truncate ml-auto max-w-[80px]" title={ret.name}>{ret.name}</span>
+            <span className="text-[10px] text-muted-foreground ml-auto">{ret.name}</span>
           )}
         </div>
       </div>
@@ -268,8 +268,8 @@ function ProductCard({
             {getInitials(cp.clientName)}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="font-semibold text-sm truncate leading-tight">{cp.clientName}</p>
-            <p className="text-xs text-muted-foreground truncate mt-0.5">
+            <p className="font-semibold text-sm leading-tight">{cp.clientName}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
               {cp.name || cp.product?.name}
             </p>
           </div>
@@ -364,7 +364,7 @@ function KanbanColumn({
   const pct = totalAcrossAll > 0 ? Math.round((returns.length / totalAcrossAll) * 100) : 0;
 
   return (
-    <div className={`flex flex-col rounded-xl border bg-white min-w-[210px] w-[210px] overflow-hidden transition-all ${isOver ? 'ring-2 ring-primary/40 ring-offset-1 shadow-lg' : 'shadow-sm'}`}>
+    <div className={`flex flex-col rounded-xl border bg-white min-w-[240px] flex-1 overflow-hidden transition-all ${isOver ? 'ring-2 ring-primary/40 ring-offset-1 shadow-lg' : 'shadow-sm'}`}>
       <div className="h-1.5 w-full" style={{ backgroundColor: accentColor }} />
       <div className={`px-3 py-2.5 border-b ${bgClass}`}>
         <div className="flex items-center justify-between">
@@ -430,7 +430,7 @@ function ProductKanbanColumn({
   const pct = totalAcrossAll > 0 ? Math.round((items.length / totalAcrossAll) * 100) : 0;
 
   return (
-    <div className={`flex flex-col rounded-xl border bg-white min-w-[210px] w-[210px] overflow-hidden transition-all ${isOver ? 'ring-2 ring-primary/40 ring-offset-1 shadow-lg' : 'shadow-sm'}`}>
+    <div className={`flex flex-col rounded-xl border bg-white min-w-[240px] flex-1 overflow-hidden transition-all ${isOver ? 'ring-2 ring-primary/40 ring-offset-1 shadow-lg' : 'shadow-sm'}`}>
       <div className="h-1.5 w-full" style={{ backgroundColor: accentColor }} />
       <div className="px-3 py-2.5 border-b" style={{ backgroundColor: `${accentColor}08` }}>
         <div className="flex items-center justify-between">
@@ -687,7 +687,7 @@ function ReturnsRow({
               ))}
             </div>
             <DragOverlay>
-              {activeReturn && <div className="w-[200px]"><ReturnCard ret={activeReturn} isDragging /></div>}
+              {activeReturn && <div className="min-w-[240px]"><ReturnCard ret={activeReturn} isDragging /></div>}
             </DragOverlay>
           </DndContext>
 
@@ -709,8 +709,8 @@ function ReturnsRow({
                         {getInitials(ret.clientName)}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="font-medium text-sm truncate">{ret.clientName}</p>
-                        <p className="text-xs text-muted-foreground truncate">
+                        <p className="font-medium text-sm">{ret.clientName}</p>
+                        <p className="text-xs text-muted-foreground">
                           {ret.returnType === 'personal' ? 'Personal' : ret.name} · {ret.taxYear}
                         </p>
                       </div>
@@ -923,7 +923,7 @@ function ProductRowComponent({ row, typeFilter, searchQuery }: { row: ProductRow
               ))}
             </div>
             <DragOverlay>
-              {activeClientProduct && <div className="w-[200px]"><ProductCard cp={activeClientProduct} isDragging /></div>}
+              {activeClientProduct && <div className="min-w-[240px]"><ProductCard cp={activeClientProduct} isDragging /></div>}
             </DragOverlay>
           </DndContext>
 
@@ -945,8 +945,8 @@ function ProductRowComponent({ row, typeFilter, searchQuery }: { row: ProductRow
                         {getInitials(cp.clientName)}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="font-medium text-sm truncate">{cp.clientName}</p>
-                        <p className="text-xs text-muted-foreground truncate">{cp.name || cp.product?.name}</p>
+                        <p className="font-medium text-sm">{cp.clientName}</p>
+                        <p className="text-xs text-muted-foreground">{cp.name || cp.product?.name}</p>
                       </div>
                       <button
                         onClick={() => reopenProductMutation.mutate(cp.id)}
