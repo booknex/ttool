@@ -364,7 +364,7 @@ function KanbanColumn({
   const pct = totalAcrossAll > 0 ? Math.round((returns.length / totalAcrossAll) * 100) : 0;
 
   return (
-    <div className={`flex flex-col rounded-xl border bg-white min-w-[240px] flex-1 overflow-hidden transition-all ${isOver ? 'ring-2 ring-primary/40 ring-offset-1 shadow-lg' : 'shadow-sm'}`}>
+    <div className={`flex flex-col rounded-xl border bg-white min-w-[240px] max-w-[320px] flex-1 overflow-hidden transition-all ${isOver ? 'ring-2 ring-primary/40 ring-offset-1 shadow-lg' : 'shadow-sm'}`}>
       <div className="h-1.5 w-full" style={{ backgroundColor: accentColor }} />
       <div className={`px-3 py-2.5 border-b ${bgClass}`}>
         <div className="flex items-center justify-between">
@@ -430,7 +430,7 @@ function ProductKanbanColumn({
   const pct = totalAcrossAll > 0 ? Math.round((items.length / totalAcrossAll) * 100) : 0;
 
   return (
-    <div className={`flex flex-col rounded-xl border bg-white min-w-[240px] flex-1 overflow-hidden transition-all ${isOver ? 'ring-2 ring-primary/40 ring-offset-1 shadow-lg' : 'shadow-sm'}`}>
+    <div className={`flex flex-col rounded-xl border bg-white min-w-[240px] max-w-[320px] flex-1 overflow-hidden transition-all ${isOver ? 'ring-2 ring-primary/40 ring-offset-1 shadow-lg' : 'shadow-sm'}`}>
       <div className="h-1.5 w-full" style={{ backgroundColor: accentColor }} />
       <div className="px-3 py-2.5 border-b" style={{ backgroundColor: `${accentColor}08` }}>
         <div className="flex items-center justify-between">
