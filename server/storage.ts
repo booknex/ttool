@@ -290,39 +290,36 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteClient(id: string): Promise<void> {
-    const userInvoices = await db.select({ id: invoices.id }).from(invoices).where(eq(invoices.userId, id));
-    const invoiceIds = userInvoices.map(inv => inv.id);
-    
-    if (invoiceIds.length > 0) {
-      await db.delete(invoiceItems).where(inArray(invoiceItems.invoiceId, invoiceIds));
+    const steps: Array<{ name: string; query: ReturnType<typeof sql> }> = [
+      { name: "invoice_items", query: sql`DELETE FROM invoice_items WHERE invoice_id IN (SELECT id FROM invoices WHERE user_id = ${id})` },
+      { name: "invoices", query: sql`DELETE FROM invoices WHERE user_id = ${id}` },
+      { name: "messages", query: sql`DELETE FROM messages WHERE user_id = ${id}` },
+      { name: "signatures", query: sql`DELETE FROM signatures WHERE user_id = ${id}` },
+      { name: "questionnaire_responses", query: sql`DELETE FROM questionnaire_responses WHERE user_id = ${id}` },
+      { name: "refund_tracking", query: sql`DELETE FROM refund_tracking WHERE user_id = ${id}` },
+      { name: "required_documents", query: sql`DELETE FROM required_documents WHERE user_id = ${id}` },
+      { name: "documents", query: sql`DELETE FROM documents WHERE user_id = ${id}` },
+      { name: "affiliate_referrals", query: sql`DELETE FROM affiliate_referrals WHERE client_user_id = ${id}` },
+      { name: "dependents", query: sql`DELETE FROM dependents WHERE user_id = ${id}` },
+      { name: "client_products", query: sql`DELETE FROM client_products WHERE user_id = ${id}` },
+      { name: "returns", query: sql`DELETE FROM returns WHERE user_id = ${id}` },
+      { name: "appointments", query: sql`DELETE FROM appointments WHERE client_id = ${id}` },
+      { name: "personal_events", query: sql`DELETE FROM personal_events WHERE user_id = ${id}` },
+      { name: "business_expenses", query: sql`DELETE FROM business_expenses WHERE business_id IN (SELECT id FROM businesses WHERE user_id = ${id})` },
+      { name: "business_owners", query: sql`DELETE FROM business_owners WHERE business_id IN (SELECT id FROM businesses WHERE user_id = ${id})` },
+      { name: "businesses", query: sql`DELETE FROM businesses WHERE user_id = ${id}` },
+      { name: "sessions", query: sql`DELETE FROM sessions WHERE sess->>'userId' = ${id} OR sess->'passport'->>'user' = ${id}` },
+      { name: "users", query: sql`DELETE FROM users WHERE id = ${id}` },
+    ];
+
+    for (const step of steps) {
+      try {
+        await db.execute(step.query);
+      } catch (err: any) {
+        console.error(`deleteClient: failed at step "${step.name}" for user ${id}:`, err.message);
+        throw new Error(`Failed to delete client data from ${step.name}: ${err.message}`);
+      }
     }
-    await db.delete(invoices).where(eq(invoices.userId, id));
-    await db.delete(messages).where(eq(messages.userId, id));
-    await db.delete(signatures).where(eq(signatures.userId, id));
-    await db.delete(questionnaireResponses).where(eq(questionnaireResponses.userId, id));
-    await db.delete(refundTracking).where(eq(refundTracking.userId, id));
-    await db.delete(requiredDocuments).where(eq(requiredDocuments.userId, id));
-    await db.delete(documents).where(eq(documents.userId, id));
-    await db.delete(affiliateReferrals).where(eq(affiliateReferrals.clientUserId, id));
-    await db.delete(dependents).where(eq(dependents.userId, id));
-    await db.delete(returns).where(eq(returns.userId, id));
-    await db.delete(clientProducts).where(eq(clientProducts.userId, id));
-    await db.delete(appointments).where(eq(appointments.clientId, id));
-    await db.delete(personalEvents).where(eq(personalEvents.userId, id));
-    
-    const userBusinesses = await db.select({ id: businesses.id }).from(businesses).where(eq(businesses.userId, id));
-    const businessIds = userBusinesses.map(b => b.id);
-    
-    if (businessIds.length > 0) {
-      await db.delete(businessExpenses).where(inArray(businessExpenses.businessId, businessIds));
-      await db.delete(businessOwners).where(inArray(businessOwners.businessId, businessIds));
-    }
-    await db.delete(businesses).where(eq(businesses.userId, id));
-    
-    await db.execute(
-      sql`DELETE FROM sessions WHERE sess->>'userId' = ${id} OR sess->'passport'->>'user' = ${id}`
-    );
-    await db.delete(users).where(eq(users.id, id));
   }
 
   // Document operations

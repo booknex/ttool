@@ -1441,9 +1441,9 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
       await storage.deleteClient(clientId);
       
       res.json({ message: "Client and all their data have been permanently deleted" });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error deleting client:", error);
-      res.status(500).json({ message: "Failed to delete client" });
+      res.status(500).json({ message: error.message || "Failed to delete client" });
     }
   });
 
