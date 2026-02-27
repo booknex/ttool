@@ -316,6 +316,10 @@ export class DatabaseStorage implements IStorage {
       try {
         await db.execute(step.query);
       } catch (err: any) {
+        if (err.message?.includes('does not exist')) {
+          console.log(`deleteClient: skipping "${step.name}" (table does not exist)`);
+          continue;
+        }
         console.error(`deleteClient: failed at step "${step.name}" for user ${id}:`, err.message);
         throw new Error(`Failed to delete client data from ${step.name}: ${err.message}`);
       }
