@@ -184,7 +184,7 @@ function ReturnCard({
             <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-white text-[10px] font-semibold ${getInitialColor(ret.clientName)}`}>
               {getInitials(ret.clientName)}
             </div>
-            <p className="font-semibold text-sm leading-tight whitespace-nowrap">{ret.clientName}</p>
+            <p className="font-semibold text-sm leading-tight">{ret.clientName}</p>
           </div>
           {showMenu && !isDragging && (
             <DropdownMenu>
@@ -215,8 +215,8 @@ function ReturnCard({
             </DropdownMenu>
           )}
         </div>
-        <p className="text-xs text-muted-foreground mt-1 whitespace-nowrap">{ret.clientEmail}</p>
-        <div className="flex items-center gap-1.5 mt-2">
+        <p className="text-xs text-muted-foreground mt-1">{ret.clientEmail}</p>
+        <div className="flex items-center flex-wrap gap-1.5 mt-2">
           <Badge
             variant="outline"
             className={`text-[10px] px-1.5 py-0 h-5 font-medium ${
@@ -233,7 +233,7 @@ function ReturnCard({
           </Badge>
           <span className="text-[10px] text-muted-foreground">{ret.taxYear}</span>
           {ret.returnType !== 'personal' && ret.name && (
-            <span className="text-[10px] text-muted-foreground ml-auto whitespace-nowrap">{ret.name}</span>
+            <span className="text-[10px] text-muted-foreground ml-auto">{ret.name}</span>
           )}
         </div>
       </div>
@@ -268,7 +268,7 @@ function ProductCard({
             <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-white text-[10px] font-semibold ${getInitialColor(cp.clientName)}`}>
               {getInitials(cp.clientName)}
             </div>
-            <p className="font-semibold text-sm leading-tight whitespace-nowrap">{cp.clientName}</p>
+            <p className="font-semibold text-sm leading-tight">{cp.clientName}</p>
           </div>
           {showMenu && !isDragging && (
             <DropdownMenu>
@@ -299,7 +299,7 @@ function ProductCard({
             </DropdownMenu>
           )}
         </div>
-        <p className="text-xs text-muted-foreground mt-1 whitespace-nowrap">{cp.name || cp.product?.name}</p>
+        <p className="text-xs text-muted-foreground mt-1">{cp.name || cp.product?.name}</p>
       </div>
     </div>
   );
@@ -362,7 +362,7 @@ function KanbanColumn({
   const pct = totalAcrossAll > 0 ? Math.round((returns.length / totalAcrossAll) * 100) : 0;
 
   return (
-    <div className={`flex flex-col rounded-xl border bg-white min-w-[240px] w-max overflow-hidden transition-all ${isOver ? 'ring-2 ring-primary/40 ring-offset-1 shadow-lg' : 'shadow-sm'}`}>
+    <div className={`flex flex-col rounded-xl border bg-white min-w-[260px] flex-1 overflow-hidden transition-all ${isOver ? 'ring-2 ring-primary/40 ring-offset-1 shadow-lg' : 'shadow-sm'}`}>
       <div className="h-1.5 w-full" style={{ backgroundColor: accentColor }} />
       <div className={`px-3 py-2.5 border-b ${bgClass}`}>
         <div className="flex items-center justify-between">
@@ -428,7 +428,7 @@ function ProductKanbanColumn({
   const pct = totalAcrossAll > 0 ? Math.round((items.length / totalAcrossAll) * 100) : 0;
 
   return (
-    <div className={`flex flex-col rounded-xl border bg-white min-w-[240px] w-max overflow-hidden transition-all ${isOver ? 'ring-2 ring-primary/40 ring-offset-1 shadow-lg' : 'shadow-sm'}`}>
+    <div className={`flex flex-col rounded-xl border bg-white min-w-[260px] flex-1 overflow-hidden transition-all ${isOver ? 'ring-2 ring-primary/40 ring-offset-1 shadow-lg' : 'shadow-sm'}`}>
       <div className="h-1.5 w-full" style={{ backgroundColor: accentColor }} />
       <div className="px-3 py-2.5 border-b" style={{ backgroundColor: `${accentColor}08` }}>
         <div className="flex items-center justify-between">
