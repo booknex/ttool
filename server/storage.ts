@@ -306,6 +306,9 @@ export class DatabaseStorage implements IStorage {
     await db.delete(affiliateReferrals).where(eq(affiliateReferrals.clientUserId, id));
     await db.delete(dependents).where(eq(dependents.userId, id));
     await db.delete(returns).where(eq(returns.userId, id));
+    await db.delete(clientProducts).where(eq(clientProducts.userId, id));
+    await db.delete(appointments).where(eq(appointments.clientId, id));
+    await db.delete(personalEvents).where(eq(personalEvents.userId, id));
     
     const userBusinesses = await db.select({ id: businesses.id }).from(businesses).where(eq(businesses.userId, id));
     const businessIds = userBusinesses.map(b => b.id);
@@ -317,7 +320,7 @@ export class DatabaseStorage implements IStorage {
     await db.delete(businesses).where(eq(businesses.userId, id));
     
     await db.execute(
-      sql`DELETE FROM sessions WHERE sess->'passport'->>'user' = ${id}`
+      sql`DELETE FROM sessions WHERE sess->>'userId' = ${id} OR sess->'passport'->>'user' = ${id}`
     );
     await db.delete(users).where(eq(users.id, id));
   }

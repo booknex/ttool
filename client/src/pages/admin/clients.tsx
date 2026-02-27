@@ -459,6 +459,19 @@ export default function AdminClients() {
     },
   });
 
+  const deleteClientMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return apiRequest("DELETE", `/api/admin/clients/${id}`);
+    },
+    onSuccess: () => {
+      toast({ title: "Client permanently deleted" });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/clients"] });
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to delete client", description: error.message, variant: "destructive" });
+    },
+  });
+
   const bulkArchiveMutation = useMutation({
     mutationFn: async (ids: string[]) => {
       await Promise.all(ids.map(id => apiRequest("POST", `/api/admin/clients/${id}/archive`)));
@@ -946,6 +959,17 @@ export default function AdminClients() {
                               <Archive className="h-3.5 w-3.5 mr-2" />Archive
                             </DropdownMenuItem>
                           )}
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            className="text-red-600 focus:text-red-600"
+                            onClick={() => {
+                              if (window.confirm(`Are you sure you want to permanently delete ${client.firstName ? `${client.firstName} ${client.lastName}` : client.email}? This will remove ALL their data including documents, messages, invoices, returns, and services. This cannot be undone.`)) {
+                                deleteClientMutation.mutate(client.id);
+                              }
+                            }}
+                          >
+                            <Trash2 className="h-3.5 w-3.5 mr-2" />Delete Permanently
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
