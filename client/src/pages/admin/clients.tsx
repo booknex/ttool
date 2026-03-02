@@ -60,6 +60,8 @@ import {
   ExternalLink,
   Package,
   Activity,
+  Shield,
+  ShieldOff,
 } from "lucide-react";
 import {
   Table,
@@ -100,6 +102,7 @@ interface ClientData {
   phone: string | null;
   profileImageUrl: string | null;
   isArchived: boolean;
+  isAdmin: boolean;
   createdAt: string;
   stats: ClientStats;
 }
@@ -457,6 +460,19 @@ export default function AdminClients() {
     },
     onError: (error: any) => {
       toast({ title: "Failed to impersonate", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const toggleAdminMutation = useMutation({
+    mutationFn: async ({ id, isAdmin }: { id: string; isAdmin: boolean }) => {
+      return apiRequest("PATCH", `/api/admin/clients/${id}`, { isAdmin });
+    },
+    onSuccess: (_data, variables) => {
+      toast({ title: variables.isAdmin ? "User promoted to admin" : "Admin access removed" });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/clients"] });
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to update admin status", description: error.message, variant: "destructive" });
     },
   });
 
@@ -910,6 +926,9 @@ export default function AdminClients() {
                               ? `${client.firstName} ${client.lastName}`
                               : client.email || "Unknown"
                             }
+                            {client.isAdmin && (
+                              <Badge variant="outline" className="bg-blue-100 text-blue-700 text-[10px] px-1 py-0 border-blue-200">Admin</Badge>
+                            )}
                             {client.isArchived && (
                               <Badge variant="outline" className="bg-gray-100 text-gray-500 text-[10px] px-1 py-0">Archived</Badge>
                             )}
@@ -951,6 +970,15 @@ export default function AdminClients() {
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => impersonateMutation.mutate(client.id)}>
                             <LogIn className="h-3.5 w-3.5 mr-2" />Log in as Client
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onSelect={() => toggleAdminMutation.mutate({ id: client.id, isAdmin: !client.isAdmin })}
+                          >
+                            {client.isAdmin ? (
+                              <><ShieldOff className="h-3.5 w-3.5 mr-2" />Remove Admin</>
+                            ) : (
+                              <><Shield className="h-3.5 w-3.5 mr-2" />Make Admin</>
+                            )}
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           {client.isArchived ? (

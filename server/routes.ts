@@ -1288,13 +1288,18 @@ export async function registerRoutes(server: Server, app: Express): Promise<Serv
   app.patch("/api/admin/clients/:id", isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       const clientId = req.params.id;
-      const { firstName, lastName, email, phone } = req.body;
+      const { firstName, lastName, email, phone, isAdmin } = req.body;
+      
+      if (isAdmin !== undefined && clientId === req.user.id) {
+        return res.status(400).json({ message: "You cannot change your own admin status" });
+      }
       
       const updates: any = {};
       if (firstName !== undefined) updates.firstName = firstName;
       if (lastName !== undefined) updates.lastName = lastName;
       if (email !== undefined) updates.email = email;
       if (phone !== undefined) updates.phone = phone;
+      if (isAdmin !== undefined) updates.isAdmin = isAdmin;
       
       const updated = await storage.updateUser(clientId, updates);
       res.json(updated);
